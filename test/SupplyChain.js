@@ -26,7 +26,8 @@ contract('SupplyChain', (accounts) => {
 
         it('newClass creates a class.', async () => {
             creationDescription = 'Creation';
-            creationClass = await supplyChain.newClass(creationDescription);
+            creationClass = await supplyChain.totalClasses();
+            await supplyChain.newClass(creationDescription);
 
             assert.equal(
                 creationClass, 
@@ -38,7 +39,8 @@ contract('SupplyChain', (accounts) => {
             );
 
             certificationDescription = 'Certification';
-            certificationClass = await supplyChain.newClass(certificationDescription);
+            certificationClass = await supplyChain.totalClasses();
+            await supplyChain.newClass(certificationDescription);
             
             assert.equal(
                 certificationClass, 
@@ -56,40 +58,73 @@ contract('SupplyChain', (accounts) => {
             supplyChain = await SupplyChain.new();
 
             creationDescription = 'Creation';
-            creationClass = await supplyChain.newClass(creationDescription);
+            await supplyChain.newClass(creationDescription);
+            creationClass = await supplyChain.totalClasses() - 1;
 
             certificationDescription = 'Certification';
-            certificationClass = await supplyChain.newClass(certificationDescription);
+            await supplyChain.newClass(certificationDescription);
+            certificationClass = await supplyChain.totalClasses() - 1;
 
         });
 
-        it('newStep creates a step.', async () => {
-            const stepZero = await supplyChain.newStep([], 0);
-            const stepOne = await supplyChain.newStep([], 0);
+        it('newStep creates a step.', async () => { 
+            await supplyChain.newStep([], creationClass);
+            const stepZero = await supplyChain.totalSteps() - 1;
+            await supplyChain.newStep([], creationClass);
+            const stepOne = await supplyChain.totalSteps() - 1; 
 
             assert.equal(stepZero, 0);
             assert.equal(stepOne, 1);
         });
 
         it('newStep creates chains.', async () => {
-            const stepZero = await supplyChain.newStep([], 0);
-            const stepOne = await supplyChain.newStep([0], 1);
-            const stepTwo = await supplyChain.newStep([1], 1);
-            const parentOfTwo = await supplyChain.getParents(2);
+            await supplyChain.newStep([], creationClass);
+            const stepZero = await supplyChain.totalSteps() - 1; 
+            await supplyChain.newStep([stepZero], certificationClass);
+            const stepOne = await supplyChain.totalSteps() - 1; 
+            await supplyChain.newStep([stepOne], certificationClass);
+            const stepTwo = await supplyChain.totalSteps() - 1; 
+            const parentOfTwo = await supplyChain.getParents(stepTwo);
 
             assert.equal(parentOfTwo[0], 1);
         });
 
         it('newStep allows multiple parents.', async () => {
-            const stepZero = await supplyChain.newStep([], 0);
-            const stepOne = await supplyChain.newStep([0], 1);
-            const stepTwo = await supplyChain.newStep([0], 1);
-            const stepThree = await supplyChain.newStep([1, 1], 1);
-            const parentsOfThree = await supplyChain.getParents(3);
+            await supplyChain.newStep([], creationClass);
+            const stepZero = await supplyChain.totalSteps() - 1; 
+            await supplyChain.newStep([stepZero], certificationClass);
+            const stepOne = await supplyChain.totalSteps() - 1; 
+            await supplyChain.newStep([stepZero], certificationClass);
+            const stepTwo = await supplyChain.totalSteps() - 1; 
+            await supplyChain.newStep([stepOne, stepTwo], 1);
+            const stepThree = await supplyChain.totalSteps() - 1; 
+            const parentsOfThree = await supplyChain.getParents(stepThree);
 
-            assert.equal(parentsOfThree[0], 1);
-            assert.equal(parentsOfThree[1], 1);
+            assert.equal(parentsOfThree[0], stepOne);
+            assert.equal(parentsOfThree[1], stepTwo);
             assert.equal(parentsOfThree.length, 2);
+        });
+
+        it('newStep records step creator.', async () => {
+            await supplyChain.newStep([], creationClass);
+            const stepZero = await supplyChain.totalSteps() - 1; 
+            await supplyChain.newStep([stepZero], certificationClass, { from: user });
+            const stepOne = await supplyChain.totalSteps() - 1; 
+            const certifier = await supplyChain.getOwner(stepOne);
+
+            assert.equal(certifier, user);
+        });
+
+        it('newStep records timestamp.', async () => {
+            await supplyChain.newStep([], creationClass);
+            const stepZero = await supplyChain.totalSteps() - 1; 
+            await supplyChain.newStep([stepZero], certificationClass, { from: user });
+            const stepOne = await supplyChain.totalSteps() - 1; 
+
+            assert.isAbove(
+                await supplyChain.getTimestamp(stepOne), 
+                await supplyChain.getTimestamp(stepZero),
+            );
         });
     });
 });

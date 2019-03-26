@@ -14,7 +14,7 @@ contract SupplyChain {
     /**
      * @notice Step counter
      */
-    uint256 lastStepId;
+    uint256 internal _totalSteps;
 
     /**
      * @notice Supply chain step data. By not chaining these and not allowing them to be modified 
@@ -25,6 +25,7 @@ contract SupplyChain {
         uint256[] parents;
         address owner;
         uint8 class;
+        uint32 timestamp;
     }
 
     /**
@@ -76,6 +77,18 @@ contract SupplyChain {
     }
 
     /**
+     * @notice A method to return the number of classes created.
+     * @return The number of classes created.
+     */
+    function totalClasses()
+        public
+        view
+        returns(uint8)
+    {
+        return uint8(classes.length);
+    }
+
+    /**
      * @notice A method to create a new supply chain step. The msg.sender is recorded as the owner
      * of the step, which might possibly mean owner of the underlying asset as well.
      * @param _previousSteps An array of the step ids for steps considered to be predecessors to
@@ -89,9 +102,26 @@ contract SupplyChain {
         returns(uint256)
     {
         require(_class < classes.length, "Event class not recognized.");
-        steps[lastStepId] = Step(_previousSteps, msg.sender, _class);
-        lastStepId += 1;
-        return lastStepId;
+        steps[_totalSteps] = Step(
+            _previousSteps, 
+            msg.sender, 
+            _class, 
+            uint32(block.timestamp)
+        );
+        _totalSteps += 1;
+        return _totalSteps;
+    }
+
+    /**
+     * @notice A method to return the number of steps created.
+     * @return The number of steps created.
+     */
+    function totalSteps()
+        public
+        view
+        returns(uint256)
+    {
+        return _totalSteps;
     }
 
     /**
@@ -131,5 +161,18 @@ contract SupplyChain {
         returns(uint8)
     {
         return steps[_stepId].class;
+    }
+
+    /**
+     * @notice A method to retrieve the timestamp of a step.
+     * @param _stepId The step id of the step to retrieve the timestamp for.
+     * @return The timestamp for the step given as a parameter.
+     */
+    function getTimestamp(uint256 _stepId)
+        public
+        view
+        returns(uint32)
+    {
+        return steps[_stepId].timestamp;
     }
 }
