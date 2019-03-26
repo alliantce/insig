@@ -68,6 +68,7 @@ contract SupplyChain {
      */
     function classDescription(uint8 _classId)
         public
+        view
         returns(string memory)
     {
         require(_classId < classes.length, "Event class not recognized.");

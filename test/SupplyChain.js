@@ -8,6 +8,10 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('SupplyChain', (accounts) => {
     let supplyChain;
+    let creationClass;
+    let creationDescription;
+    let certificationClass;
+    let certificationDescription;
     const owner = accounts[0];
     const user = accounts[1];
 
@@ -15,20 +19,48 @@ contract('SupplyChain', (accounts) => {
         supplyChain = await SupplyChain.deployed();
     });
 
-    describe('SupplyChain', () => {
+    describe('Classes', () => {
         beforeEach(async () => {
             supplyChain = await SupplyChain.new();
-            await supplyChain.newClass("Class0");
-            await supplyChain.newClass("Class1");
-
         });
 
         it('newClass creates a class.', async () => {
-            const class0 = await supplyChain.classDescription(0);
-            const class1 = await supplyChain.classDescription(1);
+            creationDescription = 'Creation';
+            creationClass = await supplyChain.newClass(creationDescription);
 
-            assert.equal(class0, "Class0");
-            assert.equal(class1, "Class1");
+            assert.equal(
+                creationClass, 
+                0,
+            );
+            assert.equal(
+                await supplyChain.classDescription(creationClass), 
+                "Creation",
+            );
+
+            certificationDescription = 'Certification';
+            certificationClass = await supplyChain.newClass(certificationDescription);
+            
+            assert.equal(
+                certificationClass, 
+                1,
+            );
+            assert.equal(
+                await supplyChain.classDescription(certificationClass), 
+                certificationDescription,
+            );
+        });
+    });
+
+    describe('Steps', () => {
+        beforeEach(async () => {
+            supplyChain = await SupplyChain.new();
+
+            creationDescription = 'Creation';
+            creationClass = await supplyChain.newClass(creationDescription);
+
+            certificationDescription = 'Certification';
+            certificationClass = await supplyChain.newClass(certificationDescription);
+
         });
 
         it('newStep creates a step.', async () => {
