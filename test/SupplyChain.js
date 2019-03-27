@@ -25,27 +25,27 @@ contract('SupplyChain', (accounts) => {
         });
 
         it('newClass creates a class.', async () => {
-            creationDescription = 'Creation';
-            creationClass = await supplyChain.newClass(creationDescription);
-
+            creationDescription = "Creation";
+            creationClass = (await supplyChain.newClass.call(creationDescription)).toNumber();
+            await supplyChain.newClass(creationDescription);
             assert.equal(
                 creationClass, 
                 0,
             );
             assert.equal(
-                await supplyChain.classDescription(creationClass), 
+                await supplyChain.classDescription.call(creationClass), 
                 "Creation",
             );
 
             certificationDescription = 'Certification';
-            certificationClass = await supplyChain.newClass(certificationDescription);
-            
+            certificationClass = (await supplyChain.newClass.call(certificationDescription)).toNumber();
+            await supplyChain.newClass(certificationDescription);
             assert.equal(
                 certificationClass, 
                 1,
             );
             assert.equal(
-                await supplyChain.classDescription(certificationClass), 
+                await supplyChain.classDescription.call(certificationClass), 
                 certificationDescription,
             );
         });
