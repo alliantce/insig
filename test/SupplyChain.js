@@ -120,10 +120,11 @@ contract('SupplyChain', (accounts) => {
             const stepZero = await supplyChain.totalSteps() - 1; 
             await supplyChain.newStep([stepZero], certificationClass, { from: user });
             const stepOne = await supplyChain.totalSteps() - 1; 
-
+            const timestampZero = await supplyChain.getTimestamp(stepZero);
+            const timestampOne = await supplyChain.getTimestamp(stepOne);
             assert.isAbove(
-                await supplyChain.getTimestamp(stepOne), 
-                await supplyChain.getTimestamp(stepZero),
+                timestampOne.toNumber(), 
+                timestampZero.toNumber()
             );
         });
     });
