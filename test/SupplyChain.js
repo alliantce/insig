@@ -26,8 +26,7 @@ contract('SupplyChain', (accounts) => {
 
         it('newClass creates a class.', async () => {
             creationDescription = 'Creation';
-            creationClass = await supplyChain.totalClasses();
-            await supplyChain.newClass(creationDescription);
+            creationClass = await supplyChain.newClass(creationDescription);
 
             assert.equal(
                 creationClass, 
@@ -39,8 +38,7 @@ contract('SupplyChain', (accounts) => {
             );
 
             certificationDescription = 'Certification';
-            certificationClass = await supplyChain.totalClasses();
-            await supplyChain.newClass(certificationDescription);
+            certificationClass = await supplyChain.newClass(certificationDescription);
             
             assert.equal(
                 certificationClass, 
@@ -120,11 +118,10 @@ contract('SupplyChain', (accounts) => {
             const stepZero = await supplyChain.totalSteps() - 1; 
             await supplyChain.newStep([stepZero], certificationClass, { from: user });
             const stepOne = await supplyChain.totalSteps() - 1; 
-            const timestampZero = await supplyChain.getTimestamp(stepZero);
-            const timestampOne = await supplyChain.getTimestamp(stepOne);
-            assert.isAbove(
-                timestampOne.toNumber(), 
-                timestampZero.toNumber()
+
+            assert.isAtLeast(
+                (await supplyChain.getTimestamp(stepOne)).toNumber(), 
+                (await supplyChain.getTimestamp(stepZero)).toNumber(),
             );
         });
     });
