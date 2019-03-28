@@ -28,6 +28,7 @@ contract('SupplyChain', (accounts) => {
             creationDescription = "Creation";
 
             transaction = await supplyChain.newClass(creationDescription, {from: owner})
+            // console.log("Cost: $" + transaction.receipt.gasUsed / 3500000);
 
             assert.equal(transaction.logs.length, 1);
             assert.equal(transaction.logs[0].event, "ClassCreated");
@@ -35,7 +36,7 @@ contract('SupplyChain', (accounts) => {
 
             assert.equal(
                 await supplyChain.classDescription(transaction.logs[0].args.classId.toNumber()), 
-                "Creation",
+                creationDescription,
             );
             let totalClasses = (await supplyChain.totalClasses()).toNumber();
             assert.equal(
@@ -43,22 +44,22 @@ contract('SupplyChain', (accounts) => {
                 1,
             );
 
-            /* certificationDescription = 'Certification';
-            certificationClass = (await supplyChain.newClass.call(certificationDescription)).toNumber();
-            await supplyChain.newClass(certificationDescription);
+            certificationDescription = 'Certification';
+            transaction = await supplyChain.newClass(certificationDescription, {from: owner});
+
+            assert.equal(transaction.logs.length, 1);
+            assert.equal(transaction.logs[0].event, "ClassCreated");
+            assert.equal(transaction.logs[0].args.classId.toNumber(), 1);
+
             assert.equal(
-                certificationClass, 
-                1,
-            );
-            assert.equal(
-                await supplyChain.classDescription.call(certificationClass), 
+                await supplyChain.classDescription(transaction.logs[0].args.classId.toNumber()), 
                 certificationDescription,
             );
             totalClasses = (await supplyChain.totalClasses()).toNumber();
             assert.equal(
                 totalClasses, 
                 2,
-            ); */
+            );
         });
     });
 
@@ -67,68 +68,88 @@ contract('SupplyChain', (accounts) => {
             supplyChain = await SupplyChain.new();
 
             creationDescription = 'Creation';
-            await supplyChain.newClass(creationDescription);
-            creationClass = await supplyChain.totalClasses() - 1;
+            transaction = await supplyChain.newClass(creationDescription);
+            creationClass = transaction.logs[0].args.classId;
 
             certificationDescription = 'Certification';
-            await supplyChain.newClass(certificationDescription);
-            certificationClass = await supplyChain.totalClasses() - 1;
+            transaction = await supplyChain.newClass(certificationDescription);
+            certificationClass = transaction.logs[0].args.classId;
 
         });
 
         it('newStep creates a step.', async () => { 
-            await supplyChain.newStep([], creationClass);
-            const stepZero = await supplyChain.totalSteps() - 1;
-            await supplyChain.newStep([], creationClass);
-            const stepOne = await supplyChain.totalSteps() - 1; 
+            stepZero = (
+                await supplyChain.newStep([], creationClass)
+            ).logs[0].args.stepId;
+            stepOne = (
+                await supplyChain.newStep([], creationClass)
+            ).logs[0].args.stepId;
 
             assert.equal(stepZero, 0);
             assert.equal(stepOne, 1);
         });
 
         it('newStep creates chains.', async () => {
-            await supplyChain.newStep([], creationClass);
-            const stepZero = await supplyChain.totalSteps() - 1; 
-            await supplyChain.newStep([stepZero], certificationClass);
-            const stepOne = await supplyChain.totalSteps() - 1; 
-            await supplyChain.newStep([stepOne], certificationClass);
-            const stepTwo = await supplyChain.totalSteps() - 1; 
-            const parentOfTwo = await supplyChain.getParents(stepTwo);
+            stepZero = (
+                await supplyChain.newStep([], creationClass)
+            ).logs[0].args.stepId;
+            stepOne = (
+                await supplyChain.newStep([stepZero], certificationClass)
+            ).logs[0].args.stepId;
+            stepTwo = (
+                await supplyChain.newStep([stepOne], certificationClass)
+            ).logs[0].args.stepId;
 
-            assert.equal(parentOfTwo[0], 1);
+            assert.equal(
+                (await supplyChain.getParents(stepOne))[0].toNumber(), 
+                stepZero.toNumber()
+            );
+            assert.equal(
+                (await supplyChain.getParents(stepTwo))[0].toNumber(), 
+                stepOne.toNumber()
+            );
         });
 
         it('newStep allows multiple parents.', async () => {
-            await supplyChain.newStep([], creationClass);
-            const stepZero = await supplyChain.totalSteps() - 1; 
-            await supplyChain.newStep([stepZero], certificationClass);
-            const stepOne = await supplyChain.totalSteps() - 1; 
-            await supplyChain.newStep([stepZero], certificationClass);
-            const stepTwo = await supplyChain.totalSteps() - 1; 
-            await supplyChain.newStep([stepOne, stepTwo], 1);
-            const stepThree = await supplyChain.totalSteps() - 1; 
-            const parentsOfThree = await supplyChain.getParents(stepThree);
+            stepZero = (
+                await supplyChain.newStep([], creationClass)
+            ).logs[0].args.stepId;
+            stepOne = (
+                await supplyChain.newStep([], creationClass)
+            ).logs[0].args.stepId;
+            stepTwo = (
+                await supplyChain.newStep([stepZero, stepOne], certificationClass)
+            ).logs[0].args.stepId;
 
-            assert.equal(parentsOfThree[0], stepOne);
-            assert.equal(parentsOfThree[1], stepTwo);
-            assert.equal(parentsOfThree.length, 2);
+            assert.equal(
+                (await supplyChain.getParents(stepTwo))[0].toNumber(), 
+                stepZero.toNumber()
+            );
+            assert.equal(
+                (await supplyChain.getParents(stepTwo))[1].toNumber(), 
+                stepOne.toNumber()
+            );
         });
 
         it('newStep records step creator.', async () => {
-            await supplyChain.newStep([], creationClass);
-            const stepZero = await supplyChain.totalSteps() - 1; 
-            await supplyChain.newStep([stepZero], certificationClass, { from: user });
-            const stepOne = await supplyChain.totalSteps() - 1; 
+            stepZero = (
+                await supplyChain.newStep([], creationClass)
+            ).logs[0].args.stepId;
+            stepOne = (
+                await supplyChain.newStep([stepZero], certificationClass, { from: user })
+            ).logs[0].args.stepId;
             const certifier = await supplyChain.getOwner(stepOne);
 
             assert.equal(certifier, user);
         });
 
         it('newStep records timestamp.', async () => {
-            await supplyChain.newStep([], creationClass);
-            const stepZero = await supplyChain.totalSteps() - 1; 
-            await supplyChain.newStep([stepZero], certificationClass, { from: user });
-            const stepOne = await supplyChain.totalSteps() - 1; 
+            stepZero = (
+                await supplyChain.newStep([], creationClass)
+            ).logs[0].args.stepId;
+            stepOne = (
+                await supplyChain.newStep([stepZero], certificationClass)
+            ).logs[0].args.stepId;
 
             assert.isAtLeast(
                 (await supplyChain.getTimestamp(stepOne)).toNumber(), 
