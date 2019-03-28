@@ -26,18 +26,24 @@ contract('SupplyChain', (accounts) => {
 
         it('newClass creates a class.', async () => {
             creationDescription = "Creation";
-            creationClass = (await supplyChain.newClass.call(creationDescription)).toNumber();
-            await supplyChain.newClass(creationDescription);
+
+            transaction = await supplyChain.newClass(creationDescription, {from: owner})
+
+            assert.equal(transaction.logs.length, 1);
+            assert.equal(transaction.logs[0].event, "ClassCreated");
+            assert.equal(transaction.logs[0].args.classId.toNumber(), 0);
+
             assert.equal(
-                creationClass, 
-                0,
-            );
-            assert.equal(
-                await supplyChain.classDescription.call(creationClass), 
+                await supplyChain.classDescription(transaction.logs[0].args.classId.toNumber()), 
                 "Creation",
             );
+            let totalClasses = (await supplyChain.totalClasses()).toNumber();
+            assert.equal(
+                totalClasses, 
+                1,
+            );
 
-            certificationDescription = 'Certification';
+            /* certificationDescription = 'Certification';
             certificationClass = (await supplyChain.newClass.call(certificationDescription)).toNumber();
             await supplyChain.newClass(certificationDescription);
             assert.equal(
@@ -48,6 +54,11 @@ contract('SupplyChain', (accounts) => {
                 await supplyChain.classDescription.call(certificationClass), 
                 certificationDescription,
             );
+            totalClasses = (await supplyChain.totalClasses()).toNumber();
+            assert.equal(
+                totalClasses, 
+                2,
+            ); */
         });
     });
 

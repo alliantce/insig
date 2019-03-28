@@ -11,6 +11,9 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract SupplyChain {
     using SafeMath for uint256;
 
+    event ClassCreated(uint8 classId);
+    event StepCreated(uint256 stepId);
+
     /**
      * @notice Step counter
      */
@@ -58,8 +61,9 @@ contract SupplyChain {
         returns(uint8)
     {
         require(classes.length < 256, "Maximum number of classes reached.");
-        classes.push(_classDescription);
-        return uint8(classes.length - 1);
+        uint8 classId = uint8(classes.push(_classDescription)) - 1;
+        emit ClassCreated(classId);
+        return classId;
     }
 
     /**
@@ -108,6 +112,7 @@ contract SupplyChain {
             _class, 
             uint32(block.timestamp)
         );
+        emit StepCreated(_totalSteps);
         _totalSteps += 1;
         return _totalSteps;
     }
