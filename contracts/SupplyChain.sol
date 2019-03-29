@@ -15,20 +15,23 @@ contract SupplyChain {
     event StepCreated(uint256 stepId);
 
     /**
-     * @notice Step counter
-     */
-    uint256 internal _totalSteps;
-
-    /**
-     * @notice Supply chain step data. By not chaining these and not allowing them to be modified 
-     * we create an Acyclic Directed Graph. The step id is not stored in the Step itself because
-     * it is always previously available to whoever looks for the step.
+     * @notice Supply chain step data. By chaining these and not allowing them to be modified 
+     * afterwards we create an Acyclic Directed Graph. 
+     * @dev The step id is not stored in the Step itself because it is always previously available
+     * to whoever looks for the step. The types of the struct members have been chosen for optimal
+     * struct packing.
+     * @param owner The creator of this step.
+     * @param timestamp Indicative timestamp of the creation of this step, not exact.
+     * @param class The class of this step.
+     * @param instance The id of the object that this step refers to.
+     * @param parents The ids of the steps that precede this one in the supply chain.
      */
     struct Step{
-        uint256[] parents;
         address owner;
-        uint8 class;
         uint32 timestamp;
+        uint8 class;
+        uint216 instance;
+        uint256[] parents;
     }
 
     /**
@@ -36,6 +39,16 @@ contract SupplyChain {
      * structs are not supported in solidity yet.
      */
     mapping(uint256 => Step) steps;
+
+    /**
+     * @notice Step counter
+     */
+    uint256 internal _totalSteps;
+
+    /**
+     * @notice Mapping from instance id to the last step in the lifecycle of that instance.
+     */
+    mapping(uint256 => uint256) internal _lastSteps;
 
     /**
      * @notice The step classes, defined by their index in an array of their descriptions. Examples
@@ -54,6 +67,11 @@ contract SupplyChain {
     /**
      * @notice A method to create a new step class.
      * @param _classDescription The description of the class being created.
+     * @dev Product lines can be implemented with a step class that indicates the creation of a 
+     * product line that is a parent to all instances of that product. The creation of an instance 
+     * would also be its own step class, which would usually have as parents a product line step
+     * and other instance steps for parts and materials. If implementing product lines as a step
+     * class the instance id could be thought of as the product id and retrieved from _lastSteps
      * @return The class id.
      */
     function newClass(string memory _classDescription)
@@ -95,26 +113,30 @@ contract SupplyChain {
     /**
      * @notice A method to create a new supply chain step. The msg.sender is recorded as the owner
      * of the step, which might possibly mean owner of the underlying asset as well.
+     * @param _instanceId The instance id that this step is for.
      * @param _previousSteps An array of the step ids for steps considered to be predecessors to
      * this one. Often this would just mean that the event refers to the same asset as the event
      * pointed to, but for steps like Creation it could point to the parts this asset is made of.
-     * @param _class The index for the step class as defined in the classes array.
+     * @param _classId The index for the step class as defined in the classes array.
      * @return The step id of the step created.
      */
-    function newStep(uint256[] memory _previousSteps, uint8 _class)
+    function newStep(uint8 _classId, uint216 _instanceId, uint256[] memory _previousSteps)
         public
         returns(uint256)
     {
-        require(_class < classes.length, "Event class not recognized.");
+        require(_classId < classes.length, "Event class not recognized.");
         steps[_totalSteps] = Step(
-            _previousSteps, 
             msg.sender, 
-            _class, 
-            uint32(block.timestamp)
+            uint32(block.timestamp),
+            _classId, 
+            _instanceId,
+            _previousSteps
         );
-        emit StepCreated(_totalSteps);
+        uint256 stepId = _totalSteps;
         _totalSteps += 1;
-        return _totalSteps;
+        _lastSteps[_instanceId] = stepId;
+        emit StepCreated(stepId);
+        return stepId;
     }
 
     /**
@@ -130,9 +152,39 @@ contract SupplyChain {
     }
 
     /**
+     * @notice A method to retrieve the last step for an instance.
+     * @param _instanceId The instance id to retrieve the last step for.
+     * @dev This contract doesn't implement methods to retrieve more than one step at a time, that
+     * is left to the frontend. A suggested implementation is that the _lastSteps mapping is used
+     * as a starting point to retrieve the lifecycle of an instance, and any filtering is done by
+     * the frontend.
+     * @return The step id of the last step for the instance id given as a parameter.
+     */
+    function getLastStep(uint256 _instanceId)
+        public
+        view
+        returns(uint256)
+    {
+        return _lastSteps[_instanceId];
+    }
+
+    /**
+     * @notice A method to retrieve the instance of a step.
+     * @param _stepId The step id of the step to retrieve the instance for.
+     * @return The instance id of the step given as a parameter.
+     */
+    function getInstance(uint256 _stepId)
+        public
+        view
+        returns(uint256)
+    {
+        return steps[_stepId].instance;
+    }
+
+    /**
      * @notice A method to retrieve the immediate parents of a step.
      * @param _stepId The step id of the step to retrieve parents for.
-     * @return An array with the setp ids of the immediate parents of the step given as a parameter.
+     * @return An array with the step ids of the immediate parents of the step given as a parameter.
      */
     function getParents(uint256 _stepId)
         public
