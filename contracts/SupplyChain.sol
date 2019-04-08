@@ -11,8 +11,8 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract SupplyChain {
     using SafeMath for uint256;
 
-    event ClassCreated(uint8 classId);
-    event StepCreated(uint256 stepId);
+    event ClassCreated(uint8 class);
+    event StepCreated(uint256 step);
 
     /**
      * @notice Supply chain step data. By chaining these and not allowing them to be modified
@@ -76,23 +76,23 @@ contract SupplyChain {
         returns(uint8)
     {
         require(classes.length < 256, "Maximum number of classes reached.");
-        uint8 classId = uint8(classes.push(_classDescription)) - 1;
-        emit ClassCreated(classId);
-        return classId;
+        uint8 class = uint8(classes.push(_classDescription)) - 1;
+        emit ClassCreated(class);
+        return class;
     }
 
     /**
      * @notice A method to retrieve the description for a class.
-     * @param _classId The identifier for the class.
+     * @param _class The identifier for the class.
      * @return The class description.
      */
-    function classDescription(uint8 _classId)
+    function classDescription(uint8 _class)
         public
         view
         returns(string memory)
     {
-        require(_classId < classes.length, "Event class not recognized.");
-        return classes[_classId];
+        require(_class < classes.length, "Event class not recognized.");
+        return classes[_class];
     }
 
     /**
@@ -110,69 +110,69 @@ contract SupplyChain {
     /**
      * @notice A method to create a new supply chain step. The msg.sender is recorded as the owner
      * of the step, which might possibly mean owner of the underlying asset as well.
-     * @param _instanceId The instance id that this step is for. This must be either the instanceId 
-     * of one of the steps in _previousSteps, or an instanceId that has never been used before. 
+     * @param _instance The instance id that this step is for. This must be either the instance 
+     * of one of the steps in _previousSteps, or an instance that has never been used before. 
      * @param _previousSteps An array of the step ids for steps considered to be predecessors to
      * this one. Often this would just mean that the event refers to the same asset as the event
      * pointed to, but for steps like Creation it could point to the parts this asset is made of.
-     * @param _classId The index for the step class as defined in the classes array.
+     * @param _class The index for the step class as defined in the classes array.
      * @return The step id of the step created.
      */
-    function newStep(uint8 _classId, uint216 _instanceId, uint256[] memory _previousSteps)
+    function newStep(uint8 _class, uint216 _instance, uint256[] memory _previousSteps)
         public
         returns(uint256)
     {
-        require(_classId < classes.length, "Event class not recognized.");
+        require(_class < classes.length, "Event class not recognized.");
         for (uint i = 0; i < _previousSteps.length; i++){
             require(isLastStep(_previousSteps[i]), "Append only on last steps.");
         }
-        bool repeatInstanceId = false;
+        bool repeatInstance = false;
         for (uint i = 0; i < _previousSteps.length; i++){
-            if (steps[_previousSteps[i]].instance == _instanceId) {
-                repeatInstanceId = true;
+            if (steps[_previousSteps[i]].instance == _instance) {
+                repeatInstance = true;
                 break;
             }
         }
-        if (!repeatInstanceId){
-            require(lastSteps[_instanceId] == 0, "InstanceId not valid.");
+        if (!repeatInstance){
+            require(lastSteps[_instance] == 0, "Instance not valid.");
         }
         
         steps[totalSteps] = Step(
             msg.sender,
-            _classId,
-            _instanceId,
+            _class,
+            _instance,
             _previousSteps
         );
-        uint256 stepId = totalSteps;
+        uint256 step = totalSteps;
         totalSteps += 1;
-        lastSteps[_instanceId] = stepId;
-        emit StepCreated(stepId);
-        return stepId;
+        lastSteps[_instance] = step;
+        emit StepCreated(step);
+        return step;
     }
 
     /**
      * @notice A method to verify whether a step is the last of an instance.
-     * @param _stepId The step id of the step to verify.
+     * @param _step The step id of the step to verify.
      * @return Whether a step is the last of an instance.
      */
-    function isLastStep(uint256 _stepId)
+    function isLastStep(uint256 _step)
         public
         view
         returns(bool)
     {
-        return lastSteps[steps[_stepId].instance] == _stepId;
+        return lastSteps[steps[_step].instance] == _step;
     }
 
     /**
      * @notice A method to retrieve the immediate parents of a step.
-     * @param _stepId The step id of the step to retrieve parents for.
+     * @param _step The step id of the step to retrieve parents for.
      * @return An array with the step ids of the immediate parents of the step given as a parameter.
      */
-    function getParents(uint256 _stepId)
+    function getParents(uint256 _step)
         public
         view
         returns(uint256[] memory)
     {
-        return steps[_stepId].parents;
+        return steps[_step].parents;
     }
 }
