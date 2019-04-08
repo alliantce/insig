@@ -122,6 +122,9 @@ contract SupplyChain {
         returns(uint256)
     {
         require(_classId < classes.length, "Event class not recognized.");
+        for (uint i = 0; i < _previousSteps.length; i++){
+            require(isLastStep(_previousSteps[i]), "Append only on last steps.");
+        }
         steps[totalSteps] = Step(
             msg.sender,
             _classId,

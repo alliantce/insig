@@ -1,6 +1,7 @@
 const SupplyChain = artifacts.require('./SupplyChain.sol');
 
 const chai = require('chai');
+const { itShouldThrow } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
@@ -104,7 +105,6 @@ contract('SupplyChain', (accounts) => {
         it('newStep creates chains.', async () => {
             const productZeroId = 100;
             const instanceZeroId = 200;
-            // const certificationZeroId = 300;
 
             const stepZero = (
                 await supplyChain.newStep(productCreationClass, productZeroId, [])
@@ -146,6 +146,24 @@ contract('SupplyChain', (accounts) => {
                 (await supplyChain.isLastStep(stepOne))
             );
         });
+
+        itShouldThrow(
+            'append only on last steps',
+            async () => {    
+                const instanceZeroId = 100;
+    
+                const stepZero = (
+                    await supplyChain.newStep(instanceCreationClass, instanceZeroId, [])
+                ).logs[0].args.stepId;
+                const stepOne = (
+                    await supplyChain.newStep(instanceCertificationClass, instanceZeroId, [stepZero])
+                ).logs[0].args.stepId;
+                const stepTwo = (
+                    await supplyChain.newStep(instanceCertificationClass, instanceZeroId, [stepZero])
+                ).logs[0].args.stepId;
+            },
+            'Append only on last steps.',
+        );
 
         it('newStep allows multiple parents.', async () => {
             const partZeroId = 200;
