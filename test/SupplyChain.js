@@ -169,23 +169,6 @@ contract('SupplyChain', (accounts) => {
             assert.equal(certifier, user);
         });
 
-        it('newStep records timestamp.', async () => {
-            const productZeroId = 100;
-            const instanceZeroId = 200;
-
-            const stepZero = (
-                await supplyChain.newStep(productCreationClass, productZeroId, [])
-            ).logs[0].args.stepId;
-            const stepOne = (
-                await supplyChain.newStep(instanceCreationClass, instanceZeroId, [stepZero])
-            ).logs[0].args.stepId;
-
-            assert.isAtLeast(
-                ((await supplyChain.steps.call(stepOne)).timestamp).toNumber(),
-                ((await supplyChain.steps.call(stepZero)).timestamp).toNumber(),
-            );
-        });
-
         it('newStep records class.', async () => {
             const productZeroId = 100;
             const instanceZeroId = 200;

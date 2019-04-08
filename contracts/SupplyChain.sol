@@ -21,14 +21,12 @@ contract SupplyChain {
      * to whoever looks for the step. The types of the struct members have been chosen for optimal
      * struct packing.
      * @param owner The creator of this step.
-     * @param timestamp Indicative timestamp of the creation of this step, not exact.
      * @param class The class of this step.
      * @param instance The id of the object that this step refers to.
      * @param parents The ids of the steps that precede this one in the supply chain.
      */
     struct Step {
         address owner;
-        uint32 timestamp;
         uint8 class;
         uint216 instance;
         uint256[] parents;
@@ -126,7 +124,6 @@ contract SupplyChain {
         require(_classId < classes.length, "Event class not recognized.");
         steps[totalSteps] = Step(
             msg.sender,
-            uint32(block.timestamp),
             _classId,
             _instanceId,
             _previousSteps
