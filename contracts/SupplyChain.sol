@@ -15,8 +15,8 @@ contract SupplyChain {
     event StepCreated(uint256 stepId);
 
     /**
-     * @notice Supply chain step data. By chaining these and not allowing them to be modified 
-     * afterwards we create an Acyclic Directed Graph. 
+     * @notice Supply chain step data. By chaining these and not allowing them to be modified
+     * afterwards we create an Acyclic Directed Graph.
      * @dev The step id is not stored in the Step itself because it is always previously available
      * to whoever looks for the step. The types of the struct members have been chosen for optimal
      * struct packing.
@@ -26,7 +26,7 @@ contract SupplyChain {
      * @param instance The id of the object that this step refers to.
      * @param parents The ids of the steps that precede this one in the supply chain.
      */
-    struct Step{
+    struct Step {
         address owner;
         uint32 timestamp;
         uint8 class;
@@ -55,20 +55,19 @@ contract SupplyChain {
      * could be Creation, Certification, Handover, Split, Merge, Destruction
      */
     string[] classes;
-    
+
     /**
      * @notice The contract constructor, empty as of now.
      */
-    constructor() 
-        public
-    {
+    // solium-disable-next-line no-empty-blocks
+    constructor() public {
     }
 
     /**
      * @notice A method to create a new step class.
      * @param _classDescription The description of the class being created.
-     * @dev Product lines can be implemented with a step class that indicates the creation of a 
-     * product line that is a parent to all instances of that product. The creation of an instance 
+     * @dev Product lines can be implemented with a step class that indicates the creation of a
+     * product line that is a parent to all instances of that product. The creation of an instance
      * would also be its own step class, which would usually have as parents a product line step
      * and other instance steps for parts and materials. If implementing product lines as a step
      * class the instance id could be thought of as the product id and retrieved from _lastSteps
@@ -126,9 +125,9 @@ contract SupplyChain {
     {
         require(_classId < classes.length, "Event class not recognized.");
         steps[_totalSteps] = Step(
-            msg.sender, 
+            msg.sender,
             uint32(block.timestamp),
-            _classId, 
+            _classId,
             _instanceId,
             _previousSteps
         );

@@ -1,28 +1,57 @@
 {
-  "extends": "solium:all",
-  "plugins": ["security"],
-  "rules": {
-    "error-reason": "off",
-    "indentation": ["error", 4],
-    "lbrace": "off",
-    "linebreak-style": ["error", "unix"],
-    "max-len": ["error", 126],
-    "no-constant": ["error"],
-    "no-empty-blocks": "off",
-    "quotes": ["error", "double"],
-    "uppercase": "off",
-    "visibility-first": "error",
-    "security/enforce-explicit-visibility": ["error"],
-    "security/no-block-members": ["warning"],
-    "security/no-inline-assembly": ["warning"],
-    "imports-on-top": "warning",
-    "variable-declarations": "warning",
-    "array-declarations": "warning",
-    "operator-whitespace": "warning",
-    "function-whitespace": "warning",
-    "semicolon-whitespace": "warning",
-    "comma-whitespace": "warning",
-    "conditionals-whitespace": "warning",
-    "arg-overflow": ["warning", 3]
-  }
+    "extends": "solium:all",
+    "plugins": [
+        "security"
+    ],
+    "rules": {
+        "imports-on-top": "warning",
+        "variable-declarations": "warning",
+        "array-declarations": "warning",
+        "operator-whitespace": "warning",
+        "conditionals-whitespace": "warning",
+        "comma-whitespace": "warning",
+        "semicolon-whitespace": "warning",
+        "function-whitespace": "warning",
+        "lbrace": "warning",
+        "mixedcase": "error",
+        "camelcase": "error",
+        "uppercase": "off",
+        "no-empty-blocks": "warning",
+        "no-unused-vars": "warning",
+        "quotes": [
+            "error",
+            "double"
+        ],
+        "blank-lines": "warning",
+        "indentation": [
+            "error",
+            4
+        ],
+        "arg-overflow": [
+            "warning",
+            3
+        ],
+        "whitespace": "warning",
+        "deprecated-suicide": "warning",
+        "pragma-on-top": "warning",
+        "function-order": "warning",
+        "emit": "warning",
+        "no-constant": [
+            "error"
+        ],
+        "value-in-payable": "warning",
+        "no-experimental": "warning",
+        "max-len": [
+            "error",
+            126
+        ],
+        "error-reason": "off",
+        "visibility-first": "error",
+        "linebreak-style": [
+            "error",
+            "unix"
+        ],
+        "constructor": "warning",
+        "no-trailing-whitespace": "warning"
+    }
 }
