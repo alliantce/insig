@@ -110,7 +110,8 @@ contract SupplyChain {
     /**
      * @notice A method to create a new supply chain step. The msg.sender is recorded as the owner
      * of the step, which might possibly mean owner of the underlying asset as well.
-     * @param _instanceId The instance id that this step is for.
+     * @param _instanceId The instance id that this step is for. This must be either the instanceId 
+     * of one of the steps in _previousSteps, or an instanceId that has never been used before. 
      * @param _previousSteps An array of the step ids for steps considered to be predecessors to
      * this one. Often this would just mean that the event refers to the same asset as the event
      * pointed to, but for steps like Creation it could point to the parts this asset is made of.
@@ -125,6 +126,17 @@ contract SupplyChain {
         for (uint i = 0; i < _previousSteps.length; i++){
             require(isLastStep(_previousSteps[i]), "Append only on last steps.");
         }
+        bool repeatInstanceId = false;
+        for (uint i = 0; i < _previousSteps.length; i++){
+            if (steps[_previousSteps[i]].instance == _instanceId) {
+                repeatInstanceId = true;
+                break;
+            }
+        }
+        if (!repeatInstanceId){
+            require(lastSteps[_instanceId] == 0, "InstanceId not valid.");
+        }
+        
         steps[totalSteps] = Step(
             msg.sender,
             _classId,

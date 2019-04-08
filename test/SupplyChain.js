@@ -190,6 +190,24 @@ contract('SupplyChain', (accounts) => {
             );
         });
 
+        itShouldThrow(
+            'instanceId must be unique or the same as a direct precedent.',
+            async () => {    
+                const instanceZeroId = 100;
+    
+                const stepZero = (
+                    await supplyChain.newStep(instanceCreationClass, instanceZeroId, [])
+                ).logs[0].args.stepId;
+                const stepOne = (
+                    await supplyChain.newStep(instanceCertificationClass, instanceZeroId, [stepZero])
+                ).logs[0].args.stepId;
+                const stepTwo = (
+                    await supplyChain.newStep(instanceCreationClass, instanceZeroId, [])
+                ).logs[0].args.stepId;
+            },
+            'InstanceId not valid.',
+        );
+
         it('newStep records step creator.', async () => {
             const productZeroId = 100;
             const instanceZeroId = 200;
