@@ -164,7 +164,7 @@ contract('SupplyChain', (accounts) => {
             const stepTwo = (
                 await supplyChain.newStep(instanceCertificationClass, instanceZeroId, [stepOne], { from: user })
             ).logs[0].args.stepId;
-            const certifier = await supplyChain.getOwner(stepTwo);
+            const certifier = (await supplyChain.steps.call(stepTwo)).owner;
 
             assert.equal(certifier, user);
         });
@@ -181,8 +181,8 @@ contract('SupplyChain', (accounts) => {
             ).logs[0].args.stepId;
 
             assert.isAtLeast(
-                (await supplyChain.getTimestamp(stepOne)).toNumber(),
-                (await supplyChain.getTimestamp(stepZero)).toNumber(),
+                ((await supplyChain.steps.call(stepOne)).timestamp).toNumber(),
+                ((await supplyChain.steps.call(stepZero)).timestamp).toNumber(),
             );
         });
 
@@ -198,11 +198,11 @@ contract('SupplyChain', (accounts) => {
             ).logs[0].args.stepId;
 
             assert.equal(
-                (await supplyChain.getClass(stepZero)).toNumber(),
+                ((await supplyChain.steps.call(stepZero)).class).toNumber(),
                 productCreationClass.toNumber(),
             );
             assert.equal(
-                (await supplyChain.getClass(stepOne)).toNumber(),
+                ((await supplyChain.steps.call(stepOne)).class).toNumber(),
                 instanceCreationClass.toNumber(),
             );
         });
@@ -226,19 +226,19 @@ contract('SupplyChain', (accounts) => {
             ).logs[0].args.stepId;
 
             assert.equal(
-                (await supplyChain.getInstance(stepZero)).toNumber(),
+                ((await supplyChain.steps.call(stepZero)).instance).toNumber(),
                 productZeroId,
             );
             assert.equal(
-                (await supplyChain.getInstance(stepOne)).toNumber(),
+                ((await supplyChain.steps.call(stepOne)).instance).toNumber(),
                 instanceZeroId,
             );
             assert.equal(
-                (await supplyChain.getInstance(stepTwo)).toNumber(),
+                ((await supplyChain.steps.call(stepTwo)).instance).toNumber(),
                 certificationZeroId,
             );
             assert.equal(
-                (await supplyChain.getInstance(stepThree)).toNumber(),
+                ((await supplyChain.steps.call(stepThree)).instance).toNumber(),
                 instanceZeroId,
             );
         });
@@ -262,15 +262,15 @@ contract('SupplyChain', (accounts) => {
             ).logs[0].args.stepId;
 
             assert.equal(
-                (await supplyChain.getLastStep(productZeroId)).toNumber(),
+                ((await supplyChain.lastSteps.call(productZeroId))).toNumber(),
                 stepZero,
             );
             assert.equal(
-                (await supplyChain.getLastStep(instanceZeroId)).toNumber(),
+                ((await supplyChain.lastSteps.call(instanceZeroId))).toNumber(),
                 stepThree,
             );
             assert.equal(
-                (await supplyChain.getLastStep(certificationZeroId)).toNumber(),
+                ((await supplyChain.lastSteps.call(certificationZeroId))).toNumber(),
                 stepTwo,
             );
         });
