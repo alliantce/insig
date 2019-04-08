@@ -38,23 +38,23 @@ contract SupplyChain {
      * @notice All steps are directly accessible through a mapping keyed by the step ids. Recursive
      * structs are not supported in solidity yet.
      */
-    mapping(uint256 => Step) steps;
+    mapping(uint256 => Step) public steps;
 
     /**
      * @notice Step counter
      */
-    uint256 internal _totalSteps;
+    uint256 public totalSteps;
 
     /**
      * @notice Mapping from instance id to the last step in the lifecycle of that instance.
      */
-    mapping(uint256 => uint256) internal _lastSteps;
+    mapping(uint256 => uint256) public lastSteps;
 
     /**
      * @notice The step classes, defined by their index in an array of their descriptions. Examples
      * could be Creation, Certification, Handover, Split, Merge, Destruction
      */
-    string[] classes;
+    string[] internal classes;
 
     /**
      * @notice The contract constructor, empty as of now.
@@ -70,7 +70,7 @@ contract SupplyChain {
      * product line that is a parent to all instances of that product. The creation of an instance
      * would also be its own step class, which would usually have as parents a product line step
      * and other instance steps for parts and materials. If implementing product lines as a step
-     * class the instance id could be thought of as the product id and retrieved from _lastSteps
+     * class the instance id could be thought of as the product id and retrieved from lastSteps
      * @return The class id.
      */
     function newClass(string memory _classDescription)
@@ -124,60 +124,18 @@ contract SupplyChain {
         returns(uint256)
     {
         require(_classId < classes.length, "Event class not recognized.");
-        steps[_totalSteps] = Step(
+        steps[totalSteps] = Step(
             msg.sender,
             uint32(block.timestamp),
             _classId,
             _instanceId,
             _previousSteps
         );
-        uint256 stepId = _totalSteps;
-        _totalSteps += 1;
-        _lastSteps[_instanceId] = stepId;
+        uint256 stepId = totalSteps;
+        totalSteps += 1;
+        lastSteps[_instanceId] = stepId;
         emit StepCreated(stepId);
         return stepId;
-    }
-
-    /**
-     * @notice A method to return the number of steps created.
-     * @return The number of steps created.
-     */
-    function totalSteps()
-        public
-        view
-        returns(uint256)
-    {
-        return _totalSteps;
-    }
-
-    /**
-     * @notice A method to retrieve the last step for an instance.
-     * @param _instanceId The instance id to retrieve the last step for.
-     * @dev This contract doesn't implement methods to retrieve more than one step at a time, that
-     * is left to the frontend. A suggested implementation is that the _lastSteps mapping is used
-     * as a starting point to retrieve the lifecycle of an instance, and any filtering is done by
-     * the frontend.
-     * @return The step id of the last step for the instance id given as a parameter.
-     */
-    function getLastStep(uint256 _instanceId)
-        public
-        view
-        returns(uint256)
-    {
-        return _lastSteps[_instanceId];
-    }
-
-    /**
-     * @notice A method to retrieve the instance of a step.
-     * @param _stepId The step id of the step to retrieve the instance for.
-     * @return The instance id of the step given as a parameter.
-     */
-    function getInstance(uint256 _stepId)
-        public
-        view
-        returns(uint256)
-    {
-        return steps[_stepId].instance;
     }
 
     /**
@@ -191,44 +149,5 @@ contract SupplyChain {
         returns(uint256[] memory)
     {
         return steps[_stepId].parents;
-    }
-
-    /**
-     * @notice A method to retrieve the owner of a step.
-     * @param _stepId The step id of the step to retrieve the owner for.
-     * @return The owner address for the step given as a parameter.
-     */
-    function getOwner(uint256 _stepId)
-        public
-        view
-        returns(address)
-    {
-        return steps[_stepId].owner;
-    }
-
-    /**
-     * @notice A method to retrieve the class of a step.
-     * @param _stepId The step id of the step to retrieve the class for.
-     * @return The class id for the step given as a parameter.
-     */
-    function getClass(uint256 _stepId)
-        public
-        view
-        returns(uint8)
-    {
-        return steps[_stepId].class;
-    }
-
-    /**
-     * @notice A method to retrieve the timestamp of a step.
-     * @param _stepId The step id of the step to retrieve the timestamp for.
-     * @return The timestamp for the step given as a parameter.
-     */
-    function getTimestamp(uint256 _stepId)
-        public
-        view
-        returns(uint32)
-    {
-        return steps[_stepId].timestamp;
     }
 }
