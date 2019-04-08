@@ -136,6 +136,19 @@ contract SupplyChain {
     }
 
     /**
+     * @notice A method to verify whether a step is the last of an instance.
+     * @param _stepId The step id of the step to verify.
+     * @return Whether a step is the last of an instance.
+     */
+    function isLastStep(uint256 _stepId)
+        public
+        view
+        returns(bool)
+    {
+        return lastSteps[steps[_stepId].instance] == _stepId;
+    }
+
+    /**
      * @notice A method to retrieve the immediate parents of a step.
      * @param _stepId The step id of the step to retrieve parents for.
      * @return An array with the step ids of the immediate parents of the step given as a parameter.

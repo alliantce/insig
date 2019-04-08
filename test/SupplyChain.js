@@ -126,6 +126,27 @@ contract('SupplyChain', (accounts) => {
             );
         });
 
+        it('newStep maintains lastSteps.', async () => {
+            const instanceZeroId = 200;
+
+            const stepZero = (
+                await supplyChain.newStep(instanceCreationClass, instanceZeroId, [])
+            ).logs[0].args.stepId;
+            const stepOne = (
+                await supplyChain.newStep(instanceCreationClass, instanceZeroId, [stepZero])
+            ).logs[0].args.stepId;
+
+            assert.isFalse(
+                (await supplyChain.isLastStep(10))
+            );
+            assert.isFalse(
+                (await supplyChain.isLastStep(stepZero))
+            );
+            assert.isTrue(
+                (await supplyChain.isLastStep(stepOne))
+            );
+        });
+
         it('newStep allows multiple parents.', async () => {
             const partZeroId = 200;
             const partOneId = 201;
