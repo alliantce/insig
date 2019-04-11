@@ -9,7 +9,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  * @notice Implements a basic compositional supply chain contract.
  */
 contract SupplyChain {
-    using SafeMath for uint256;
+    // using SafeMath for uint256;
 
     event ActionCreated(uint8 action);
     event StepCreated(uint256 step);
