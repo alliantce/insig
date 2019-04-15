@@ -38,6 +38,9 @@ contract SupplyChain {
      */
     mapping(uint256 => Step) public steps;
 
+    /** @notice Record of all items ever created. */
+    int256[] public items;
+
     /**
      * @notice Step counter
      */
@@ -136,7 +139,8 @@ contract SupplyChain {
         if (!repeatInstance){
             require(lastSteps[_item] == 0, "Instance not valid.");
         }
-        
+        items.push(_item);
+
         steps[totalSteps] = Step(
             msg.sender,
             _action,
