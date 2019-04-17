@@ -5,6 +5,7 @@ module.exports = (deployer) => {
     deployer.deploy(
         RBAC,
     );
+    deployer.link(RBAC, SupplyChain);
     deployer.deploy(
         SupplyChain,
     );

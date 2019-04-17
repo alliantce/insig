@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 // import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./RBAC.sol";
 
 
 /**
@@ -8,7 +9,7 @@ pragma solidity ^0.5.0;
  * @author Alberto Cuesta Canada
  * @notice Implements a basic compositional supply chain contract.
  */
-contract SupplyChain {
+contract SupplyChain is RBAC {
     // using SafeMath for uint256;
 
     event ActionCreated(uint8 action);
@@ -24,12 +25,16 @@ contract SupplyChain {
      * @param action The action of this step.
      * @param item The id of the object that this step refers to.
      * @param precedents The ids of the steps that precede this one in the supply chain.
+     * @param appenders The roles allowed to append steps to this one.
+     * @param admins The roles allowed to append steps with different permissions.
      */
     struct Step {
         address creator;
         uint8 action;
         uint248 item;
         uint256[] precedents;
+        uint256 appenders;
+        uint256 admins;
     }
 
     /**
@@ -113,25 +118,38 @@ contract SupplyChain {
     /**
      * @notice A method to create a new supply chain step. The msg.sender is recorded as the creator
      * of the step, which might possibly mean creator of the underlying asset as well.
+     * @param _action The index for the step action as defined in the actions array.
      * @param _item The item id that this step is for. This must be either the item 
-     * of one of the steps in _previousSteps, or an item that has never been used before. 
-     * @param _previousSteps An array of the step ids for steps considered to be predecessors to
+     * of one of the steps in _precedents, or an item that has never been used before. 
+     * @param _precedents An array of the step ids for steps considered to be predecessors to
      * this one. Often this would just mean that the event refers to the same asset as the event
      * pointed to, but for steps like Creation it could point to the parts this asset is made of.
-     * @param _action The index for the step action as defined in the actions array.
+     * @param _appenders The roles allowed to append steps to this one.
+     * @param _admins The roles allowed to append steps with different permissions.
      * @return The step id of the step created.
      */
-    function newStep(uint8 _action, uint216 _item, uint256[] memory _previousSteps)
+    function newStep
+    (
+        uint8 _action, 
+        uint216 _item, 
+        uint256[] memory _precedents,
+        uint256 _appenders,
+        uint256 _admins
+    )
         public
         returns(uint256)
     {
+
         require(_action < actions.length, "Event action not recognized.");
-        for (uint i = 0; i < _previousSteps.length; i++){
-            require(isLastStep(_previousSteps[i]), "Append only on last steps.");
+        
+        for (uint i = 0; i < _precedents.length; i++){
+            require(isLastStep(_precedents[i]), "Append only on last steps.");
         }
+
+        // Check the instance id is consistent
         bool repeatInstance = false;
-        for (uint i = 0; i < _previousSteps.length; i++){
-            if (steps[_previousSteps[i]].item == _item) {
+        for (uint i = 0; i < _precedents.length; i++){
+            if (steps[_precedents[i]].item == _item) {
                 repeatInstance = true;
                 break;
             }
@@ -141,11 +159,34 @@ contract SupplyChain {
         }
         items.push(_item);
 
+        // If there are no precedents check user belongs to appenders of the current step.
+        if (_precedents.length == 0) {
+            require(memberOf(msg.sender, _appenders), "Creator not in appenders.");
+        }
+
+        // Check user belongs to the appenders of all precedents.
+        else
+        {
+            for (uint i = 0; i < _precedents.length; i++){
+                uint256 appenders = steps[_precedents[i]].appenders;
+                require(memberOf(msg.sender, appenders), "Not an appender of precedents.");
+            }
+        }
+        // If permissions are different to a precedent with the same instance id check user belongs to its admins.
+        if (repeatInstance){
+            Step memory precedent = steps[lastSteps[_item]];
+            if (precedent.appenders != _appenders || precedent.admins != _admins){
+                require(memberOf(msg.sender, precedent.admins), "Needs admin to change permissions.");
+            }
+        }
+
         steps[totalSteps] = Step(
             msg.sender,
             _action,
             _item,
-            _previousSteps
+            _precedents,
+            _appenders,
+            _admins
         );
         uint256 step = totalSteps;
         totalSteps += 1;
