@@ -448,15 +448,36 @@ contract('SupplyChain', (accounts) => {
 
 
             const stepZero = (
-                await supplyChain.newStep(itemCreationAction, partZero, [], appenderRole1, adminRole1, { from: appender1 })
+                await supplyChain.newStep(
+                    itemCreationAction, 
+                    partZero, 
+                    [], 
+                    appenderRole1, 
+                    adminRole1, 
+                    { from: appender1 }
+                )
             ).logs[0].args.step;
             const stepOne = (
-                await supplyChain.newStep(itemCreationAction, partOne, [], appenderRole2, adminRole2, { from: appender2 })
+                await supplyChain.newStep(
+                    itemCreationAction, 
+                    partOne, 
+                    [], 
+                    appenderRole2, 
+                    adminRole2, 
+                    { from: appender2 }
+                )
             ).logs[0].args.step;
             
             const stepTwo = (
-                await supplyChain.newStep(itemCreationAction, partOne, [stepZero, stepOne], appenderRole1, adminRole1, {from: appender1})
-            ).logs[0].args.step;    
+                await supplyChain.newStep(
+                    itemCreationAction, 
+                    partOne, 
+                    [stepZero, stepOne], 
+                    appenderRole1, 
+                    adminRole1, 
+                    {from: appender1}
+                )
+            ).logs[0].args.step;
         });
     });
 });

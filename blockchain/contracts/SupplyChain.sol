@@ -12,7 +12,7 @@ import "./RBAC.sol";
 contract SupplyChain is RBAC {
     // using SafeMath for uint256;
 
-    event ActionCreated(uint8 action);
+    event ActionCreated(uint256 action);
     event StepCreated(uint256 step);
 
     /**
@@ -30,8 +30,8 @@ contract SupplyChain is RBAC {
      */
     struct Step {
         address creator;
-        uint8 action;
-        uint248 item;
+        uint256 action;
+        uint256 item;
         uint256[] precedents;
         uint256 appenders;
         uint256 admins;
@@ -44,7 +44,7 @@ contract SupplyChain is RBAC {
     mapping(uint256 => Step) public steps;
 
     /** @notice Record of all items ever created. */
-    int256[] public items;
+    uint256[] public items;
 
     /**
      * @notice Step counter
@@ -81,10 +81,9 @@ contract SupplyChain is RBAC {
      */
     function newAction(string memory _actionDescription)
         public
-        returns(uint8)
+        returns(uint256)
     {
-        require(actions.length < 256, "Maximum number of actions reached.");
-        uint8 action = uint8(actions.push(_actionDescription)) - 1;
+        uint256 action = actions.push(_actionDescription) - 1;
         emit ActionCreated(action);
         return action;
     }
@@ -94,7 +93,7 @@ contract SupplyChain is RBAC {
      * @param _action The identifier for the action.
      * @return The action description.
      */
-    function actionDescription(uint8 _action)
+    function actionDescription(uint256 _action)
         public
         view
         returns(string memory)
@@ -110,9 +109,9 @@ contract SupplyChain is RBAC {
     function totalActions()
         public
         view
-        returns(uint8)
+        returns(uint256)
     {
-        return uint8(actions.length);
+        return actions.length;
     }
 
     /**
@@ -130,8 +129,8 @@ contract SupplyChain is RBAC {
      */
     function newStep
     (
-        uint8 _action, 
-        uint216 _item, 
+        uint256 _action, 
+        uint256 _item, 
         uint256[] memory _precedents,
         uint256 _appenders,
         uint256 _admins
