@@ -8,8 +8,8 @@ pragma solidity ^0.5.0;
  */
 contract RBAC {
     event RoleCreated(uint256 role);
-    event MemberAdded(address account, uint256 role);
-    event MemberRemoved(address account, uint256 role);
+    event BearerAdded(address account, uint256 role);
+    event BearerRemoved(address account, uint256 role);
 
     /**
      * @notice A role, which will be used to group users.
@@ -60,7 +60,7 @@ contract RBAC {
         emit RoleCreated(role);
         if (_admin == role) {
             roles[role].bearers.push(msg.sender);
-            emit MemberAdded(msg.sender, role);
+            emit BearerAdded(msg.sender, role);
         }
         return role;
     }
@@ -110,7 +110,7 @@ contract RBAC {
         );
         if (hasRole(_account, _role) == false){
             roles[_role].bearers.push(_account);
-            emit MemberAdded(_account, _role);
+            emit BearerAdded(_account, _role);
         }
     }
 
@@ -135,7 +135,7 @@ contract RBAC {
             if (_bearers[i] == _account){
                 _bearers[i] = _bearers[_bearers.length - 1];
                 roles[_role].bearers.pop();
-                emit MemberRemoved(_account, _role);
+                emit BearerRemoved(_account, _role);
             }
         }
     }
