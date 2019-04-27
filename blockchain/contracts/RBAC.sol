@@ -15,8 +15,9 @@ contract RBAC {
      * @notice A role, which will be used to group users.
      * @dev The role id is its position in the roles array.
      * @param description A description for the role.
-     * @param admin The role that can add or remove users from the role.
-     * @param Memberships of users to roles.
+     * @param admin The only role that can add or remove bearers from this role. To have the role
+     * bearers to be also the role admins you should pass roles.length as the admin role.
+     * @param bearers Addresses belonging to this role.
      */
     struct Role {
         string description;
