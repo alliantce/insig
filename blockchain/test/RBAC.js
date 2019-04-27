@@ -20,9 +20,9 @@ contract('RBAC', (accounts) => {
             rbac = await RBAC.new();
         });
 
-        it('newRole creates a role.', async () => {
+        it('addRole creates a role.', async () => {
             roleDescription = 'Role 1.';
-            transaction = await rbac.newRole(roleDescription, 0, { from: user1 });
+            transaction = await rbac.addRole(roleDescription, 0, { from: user1 });
 
             assert.equal(transaction.logs.length, 2);
             assert.equal(transaction.logs[0].event, 'RoleCreated');
@@ -30,101 +30,101 @@ contract('RBAC', (accounts) => {
             assert.equal((await rbac.totalRoles()).toNumber(), 1);
         });
 
-        it('memberOf returns false for non existing roles', async () => {
-            assert.isFalse(await rbac.memberOf(user1, 0));
+        it('hasRole returns false for non existing roles', async () => {
+            assert.isFalse(await rbac.hasRole(user1, 0));
         });
 
-        it('memberOf returns false for non existing memberships', async () => {
+        it('hasRole returns false for non existing memberships', async () => {
             roleDescription = 'Role 1.';
-            transaction = await rbac.newRole(roleDescription, 0, { from: user1 });
+            transaction = await rbac.addRole(roleDescription, 0, { from: user1 });
 
-            assert.isFalse(await rbac.memberOf(user2, 0));
+            assert.isFalse(await rbac.hasRole(user2, 0));
         });
 
-        it('newRole adds msg.sender as member', async () => {
+        it('addRole adds msg.sender as member', async () => {
             roleDescription = 'Role 1.';
-            transaction = await rbac.newRole(roleDescription, 0, { from: user1 });
+            transaction = await rbac.addRole(roleDescription, 0, { from: user1 });
 
-            assert.isTrue(await rbac.memberOf(user1, 0));
+            assert.isTrue(await rbac.hasRole(user1, 0));
         });
 
-        it('newRole doesn\'t add msg.sender as member if another role is given.', async () => {
+        it('addRole doesn\'t add msg.sender as member if another role is given.', async () => {
             const roleZero = (
-                await rbac.newRole('Role 0', 0, { from: user1 })
+                await rbac.addRole('Role 0', 0, { from: user1 })
             ).logs[0].args.role;
 
             const roleOne = (
-                await rbac.newRole('Role 1', 0, { from: user1 })
+                await rbac.addRole('Role 1', 0, { from: user1 })
             ).logs[0].args.role;
 
-            assert.isTrue(await rbac.memberOf(user1, roleZero));
-            assert.isFalse(await rbac.memberOf(user1, roleOne));
+            assert.isTrue(await rbac.hasRole(user1, roleZero));
+            assert.isFalse(await rbac.hasRole(user1, roleOne));
         });
 
         itShouldThrow(
-            'addMember throws on non existing roles',
+            'addBearer throws on non existing roles',
             async () => {
-                await rbac.addMember(user1, 0, { from: user1 });
+                await rbac.addBearer(user1, 0, { from: user1 });
             },
             'Role doesn\'t exist.',
         );
 
         itShouldThrow(
-            'addMember throws on non authorized users',
+            'addBearer throws on non authorized users',
             async () => {    
-                await rbac.newRole(roleDescription, 0, { from: user1 });
-                await rbac.addMember(user2, 0, { from: user2 });
+                await rbac.addRole(roleDescription, 0, { from: user1 });
+                await rbac.addBearer(user2, 0, { from: user2 });
             },
             'User not authorized to add members.',
         );
 
-        it('addMember does nothing if the member already belongs to the role.', async () => {
+        it('addBearer does nothing if the member already belongs to the role.', async () => {
             roleDescription = 'Role 1.';
-            await rbac.newRole(roleDescription, 0, { from: user1 });
-            transaction = await rbac.addMember(user1, 0, { from: user1 });
+            await rbac.addRole(roleDescription, 0, { from: user1 });
+            transaction = await rbac.addBearer(user1, 0, { from: user1 });
 
             assert.equal(transaction.logs.length, 0);
         });
 
-        it('addMember adds a member to a role.', async () => {
+        it('addBearer adds a member to a role.', async () => {
             roleDescription = 'Role 1.';
-            await rbac.newRole(roleDescription, 0, { from: user1 });
-            await rbac.addMember(user2, 0, { from: user1 });
-            assert.isTrue(await rbac.memberOf(user2, 0));
+            await rbac.addRole(roleDescription, 0, { from: user1 });
+            await rbac.addBearer(user2, 0, { from: user1 });
+            assert.isTrue(await rbac.hasRole(user2, 0));
         });
 
         itShouldThrow(
-            'removeMember throws on non existing roles',
+            'removeBearer throws on non existing roles',
             async () => {
-                await rbac.removeMember(user1, 0, { from: user1 });
+                await rbac.removeBearer(user1, 0, { from: user1 });
             },
             'Role doesn\'t exist.',
         );
 
         itShouldThrow(
-            'removeMember throws on non authorized users',
+            'removeBearer throws on non authorized users',
             async () => {    
-                await rbac.newRole(roleDescription, 0, { from: user1 });
-                await rbac.removeMember(user2, 0, { from: user2 });
+                await rbac.addRole(roleDescription, 0, { from: user1 });
+                await rbac.removeBearer(user2, 0, { from: user2 });
             },
             'User not authorized to remove members.',
         );
 
-        it('removeMember does nothing if the member doesn\'t belong to the role.', async () => {
+        it('removeBearer does nothing if the member doesn\'t belong to the role.', async () => {
             roleDescription = 'Role 1.';
-            await rbac.newRole(roleDescription, 0, { from: user1 });
-            transaction = await rbac.removeMember(user2, 0, { from: user1 });
+            await rbac.addRole(roleDescription, 0, { from: user1 });
+            transaction = await rbac.removeBearer(user2, 0, { from: user1 });
 
             assert.equal(transaction.logs.length, 0);
         });
 
-        it('removeMember removes a member from a role.', async () => {
+        it('removeBearer removes a member from a role.', async () => {
             roleDescription = 'Role 1.';
-            await rbac.newRole(roleDescription, 0, { from: user1 });
-            await rbac.addMember(user2, 0, { from: user1 });
-            assert.isTrue(await rbac.memberOf(user2, 0));
-            await rbac.removeMember(user2, 0, { from: user1 });
-            assert.isFalse(await rbac.memberOf(user2, 0));
+            await rbac.addRole(roleDescription, 0, { from: user1 });
+            await rbac.addBearer(user2, 0, { from: user1 });
+            assert.isTrue(await rbac.hasRole(user2, 0));
+            await rbac.removeBearer(user2, 0, { from: user1 });
+            assert.isFalse(await rbac.hasRole(user2, 0));
         });
     });
 });

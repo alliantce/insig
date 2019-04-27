@@ -34,7 +34,7 @@ contract('SupplyChain', (accounts) => {
             productCreationDescription = 'Product line created.';
 
             transaction = await supplyChain.newAction(productCreationDescription, { from: root });
-            // console.log("Cost: $" + transaction.receipt.gasUsed / 3500000);
+            // console.log("Gas: " + transaction.receipt.gasUsed);
 
             assert.equal(transaction.logs.length, 1);
             assert.equal(transaction.logs[0].event, 'ActionCreated');
@@ -89,7 +89,7 @@ contract('SupplyChain', (accounts) => {
             transaction = await supplyChain.newAction(itemCertificationDescription);
             itemCertificationAction = transaction.logs[0].args.action;
 
-            transaction = await supplyChain.newRole("OnlyRole", 0);
+            transaction = await supplyChain.addRole("OnlyRole", 0);
             roleId = transaction.logs[0].args.role;
         });
 
@@ -313,7 +313,7 @@ contract('SupplyChain', (accounts) => {
             const stepOne = (
                 await supplyChain.newStep(itemCreationAction, itemZero, [stepZero], roleId, roleId)
             ).logs[0].args.step;
-            await supplyChain.addMember(appender1, roleId);
+            await supplyChain.addBearer(appender1, roleId);
             const stepTwo = (
                 await supplyChain.newStep(itemCertificationAction, itemZero, [stepOne], roleId, roleId, { from: appender1 })
             ).logs[0].args.step;
@@ -343,24 +343,24 @@ contract('SupplyChain', (accounts) => {
             transaction = await supplyChain.newAction(itemCertificationDescription);
             itemCertificationAction = transaction.logs[0].args.action;
 
-            transaction = await supplyChain.newRole("Root", 0, { from: root });
+            transaction = await supplyChain.addRole("Root", 0, { from: root });
             rootRole = transaction.logs[0].args.role;
 
-            transaction = await supplyChain.newRole("Admin1", rootRole);
+            transaction = await supplyChain.addRole("Admin1", rootRole);
             adminRole1 = transaction.logs[0].args.role;
-            await supplyChain.addMember(admin1, adminRole1, { from: root });
+            await supplyChain.addBearer(admin1, adminRole1, { from: root });
 
-            transaction = await supplyChain.newRole("Appender1", adminRole1);
+            transaction = await supplyChain.addRole("Appender1", adminRole1);
             appenderRole1 = transaction.logs[0].args.role;
-            await supplyChain.addMember(appender1, appenderRole1, { from: admin1 });
+            await supplyChain.addBearer(appender1, appenderRole1, { from: admin1 });
 
-            transaction = await supplyChain.newRole("Admin2", rootRole);
+            transaction = await supplyChain.addRole("Admin2", rootRole);
             adminRole2 = transaction.logs[0].args.role;
-            await supplyChain.addMember(admin2, adminRole2, { from: root });
+            await supplyChain.addBearer(admin2, adminRole2, { from: root });
 
-            transaction = await supplyChain.newRole("Appender2", adminRole2);
+            transaction = await supplyChain.addRole("Appender2", adminRole2);
             appenderRole2 = transaction.logs[0].args.role;
-            await supplyChain.addMember(appender2, appenderRole2, { from: admin2 });
+            await supplyChain.addBearer(appender2, appenderRole2, { from: admin2 });
         });
 
         // If there are no precedents check appender1 belongs to appenders of the current step.
@@ -404,7 +404,7 @@ contract('SupplyChain', (accounts) => {
             async () => {    
                 const partZero = 200;
                 const partOne = 201;
-                await supplyChain.addMember(appender1, appenderRole2, { from: admin2 });
+                await supplyChain.addBearer(appender1, appenderRole2, { from: admin2 });
 
 
                 const stepZero = (
@@ -425,7 +425,7 @@ contract('SupplyChain', (accounts) => {
             const partZero = 200;
             const partOne = 201;
             const partTwo = 202;
-            await supplyChain.addMember(appender1, appenderRole2, { from: admin2 });
+            await supplyChain.addBearer(appender1, appenderRole2, { from: admin2 });
 
 
             const stepZero = (
@@ -443,8 +443,8 @@ contract('SupplyChain', (accounts) => {
         it('sanity check same item', async () => {
             const partZero = 200;
             const partOne = 201;
-            await supplyChain.addMember(appender1, appenderRole2, { from: admin2 });
-            await supplyChain.addMember(appender1, adminRole2, { from: root });
+            await supplyChain.addBearer(appender1, appenderRole2, { from: admin2 });
+            await supplyChain.addBearer(appender1, adminRole2, { from: root });
 
 
             const stepZero = (

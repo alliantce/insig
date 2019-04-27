@@ -160,7 +160,7 @@ contract SupplyChain is RBAC {
 
         // If there are no precedents check user belongs to appenders of the current step.
         if (_precedents.length == 0) {
-            require(memberOf(msg.sender, _appenders), "Creator not in appenders.");
+            require(hasRole(msg.sender, _appenders), "Creator not in appenders.");
         }
 
         // Check user belongs to the appenders of all precedents.
@@ -168,14 +168,14 @@ contract SupplyChain is RBAC {
         {
             for (uint i = 0; i < _precedents.length; i++){
                 uint256 appenders = steps[_precedents[i]].appenders;
-                require(memberOf(msg.sender, appenders), "Not an appender of precedents.");
+                require(hasRole(msg.sender, appenders), "Not an appender of precedents.");
             }
         }
         // If permissions are different to a precedent with the same instance id check user belongs to its admins.
         if (repeatInstance){
             Step memory precedent = steps[lastSteps[_item]];
             if (precedent.appenders != _appenders || precedent.admins != _admins){
-                require(memberOf(msg.sender, precedent.admins), "Needs admin to change permissions.");
+                require(hasRole(msg.sender, precedent.admins), "Needs admin to change permissions.");
             }
         }
 
