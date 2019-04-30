@@ -36,7 +36,7 @@ contract RBAC {
      * @notice The contract constructor, empty as of now.
      */
     constructor() public {
-        addInitialRole("NO_ROLE");
+        addRootRole("NO_ROLE");
     }
 
     /**
@@ -45,7 +45,7 @@ contract RBAC {
      * @param _roleDescription The description of the role being created.
      * @return The role id.
      */
-    function addInitialRole(string memory _roleDescription)
+    function addRootRole(string memory _roleDescription)
         public
         returns(uint256)
     {

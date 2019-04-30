@@ -232,20 +232,105 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to create a new supply chain step. The msg.sender is recorded as the creator
-     * of the step, which might possibly mean creator of the underlying asset as well.
+     * @notice A method to create a new supply chain step without precedents.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The item id that this step is for. This must be either the item 
-     * of one of the steps in _precedents, or an item that has never been used before. 
-     * @param _precedent The last step id for the item being made a part of another.
-     * @param _partOf The item id for the item that this one is being made a part of.
+     * @param _item The item id that this step is for. This must be an item that has never been
+     * used before.
+     * @param _appenders The roles allowed to append steps to this one.
+     * @param _admins The roles allowed to append steps with different permissions.
      * @return The step id of the step created.
-     * TODO: Test
      */
-    function newPartOf
+    function addRootStep
     (
         uint256 _action, 
         uint256 _item, 
+        uint256 _appenders,
+        uint256 _admins
+    )
+        public
+        returns(uint256)
+    {
+
+        require(_action < actions.length, "Event action not recognized.");
+
+        require(_appenders != NO_ROLE, "An appender role is required.");
+
+        require(_admins != NO_ROLE, "An admin role is required.");
+        
+        require(lastSteps[_item] == 0, "Item not valid.");
+        totalItems += 1;
+
+        require(hasRole(msg.sender, _appenders), "Creator not in appenders.");
+        
+        uint256[] memory emptyArray;
+        uint256 stepId = steps.push(
+            Step(
+                msg.sender,
+                _action,
+                _item,
+                emptyArray,
+                NO_PARTOF,
+                _appenders,
+                _admins
+            )
+        ) - 1;
+        lastSteps[_item] = stepId;
+        emit StepCreated(stepId);
+        return stepId;
+    }
+
+    /**
+     * @notice A method to create a new supply chain step representing the handover of an item.
+     * In practical terms it is a change in the permissions.
+     * @param _action The index for the step action as defined in the actions array.
+     * @param _item The item being handed over.
+     * @param _appenders The roles allowed to append steps to this one.
+     * @param _admins The roles allowed to append steps with different permissions.
+     * @return The step id of the step created.
+     */
+    function addHandover
+    (
+        uint256 _action, 
+        uint256 _item,
+        uint256 _appenders,
+        uint256 _admins
+    )
+        public
+        returns(uint256)
+    {
+        require(_action < actions.length, "Event action not recognized.");
+        
+        require(lastSteps[_item] != 0, "Item does not exist.");
+
+        require(hasRole(msg.sender, steps[lastSteps[_item]].admins), "Needs admin for handover.");
+        
+        uint256 stepId = steps.push(
+            Step(
+                msg.sender,
+                _action,
+                _item,
+                new uint256[](lastSteps[_item]),
+                NO_PARTOF,
+                _appenders,
+                _admins
+            )
+        ) - 1;
+        lastSteps[_item] = stepId;
+        emit StepCreated(stepId);
+        return stepId;
+    }
+
+    /**
+     * @notice A method to create a new supply chain step representing that the item in the step
+     * passed as a parameter has become a part of another item.
+     * @param _action The index for the step action as defined in the actions array.
+     * @param _precedent The last step id for the item being made a part of another.
+     * @param _partOf The item id for the item that this one is being made a part of.
+     * @return The step id of the step created.
+     */
+    function addPartOf
+    (
+        uint256 _action,
         uint256 _precedent,
         uint256 _partOf
     )
@@ -257,22 +342,20 @@ contract SupplyChain is RBAC {
         
         require(isLastStep(_precedent), "Append only on last steps.");
 
-        require(steps[_precedent].item == _item, "Item not valid.");
-
         require(hasRole(msg.sender, steps[_precedent].admins), "Needs admin for partOf.");
 
         uint256 stepId = steps.push(
             Step(
                 msg.sender,
                 _action,
-                _item,
+                steps[_precedent].item,
                 new uint256[](_precedent),
                 _partOf,
                 NO_ROLE,
                 NO_ROLE
             )
         ) - 1;
-        lastSteps[_item] = stepId;
+        lastSteps[steps[_precedent].item] = stepId;
         emit StepCreated(stepId);
         return stepId;
     }

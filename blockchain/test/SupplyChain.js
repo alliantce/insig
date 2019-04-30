@@ -88,7 +88,7 @@ contract('SupplyChain', (accounts) => {
             transaction = await supplyChain.addAction(itemCertificationDescription);
             itemCertificationAction = transaction.logs[0].args.action;
 
-            transaction = await supplyChain.addInitialRole("OnlyRole");
+            transaction = await supplyChain.addRootRole("OnlyRole");
             roleId = transaction.logs[0].args.role;
         });
 
@@ -346,7 +346,7 @@ contract('SupplyChain', (accounts) => {
             transaction = await supplyChain.addAction(itemCertificationDescription);
             itemCertificationAction = transaction.logs[0].args.action;
 
-            transaction = await supplyChain.addInitialRole("Root", { from: root });
+            transaction = await supplyChain.addRootRole("Root", { from: root });
             rootRole = transaction.logs[0].args.role;
 
             transaction = await supplyChain.addRole("Admin1", rootRole);
