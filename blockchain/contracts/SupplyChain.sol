@@ -44,7 +44,7 @@ contract SupplyChain is RBAC {
     mapping(uint256 => Step) public steps;
 
     /** @notice Record of all items ever created. */
-    uint256[] public items;
+    // uint256[] public items;
 
     /**
      * @notice Step counter
@@ -145,18 +145,18 @@ contract SupplyChain is RBAC {
             require(isLastStep(_precedents[i]), "Append only on last steps.");
         }
 
-        // Check the instance id is consistent
-        bool repeatInstance = false;
+        // Check the item id is consistent
+        bool repeatItem = false;
         for (uint i = 0; i < _precedents.length; i++){
             if (steps[_precedents[i]].item == _item) {
-                repeatInstance = true;
+                repeatItem = true;
                 break;
             }
         }
-        if (!repeatInstance){
+        if (!repeatItem){
             require(lastSteps[_item] == 0, "Instance not valid.");
+            // items.push(_item);
         }
-        items.push(_item);
 
         // If there are no precedents check user belongs to appenders of the current step.
         if (_precedents.length == 0) {
@@ -172,7 +172,7 @@ contract SupplyChain is RBAC {
             }
         }
         // If permissions are different to a precedent with the same instance id check user belongs to its admins.
-        if (repeatInstance){
+        if (repeatItem){
             Step memory precedent = steps[lastSteps[_item]];
             if (precedent.appenders != _appenders || precedent.admins != _admins){
                 require(hasRole(msg.sender, precedent.admins), "Needs admin to change permissions.");
