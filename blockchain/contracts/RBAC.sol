@@ -11,6 +11,8 @@ contract RBAC {
     event BearerAdded(address account, uint256 role);
     event BearerRemoved(address account, uint256 role);
 
+    uint256 constant NO_ROLE = 0;
+
     /**
      * @notice A role, which will be used to group users.
      * @dev The role id is its position in the roles array.
@@ -33,8 +35,8 @@ contract RBAC {
     /**
      * @notice The contract constructor, empty as of now.
      */
-    // solium-disable-next-line no-empty-blocks
     constructor() public {
+        addRole("NO_ROLE", NO_ROLE);
     }
 
     /**
@@ -66,12 +68,17 @@ contract RBAC {
         return role;
     }
 
+    /**
+     * @notice A method to retrieve the number of roles in the contract.
+     * @dev The zero position in the roles array is reserved for NO_ROLE and doesn't count towards
+     * this total.
+     */
     function totalRoles()
         public
         view
         returns(uint256)
     {
-        return roles.length;
+        return roles.length - 1;
     }
 
     /**
