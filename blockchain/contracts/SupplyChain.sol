@@ -275,4 +275,21 @@ contract SupplyChain is RBAC {
     {
         return steps[_step].precedents;
     }
+
+    /**
+     * @notice A method to retrieve the composite item this step refers to.
+     * @param _step The step id of the step to start looking from.
+     * @return The composite item this step refers to.
+     */
+    function getComposite(uint256 _step)
+        public
+        view
+        returns(uint256)
+    {
+        uint256 step = _step;
+        while (steps[step].partOf != NO_ITEM){
+            step = lastSteps[steps[step].partOf];
+        }
+        return steps[step].item;
+    }
 }

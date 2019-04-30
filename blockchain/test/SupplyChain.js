@@ -440,10 +440,49 @@ contract('SupplyChain', (accounts) => {
             
             const stepThree = (
                 await supplyChain.addStep(itemCreationAction, partTwo, [stepOne, stepTwo], appenderRole1, adminRole1, {from: appender1})
-            ).logs[0].args.step;    
+            ).logs[0].args.step;  
         });
 
         it('sanity check same item', async () => {
+            const partZero = 200;
+            const partOne = 201;
+            await supplyChain.addBearer(appender1, appenderRole2, { from: admin2 });
+            await supplyChain.addBearer(appender1, adminRole2, { from: root });
+
+            const stepOne = (
+                await supplyChain.addStep(
+                    itemCreationAction, 
+                    partZero, 
+                    [], 
+                    appenderRole1, 
+                    adminRole1, 
+                    { from: appender1 }
+                )
+            ).logs[0].args.step;
+            const stepTwo = (
+                await supplyChain.addStep(
+                    itemCreationAction, 
+                    partOne, 
+                    [], 
+                    appenderRole2, 
+                    adminRole2, 
+                    { from: appender2 }
+                )
+            ).logs[0].args.step;
+            
+            const stepThree = (
+                await supplyChain.addStep(
+                    itemCreationAction, 
+                    partOne, 
+                    [stepOne, stepTwo], 
+                    appenderRole1, 
+                    adminRole1, 
+                    {from: appender1}
+                )
+            ).logs[0].args.step;
+        });
+
+        it('getComposite returns the immediate item for non-composites', async () => {
             const partZero = 200;
             const partOne = 201;
             await supplyChain.addBearer(appender1, appenderRole2, { from: admin2 });
@@ -481,6 +520,19 @@ contract('SupplyChain', (accounts) => {
                     {from: appender1}
                 )
             ).logs[0].args.step;
+
+            assert.equal(
+                (await supplyChain.getComposite(stepOne)).toNumber(),
+                partZero,
+            );
+            assert.equal(
+                (await supplyChain.getComposite(stepTwo)).toNumber(),
+                partOne,
+            );
+            assert.equal(
+                (await supplyChain.getComposite(stepThree)).toNumber(),
+                partOne,
+            );
         });
     });
 });
