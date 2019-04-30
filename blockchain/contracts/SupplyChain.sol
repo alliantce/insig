@@ -14,6 +14,7 @@ contract SupplyChain is RBAC {
 
     uint256 constant NO_ACTION = 0;
     uint256 constant NO_ITEM = 0;
+    uint256 constant NO_PARTOF = NO_ITEM;
     uint256 constant NO_STEP = 0;
 
     event ActionCreated(uint256 action);
@@ -47,7 +48,7 @@ contract SupplyChain is RBAC {
      * @notice All steps are directly accessible through a mapping keyed by the step ids. Recursive
      * structs are not supported in solidity yet.
      */
-    mapping(uint256 => Step) public steps;
+    mapping(uint256 => Step) public steps; // TODO: Just use an array
 
     /** @notice Record of all items ever created. */
     // uint256[] public items;
@@ -74,7 +75,17 @@ contract SupplyChain is RBAC {
     constructor() public {
         addAction("NO ACTION");
         uint256[] memory noPrecedents;
-        addStep(NO_ACTION, NO_ITEM, noPrecedents, NO_ROLE, NO_ROLE);
+        steps[0] = Step(
+            msg.sender,
+            NO_ACTION,
+            NO_ITEM,
+            noPrecedents,
+            NO_PARTOF,
+            NO_ROLE,
+            NO_ROLE
+        );
+        lastSteps[NO_ITEM] = 0;
+        emit StepCreated(0);
     }
 
     /**
@@ -150,6 +161,10 @@ contract SupplyChain is RBAC {
     {
 
         require(_action < actions.length, "Event action not recognized.");
+
+        // require(_appenders != NO_ROLE, "An appender role is required.");
+
+        // require(_admins != NO_ROLE, "An admin role is required.");
         
         for (uint i = 0; i < _precedents.length; i++){
             require(isLastStep(_precedents[i]), "Append only on last steps.");
@@ -172,37 +187,44 @@ contract SupplyChain is RBAC {
         if (_precedents.length == 0) {
             require(hasRole(msg.sender, _appenders), "Creator not in appenders.");
         }
+        else {
+            uint256[] memory precedents = _precedents;
+            uint256 item = _item;
 
-        // Check user belongs to the appenders of all precedents.
-        else
-        {
-            for (uint i = 0; i < _precedents.length; i++){
-                uint256 appenders = steps[_precedents[i]].appenders;
+            // If the precedent is a partOf retrieve the precedents of the composite item
+            if (precedents.length == 1 && steps[precedents[0]].partOf != NO_PARTOF){
+                item = getComposite(_item);
+                precedents = steps[lastSteps[getComposite(item)]].precedents;
+            }
+
+            // Check user belongs to the appenders of all precedents.
+            for (uint i = 0; i < precedents.length; i++){
+                uint256 appenders = steps[precedents[i]].appenders;
                 require(hasRole(msg.sender, appenders), "Not an appender of precedents.");
             }
-        }
-        // If permissions are different to a precedent with the same instance id check user belongs to its admins.
-        if (repeatItem){
-            Step memory precedent = steps[lastSteps[_item]];
-            if (precedent.appenders != _appenders || precedent.admins != _admins){
-                require(hasRole(msg.sender, precedent.admins), "Needs admin to change permissions.");
+
+            // If permissions are different to a precedent with the same instance id check user belongs to its admins.
+            if (repeatItem){
+                Step memory precedent = steps[lastSteps[item]];
+                if (precedent.appenders != _appenders || precedent.admins != _admins){
+                    require(hasRole(msg.sender, precedent.admins), "Needs admin to change permissions.");
+                }
             }
         }
-
+        
+        totalSteps += 1;
         steps[totalSteps] = Step(
             msg.sender,
             _action,
             _item,
             _precedents,
-            NO_ITEM,
+            NO_PARTOF,
             _appenders,
             _admins
         );
-        uint256 step = totalSteps;
-        totalSteps += 1;
-        lastSteps[_item] = step;
-        emit StepCreated(step);
-        return step;
+        lastSteps[_item] = totalSteps;
+        emit StepCreated(totalSteps);
+        return totalSteps;
     }
 
     /**
@@ -234,6 +256,7 @@ contract SupplyChain is RBAC {
 
         require(hasRole(msg.sender, steps[_precedent].admins), "Needs admin for partOf.");
 
+        totalSteps += 1;
         steps[totalSteps] = Step(
             msg.sender,
             _action,
@@ -243,11 +266,9 @@ contract SupplyChain is RBAC {
             NO_ROLE,
             NO_ROLE
         );
-        uint256 step = totalSteps;
-        totalSteps += 1;
-        lastSteps[_item] = step;
-        emit StepCreated(step);
-        return step;
+        lastSteps[_item] = totalSteps;
+        emit StepCreated(totalSteps);
+        return totalSteps;
     }
 
     /**
