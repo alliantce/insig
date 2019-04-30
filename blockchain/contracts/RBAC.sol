@@ -36,13 +36,26 @@ contract RBAC {
      * @notice The contract constructor, empty as of now.
      */
     constructor() public {
-        addRole("NO_ROLE", NO_ROLE);
+        addInitialRole("NO_ROLE");
+    }
+
+    /**
+     * @notice A method to create a new role that has itself as an admin. 
+     * msg.sender is added as a bearer.
+     * @param _roleDescription The description of the role being created.
+     * @return The role id.
+     */
+    function addInitialRole(string memory _roleDescription)
+        public
+        returns(uint256)
+    {
+        uint256 role = addRole(_roleDescription, roles.length);
+        roles[role].bearers.push(msg.sender);
+        emit BearerAdded(msg.sender, role);
     }
 
     /**
      * @notice A method to create a new role.
-     * @dev If the _admin parameter is the id of the newly created role 
-     * msg.sender is added to it automatically.
      * @param _roleDescription The description of the role being created.
      * @param _admin The role that is allowed to add and remove bearers from 
      * the role being created.
@@ -61,10 +74,6 @@ contract RBAC {
             })
         ) - 1;
         emit RoleCreated(role);
-        if (_admin == role) {
-            roles[role].bearers.push(msg.sender);
-            emit BearerAdded(msg.sender, role);
-        }
         return role;
     }
 

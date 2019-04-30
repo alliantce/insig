@@ -20,10 +20,9 @@ contract('RBAC', (accounts) => {
             rbac = await RBAC.new();
         });
 
-        it('addRole creates a role.', async () => {
+        it('addInitialRole creates a role.', async () => {
             roleDescription = 'Role 1.';
-            roleId = (await rbac.totalRoles()).toNumber() + 1;
-            transaction = await rbac.addRole(roleDescription, roleId, { from: user1 });
+            transaction = await rbac.addInitialRole(roleDescription, { from: user1 });
 
             assert.equal(transaction.logs.length, 2);
             assert.equal(transaction.logs[0].event, 'RoleCreated');
@@ -37,29 +36,25 @@ contract('RBAC', (accounts) => {
 
         it('hasRole returns false for non existing bearerships', async () => {
             roleDescription = 'Role 1.';
-            roleId = (await rbac.totalRoles()).toNumber() + 1;
-            transaction = await rbac.addRole(roleDescription, roleId, { from: user1 });
+            transaction = await rbac.addInitialRole(roleDescription, { from: user1 });
 
-            assert.isFalse(await rbac.hasRole(user2, roleId));
+            assert.isFalse(await rbac.hasRole(user2, transaction.logs[0].args.role));
         });
 
-        it('addRole adds msg.sender as bearer', async () => {
+        it('addInitialRole adds msg.sender as bearer', async () => {
             roleDescription = 'Role 1.';
-            roleId = (await rbac.totalRoles()).toNumber() + 1;
-            transaction = await rbac.addRole(roleDescription, roleId, { from: user1 });
+            transaction = await rbac.addInitialRole(roleDescription, { from: user1 });
 
-            assert.isTrue(await rbac.hasRole(user1, roleId));
+            assert.isTrue(await rbac.hasRole(user1, transaction.logs[0].args.role));
         });
 
         it('addRole doesn\'t add msg.sender as bearer if another role is given.', async () => {
-            roleOneId = (await rbac.totalRoles()).toNumber() + 1;
             const roleOne = (
-                await rbac.addRole('Role 1', roleOneId, { from: user1 })
+                await rbac.addInitialRole('Role 1', { from: user1 })
             ).logs[0].args.role;
 
-            roleTwoId = (await rbac.totalRoles()).toNumber() + 1;
             const roleTwo = (
-                await rbac.addRole('Role 2', roleOneId, { from: user1 })
+                await rbac.addRole('Role 2', roleOne, { from: user1 })
             ).logs[0].args.role;
 
             assert.isTrue(await rbac.hasRole(user1, roleOne));
@@ -78,8 +73,9 @@ contract('RBAC', (accounts) => {
         itShouldThrow(
             'addBearer throws on non authorized users',
             async () => {    
-                roleId = (await rbac.totalRoles()).toNumber() + 1;
-                await rbac.addRole(roleDescription, roleId, { from: user1 });
+                const roleId = (
+                    await rbac.addInitialRole(roleDescription, { from: user1 })
+                ).logs[0].args.role;
                 await rbac.addBearer(user2, roleId, { from: user2 });
             },
             'User not authorized to add bearers.',
@@ -87,8 +83,9 @@ contract('RBAC', (accounts) => {
 
         it('addBearer does nothing if the bearer already belongs to the role.', async () => {
             roleDescription = 'Role 1.';
-            roleId = (await rbac.totalRoles()).toNumber() + 1;
-            await rbac.addRole(roleDescription, roleId, { from: user1 });
+            const roleId = (
+                await rbac.addInitialRole(roleDescription, { from: user1 })
+            ).logs[0].args.role;
             transaction = await rbac.addBearer(user1, roleId, { from: user1 });
 
             assert.equal(transaction.logs.length, 0);
@@ -96,8 +93,9 @@ contract('RBAC', (accounts) => {
 
         it('addBearer adds a bearer to a role.', async () => {
             roleDescription = 'Role 1.';
-            roleId = (await rbac.totalRoles()).toNumber() + 1;
-            await rbac.addRole(roleDescription, roleId, { from: user1 });
+            const roleId = (
+                await rbac.addInitialRole(roleDescription, { from: user1 })
+            ).logs[0].args.role;
             await rbac.addBearer(user2, roleId, { from: user1 });
             assert.isTrue(await rbac.hasRole(user2, roleId));
         });
@@ -113,8 +111,9 @@ contract('RBAC', (accounts) => {
         itShouldThrow(
             'removeBearer throws on non authorized users',
             async () => {
-                roleId = (await rbac.totalRoles()).toNumber() + 1;
-                await rbac.addRole(roleDescription, roleId, { from: user1 });
+                const roleId = (
+                    await rbac.addInitialRole(roleDescription, { from: user1 })
+                ).logs[0].args.role;
                 await rbac.removeBearer(user2, roleId, { from: user2 });
             },
             'User not authorized to remove bearers.',
@@ -122,17 +121,19 @@ contract('RBAC', (accounts) => {
 
         it('removeBearer does nothing if the bearer doesn\'t belong to the role.', async () => {
             roleDescription = 'Role 1.';
-            roleId = (await rbac.totalRoles()).toNumber() + 1;
-            await rbac.addRole(roleDescription, 1, { from: user1 });
-            transaction = await rbac.removeBearer(user2, 1, { from: user1 });
+            const roleId = (
+                await rbac.addInitialRole(roleDescription, { from: user1 })
+            ).logs[0].args.role;
+            transaction = await rbac.removeBearer(user2, roleId, { from: user1 });
 
             assert.equal(transaction.logs.length, 0);
         });
 
         it('removeBearer removes a bearer from a role.', async () => {
             roleDescription = 'Role 1.';
-            roleId = (await rbac.totalRoles()).toNumber() + 1;
-            await rbac.addRole(roleDescription, roleId, { from: user1 });
+            const roleId = (
+                await rbac.addInitialRole(roleDescription, { from: user1 })
+            ).logs[0].args.role;
             await rbac.addBearer(user2, roleId, { from: user1 });
             assert.isTrue(await rbac.hasRole(user2, roleId));
             await rbac.removeBearer(user2, roleId, { from: user1 });
