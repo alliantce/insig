@@ -138,6 +138,35 @@ contract SupplyChain is RBAC {
         return steps.length - 1;
     }
 
+    function pushStep
+    (
+        address _creator,
+        uint256 _action,
+        uint256 _item,
+        uint256[] memory _precedents,
+        uint256 _partOf,
+        uint256 _appenders,
+        uint256 _admins
+    )
+        internal
+        returns(uint256)
+    {
+        uint256 stepId = steps.push(
+            Step(
+                _creator,
+                _action,
+                _item,
+                _precedents,
+                _partOf,
+                _appenders,
+                _admins
+            )
+        ) - 1;
+        lastSteps[_item] = stepId;
+        emit StepCreated(stepId);
+        return stepId;        
+    }
+
     /**
      * @notice A method to create a new supply chain step. The msg.sender is recorded as the creator
      * of the step, which might possibly mean creator of the underlying asset as well.
@@ -147,27 +176,20 @@ contract SupplyChain is RBAC {
      * @param _precedents An array of the step ids for steps considered to be predecessors to
      * this one. Often this would just mean that the event refers to the same asset as the event
      * pointed to, but for steps like Creation it could point to the parts this asset is made of.
-     * @param _appenders The roles allowed to append steps to this one.
-     * @param _admins The roles allowed to append steps with different permissions.
      * @return The step id of the step created.
      */
     function addStep
     (
         uint256 _action, 
         uint256 _item, 
-        uint256[] memory _precedents,
-        uint256 _appenders,
-        uint256 _admins
+        uint256[] memory _precedents
     )
         public
         returns(uint256)
     {
+        require(_precedents.length > 0, "No precedents, use addRootStep.");
 
         require(_action < actions.length, "Event action not recognized.");
-
-        require(_appenders != NO_ROLE, "An appender role is required.");
-
-        require(_admins != NO_ROLE, "An admin role is required.");
         
         for (uint i = 0; i < _precedents.length; i++){
             require(isLastStep(_precedents[i]), "Append only on last steps.");
@@ -181,53 +203,87 @@ contract SupplyChain is RBAC {
                 break;
             }
         }
-        if (!repeatItem){
-            require(lastSteps[_item] == 0, "Instance not valid.");
-            totalItems += 1;
+        require (repeatItem, "Item not valid.");
+
+        uint256[] memory precedents = _precedents;
+        uint256 item = _item;
+
+        // If the precedent is a partOf retrieve the precedents of the composite item
+        if (precedents.length == 1 && steps[precedents[0]].partOf != NO_PARTOF){
+            item = getComposite(_item);
+            precedents = steps[lastSteps[getComposite(item)]].precedents;
         }
 
-        // If there are no precedents check user belongs to appenders of the current step.
-        if (_precedents.length == 0) {
-            require(hasRole(msg.sender, _appenders), "Creator not in appenders.");
-        }
-        else {
-            uint256[] memory precedents = _precedents;
-            uint256 item = _item;
-
-            // If the precedent is a partOf retrieve the precedents of the composite item
-            if (precedents.length == 1 && steps[precedents[0]].partOf != NO_PARTOF){
-                item = getComposite(_item);
-                precedents = steps[lastSteps[getComposite(item)]].precedents;
-            }
-
-            // Check user belongs to the appenders of all precedents.
-            for (uint i = 0; i < precedents.length; i++){
-                uint256 appenders = steps[precedents[i]].appenders;
-                require(hasRole(msg.sender, appenders), "Not an appender of precedents.");
-            }
-
-            // If permissions are different to a precedent with the same instance id check user belongs to its admins.
-            if (repeatItem){
-                Step memory precedent = steps[lastSteps[item]];
-                if (precedent.appenders != _appenders || precedent.admins != _admins){
-                    require(hasRole(msg.sender, precedent.admins), "Needs admin to change permissions.");
-                }
-            }
+        // Check user belongs to the appenders of all precedents.
+        for (uint i = 0; i < precedents.length; i++){
+            uint256 appenders = steps[precedents[i]].appenders;
+            require(hasRole(msg.sender, appenders), "Not an appender of precedents.");
         }
         
-        uint256 stepId = steps.push(
-            Step(
-                msg.sender,
-                _action,
-                _item,
-                _precedents,
-                NO_PARTOF,
-                _appenders,
-                _admins
-            )
-        ) - 1;
-        lastSteps[_item] = stepId;
-        emit StepCreated(stepId);
+        return pushStep(
+            msg.sender,
+            _action,
+            _item,
+            _precedents,
+            NO_PARTOF,
+            steps[precedents[0]].appenders,
+            steps[precedents[0]].admins
+        );
+    }
+
+    /**
+     * @notice A method to create a new supply chain step implying a transformation and a new item.
+     * @param _action The index for the step action as defined in the actions array.
+     * @param _item The item id that this step is for. This must be either the item 
+     * of one of the steps in _precedents, or an item that has never been used before. 
+     * @param _precedents An array of the step ids for steps considered to be predecessors to
+     * this one. Permissions are inherited from the first one.
+     * @return The step id of the step created.
+     */
+    function addTransformStep
+    (
+        uint256 _action, 
+        uint256 _item, 
+        uint256[] memory _precedents
+    )
+        public
+        returns(uint256)
+    {
+        require(_precedents.length > 0, "No precedents, use addRootStep.");
+
+        require(_action < actions.length, "Event action not recognized.");
+
+        require(lastSteps[_item] == 0, "Item not valid.");
+
+        for (uint i = 0; i < _precedents.length; i++){
+            require(isLastStep(_precedents[i]), "Append only on last steps.");
+        }
+
+        // Check user belongs to the appenders of all precedents.
+        for (uint i = 0; i < _precedents.length; i++){
+            uint256 precedentStepId = _precedents[i];
+            uint256 appenders;
+            if(steps[precedentStepId].partOf != NO_PARTOF){
+                uint256 compositeItem = getComposite(precedentStepId);
+                appenders = steps[lastSteps[compositeItem]].appenders;
+            }
+            else{
+                appenders = steps[precedentStepId].appenders;
+            }
+            require(hasRole(msg.sender, appenders), "Not an appender of precedents.");
+        }
+        
+        totalItems += 1;
+        Step memory mainPrecedentStep = steps[_precedents[0]];
+        uint256 stepId =  pushStep(
+            msg.sender,
+            _action,
+            _item,
+            _precedents,
+            NO_PARTOF,
+            mainPrecedentStep.appenders,
+            mainPrecedentStep.admins
+        );
         return stepId;
     }
 
@@ -239,6 +295,7 @@ contract SupplyChain is RBAC {
      * @param _appenders The roles allowed to append steps to this one.
      * @param _admins The roles allowed to append steps with different permissions.
      * @return The step id of the step created.
+     * TODO: creator should belong to admins
      */
     function addRootStep
     (
@@ -263,20 +320,15 @@ contract SupplyChain is RBAC {
         require(hasRole(msg.sender, _appenders), "Creator not in appenders.");
         
         uint256[] memory emptyArray;
-        uint256 stepId = steps.push(
-            Step(
-                msg.sender,
-                _action,
-                _item,
-                emptyArray,
-                NO_PARTOF,
-                _appenders,
-                _admins
-            )
-        ) - 1;
-        lastSteps[_item] = stepId;
-        emit StepCreated(stepId);
-        return stepId;
+        return pushStep(
+            msg.sender,
+            _action,
+            _item,
+            emptyArray,
+            NO_PARTOF,
+            _appenders,
+            _admins
+        );
     }
 
     /**
@@ -303,21 +355,16 @@ contract SupplyChain is RBAC {
         require(lastSteps[_item] != 0, "Item does not exist.");
 
         require(hasRole(msg.sender, steps[lastSteps[_item]].admins), "Needs admin for handover.");
-        
-        uint256 stepId = steps.push(
-            Step(
-                msg.sender,
-                _action,
-                _item,
-                new uint256[](lastSteps[_item]),
-                NO_PARTOF,
-                _appenders,
-                _admins
-            )
-        ) - 1;
-        lastSteps[_item] = stepId;
-        emit StepCreated(stepId);
-        return stepId;
+
+        return pushStep(
+            msg.sender,
+            _action,
+            _item,
+            new uint256[](lastSteps[_item]),
+            NO_PARTOF,
+            _appenders,
+            _admins
+        );
     }
 
     /**
@@ -344,20 +391,15 @@ contract SupplyChain is RBAC {
 
         require(hasRole(msg.sender, steps[_precedent].admins), "Needs admin for partOf.");
 
-        uint256 stepId = steps.push(
-            Step(
-                msg.sender,
-                _action,
-                steps[_precedent].item,
-                new uint256[](_precedent),
-                _partOf,
-                NO_ROLE,
-                NO_ROLE
-            )
-        ) - 1;
-        lastSteps[steps[_precedent].item] = stepId;
-        emit StepCreated(stepId);
-        return stepId;
+        return pushStep(
+            msg.sender,
+            _action,
+            steps[_precedent].item,
+            new uint256[](_precedent),
+            _partOf,
+            NO_ROLE,
+            NO_ROLE
+        );
     }
 
     /**
