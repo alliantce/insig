@@ -48,15 +48,12 @@ contract SupplyChain is RBAC {
      * @notice All steps are directly accessible through a mapping keyed by the step ids. Recursive
      * structs are not supported in solidity yet.
      */
-    mapping(uint256 => Step) public steps; // TODO: Just use an array
+    Step[] public steps;
 
-    /** @notice Record of all items ever created. */
-    // uint256[] public items;
-
-    /**
-     * @notice Step counter
+    /** 
+     * @notice Item counter 
      */
-    uint256 public totalSteps;
+    uint256 public totalItems;
 
     /**
      * @notice Mapping from item id to the last step in the lifecycle of that item.
@@ -74,18 +71,10 @@ contract SupplyChain is RBAC {
      */
     constructor() public {
         addAction("NO ACTION");
-        uint256[] memory noPrecedents;
-        steps[0] = Step(
-            msg.sender,
-            NO_ACTION,
-            NO_ITEM,
-            noPrecedents,
-            NO_PARTOF,
-            NO_ROLE,
-            NO_ROLE
+        uint256[] memory emptyArray;
+        steps.push(
+            Step(address(0), 0, 0, emptyArray, 0, 0, 0)
         );
-        lastSteps[NO_ITEM] = 0;
-        emit StepCreated(0);
     }
 
     /**
@@ -136,6 +125,20 @@ contract SupplyChain is RBAC {
     }
 
     /**
+     * @notice A method to return the number of steps created.
+     * @dev The zero position of the actions array is not used for valid steps and doesn't count
+     * towards their total.
+     * @return The number of steps created.
+     */
+    function totalSteps()
+        public
+        view
+        returns(uint256)
+    {
+        return steps.length - 1;
+    }
+
+    /**
      * @notice A method to create a new supply chain step. The msg.sender is recorded as the creator
      * of the step, which might possibly mean creator of the underlying asset as well.
      * @param _action The index for the step action as defined in the actions array.
@@ -162,9 +165,9 @@ contract SupplyChain is RBAC {
 
         require(_action < actions.length, "Event action not recognized.");
 
-        // require(_appenders != NO_ROLE, "An appender role is required.");
+        require(_appenders != NO_ROLE, "An appender role is required.");
 
-        // require(_admins != NO_ROLE, "An admin role is required.");
+        require(_admins != NO_ROLE, "An admin role is required.");
         
         for (uint i = 0; i < _precedents.length; i++){
             require(isLastStep(_precedents[i]), "Append only on last steps.");
@@ -180,7 +183,7 @@ contract SupplyChain is RBAC {
         }
         if (!repeatItem){
             require(lastSteps[_item] == 0, "Instance not valid.");
-            // items.push(_item);
+            totalItems += 1;
         }
 
         // If there are no precedents check user belongs to appenders of the current step.
@@ -212,19 +215,20 @@ contract SupplyChain is RBAC {
             }
         }
         
-        totalSteps += 1;
-        steps[totalSteps] = Step(
-            msg.sender,
-            _action,
-            _item,
-            _precedents,
-            NO_PARTOF,
-            _appenders,
-            _admins
-        );
-        lastSteps[_item] = totalSteps;
-        emit StepCreated(totalSteps);
-        return totalSteps;
+        uint256 stepId = steps.push(
+            Step(
+                msg.sender,
+                _action,
+                _item,
+                _precedents,
+                NO_PARTOF,
+                _appenders,
+                _admins
+            )
+        ) - 1;
+        lastSteps[_item] = stepId;
+        emit StepCreated(stepId);
+        return stepId;
     }
 
     /**
@@ -236,6 +240,7 @@ contract SupplyChain is RBAC {
      * @param _precedent The last step id for the item being made a part of another.
      * @param _partOf The item id for the item that this one is being made a part of.
      * @return The step id of the step created.
+     * TODO: Test
      */
     function newPartOf
     (
@@ -256,19 +261,20 @@ contract SupplyChain is RBAC {
 
         require(hasRole(msg.sender, steps[_precedent].admins), "Needs admin for partOf.");
 
-        totalSteps += 1;
-        steps[totalSteps] = Step(
-            msg.sender,
-            _action,
-            _item,
-            new uint256[](_precedent),
-            _partOf,
-            NO_ROLE,
-            NO_ROLE
-        );
-        lastSteps[_item] = totalSteps;
-        emit StepCreated(totalSteps);
-        return totalSteps;
+        uint256 stepId = steps.push(
+            Step(
+                msg.sender,
+                _action,
+                _item,
+                new uint256[](_precedent),
+                _partOf,
+                NO_ROLE,
+                NO_ROLE
+            )
+        ) - 1;
+        lastSteps[_item] = stepId;
+        emit StepCreated(stepId);
+        return stepId;
     }
 
     /**
@@ -281,6 +287,7 @@ contract SupplyChain is RBAC {
         view
         returns(bool)
     {
+        if (_step > totalSteps()) return false;
         return lastSteps[steps[_step].item] == _step;
     }
 
