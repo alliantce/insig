@@ -12,6 +12,10 @@ import "./RBAC.sol";
 contract SupplyChain is RBAC {
     // using SafeMath for uint256;
 
+    uint256 constant NO_ACTION = 0;
+    uint256 constant NO_ITEM = 0;
+    uint256 constant NO_STEP = 0;
+
     event ActionCreated(uint256 action);
     event StepCreated(uint256 step);
 
@@ -25,6 +29,7 @@ contract SupplyChain is RBAC {
      * @param action The action of this step.
      * @param item The id of the object that this step refers to.
      * @param precedents The ids of the steps that precede this one in the supply chain.
+     * @param partOf The id of some other item that this is part of and inherits permissions from.
      * @param appenders The roles allowed to append steps to this one.
      * @param admins The roles allowed to append steps with different permissions.
      */
@@ -33,6 +38,7 @@ contract SupplyChain is RBAC {
         uint256 action;
         uint256 item;
         uint256[] precedents;
+        uint256 partOf;
         uint256 appenders;
         uint256 admins;
     }
@@ -65,8 +71,10 @@ contract SupplyChain is RBAC {
     /**
      * @notice The contract constructor, empty as of now.
      */
-    // solium-disable-next-line no-empty-blocks
     constructor() public {
+        addAction("NO ACTION");
+        uint256[] memory noPrecedents;
+        addStep(NO_ACTION, NO_ITEM, noPrecedents, NO_ROLE, NO_ROLE);
     }
 
     /**
@@ -79,7 +87,7 @@ contract SupplyChain is RBAC {
      * action the item id could be thought of as the product id and retrieved from lastSteps
      * @return The action id.
      */
-    function newAction(string memory _actionDescription)
+    function addAction(string memory _actionDescription)
         public
         returns(uint256)
     {
@@ -104,6 +112,8 @@ contract SupplyChain is RBAC {
 
     /**
      * @notice A method to return the number of actions created.
+     * @dev The zero position of the actions array is reserved for NO_ACTION and doesn't count
+     * towards the total of actions.
      * @return The number of actions created.
      */
     function totalActions()
@@ -111,7 +121,7 @@ contract SupplyChain is RBAC {
         view
         returns(uint256)
     {
-        return actions.length;
+        return actions.length - 1;
     }
 
     /**
@@ -127,7 +137,7 @@ contract SupplyChain is RBAC {
      * @param _admins The roles allowed to append steps with different permissions.
      * @return The step id of the step created.
      */
-    function newStep
+    function addStep
     (
         uint256 _action, 
         uint256 _item, 
@@ -184,8 +194,54 @@ contract SupplyChain is RBAC {
             _action,
             _item,
             _precedents,
+            NO_ITEM,
             _appenders,
             _admins
+        );
+        uint256 step = totalSteps;
+        totalSteps += 1;
+        lastSteps[_item] = step;
+        emit StepCreated(step);
+        return step;
+    }
+
+    /**
+     * @notice A method to create a new supply chain step. The msg.sender is recorded as the creator
+     * of the step, which might possibly mean creator of the underlying asset as well.
+     * @param _action The index for the step action as defined in the actions array.
+     * @param _item The item id that this step is for. This must be either the item 
+     * of one of the steps in _precedents, or an item that has never been used before. 
+     * @param _precedent The last step id for the item being made a part of another.
+     * @param _partOf The item id for the item that this one is being made a part of.
+     * @return The step id of the step created.
+     */
+    function newPartOf
+    (
+        uint256 _action, 
+        uint256 _item, 
+        uint256 _precedent,
+        uint256 _partOf
+    )
+        public
+        returns(uint256)
+    {
+
+        require(_action < actions.length, "Event action not recognized.");
+        
+        require(isLastStep(_precedent), "Append only on last steps.");
+
+        require(steps[_precedent].item == _item, "Item not valid.");
+
+        require(hasRole(msg.sender, steps[_precedent].admins), "Needs admin for partOf.");
+
+        steps[totalSteps] = Step(
+            msg.sender,
+            _action,
+            _item,
+            new uint256[](_precedent),
+            _partOf,
+            NO_ROLE,
+            NO_ROLE
         );
         uint256 step = totalSteps;
         totalSteps += 1;
