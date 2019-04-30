@@ -288,7 +288,7 @@ contract SupplyChain is RBAC {
      * @param _admins The roles allowed to append steps with different permissions.
      * @return The step id of the step created.
      */
-    function addHandover
+    function addHandoverStep
     (
         uint256 _action, 
         uint256 _item,
@@ -328,7 +328,7 @@ contract SupplyChain is RBAC {
      * @param _partOf The item id for the item that this one is being made a part of.
      * @return The step id of the step created.
      */
-    function addPartOf
+    function addPartOfStep
     (
         uint256 _action,
         uint256 _precedent,

@@ -92,15 +92,15 @@ contract('SupplyChain', (accounts) => {
             roleId = transaction.logs[0].args.role;
         });
 
-        it('addStep creates a step.', async () => {
+        it('addRootStep creates a step.', async () => {
             const productZero = 100;
             const productOne = 101;
 
             const stepOne = (
-                await supplyChain.addStep(productCreationAction, productZero, [], roleId, roleId)
+                await supplyChain.addRootStep(productCreationAction, productZero, roleId, roleId)
             ).logs[0].args.step;
             const stepTwo = (
-                await supplyChain.addStep(productCreationAction, productOne, [], roleId, roleId)
+                await supplyChain.addRootStep(productCreationAction, productOne, roleId, roleId)
             ).logs[0].args.step;
 
             assert.equal(stepOne, 1);
@@ -112,7 +112,7 @@ contract('SupplyChain', (accounts) => {
             const itemZero = 200;
 
             const stepOne = (
-                await supplyChain.addStep(productCreationAction, productZero, [], roleId, roleId)
+                await supplyChain.addRootStep(productCreationAction, productZero, roleId, roleId)
             ).logs[0].args.step;
             const stepTwo = (
                 await supplyChain.addStep(itemCreationAction, itemZero, [stepOne], roleId, roleId)
@@ -135,7 +135,7 @@ contract('SupplyChain', (accounts) => {
             const itemZero = 200;
 
             const stepOne = (
-                await supplyChain.addStep(itemCreationAction, itemZero, [], roleId, roleId)
+                await supplyChain.addRootStep(itemCreationAction, itemZero, roleId, roleId)
             ).logs[0].args.step;
             const stepTwo = (
                 await supplyChain.addStep(itemCreationAction, itemZero, [stepOne], roleId, roleId)
@@ -158,7 +158,7 @@ contract('SupplyChain', (accounts) => {
                 const itemZero = 100;
     
                 const stepOne = (
-                    await supplyChain.addStep(itemCreationAction, itemZero, [], roleId, roleId)
+                    await supplyChain.addRootStep(itemCreationAction, itemZero, roleId, roleId)
                 ).logs[0].args.step;
                 const stepTwo = (
                     await supplyChain.addStep(itemCertificationAction, itemZero, [stepOne], roleId, roleId)
@@ -176,10 +176,10 @@ contract('SupplyChain', (accounts) => {
             const itemZero = 202;
 
             const stepOne = (
-                await supplyChain.addStep(itemCreationAction, partZero, [], roleId, roleId)
+                await supplyChain.addRootStep(itemCreationAction, partZero, roleId, roleId)
             ).logs[0].args.step;
             const stepTwo = (
-                await supplyChain.addStep(itemCreationAction, partOne, [], roleId, roleId)
+                await supplyChain.addRootStep(itemCreationAction, partOne, roleId, roleId)
             ).logs[0].args.step;
             const stepThree = (
                 await supplyChain.addStep(itemCreationAction, itemZero, [stepOne, stepTwo], roleId, roleId)
@@ -201,16 +201,16 @@ contract('SupplyChain', (accounts) => {
                 const itemZero = 100;
     
                 const stepOne = (
-                    await supplyChain.addStep(itemCreationAction, itemZero, [], roleId, roleId)
+                    await supplyChain.addRootStep(itemCreationAction, itemZero, roleId, roleId)
                 ).logs[0].args.step;
                 const stepTwo = (
                     await supplyChain.addStep(itemCertificationAction, itemZero, [stepOne], roleId, roleId)
                 ).logs[0].args.step;
                 const stepThree = (
-                    await supplyChain.addStep(itemCreationAction, itemZero, [], roleId, roleId)
+                    await supplyChain.addRootStep(itemCreationAction, itemZero, roleId, roleId)
                 ).logs[0].args.step;
             },
-            'Instance not valid.',
+            'Item not valid.',
         );
 
         it('addStep records action.', async () => {
@@ -218,7 +218,7 @@ contract('SupplyChain', (accounts) => {
             const itemZero = 200;
 
             const stepOne = (
-                await supplyChain.addStep(productCreationAction, productZero, [], roleId, roleId)
+                await supplyChain.addRootStep(productCreationAction, productZero, roleId, roleId)
             ).logs[0].args.step;
             const stepTwo = (
                 await supplyChain.addStep(itemCreationAction, itemZero, [stepOne], roleId, roleId)
@@ -240,13 +240,13 @@ contract('SupplyChain', (accounts) => {
             const certificationZero = 300;
 
             const stepOne = (
-                await supplyChain.addStep(productCreationAction, productZero, [], roleId, roleId)
+                await supplyChain.addRootStep(productCreationAction, productZero, roleId, roleId)
             ).logs[0].args.step;
             const stepTwo = (
                 await supplyChain.addStep(itemCreationAction, itemZero, [stepOne], roleId, roleId)
             ).logs[0].args.step;
             const stepThree = (
-                await supplyChain.addStep(certificationCreationAction, certificationZero, [], roleId, roleId)
+                await supplyChain.addRootStep(certificationCreationAction, certificationZero, roleId, roleId)
             ).logs[0].args.step;
             const stepFour = (
                 await supplyChain.addStep(itemCertificationAction, itemZero, [stepTwo, stepThree], roleId, roleId)
@@ -276,13 +276,13 @@ contract('SupplyChain', (accounts) => {
             const certificationZero = 300;
 
             const stepOne = (
-                await supplyChain.addStep(productCreationAction, productZero, [], roleId, roleId)
+                await supplyChain.addRootStep(productCreationAction, productZero, roleId, roleId)
             ).logs[0].args.step;
             const stepTwo = (
                 await supplyChain.addStep(itemCreationAction, itemZero, [stepOne], roleId, roleId)
             ).logs[0].args.step;
             const stepThree = (
-                await supplyChain.addStep(certificationCreationAction, certificationZero, [], roleId, roleId)
+                await supplyChain.addRootStep(certificationCreationAction, certificationZero, roleId, roleId)
             ).logs[0].args.step;
             const stepFour = (
                 await supplyChain.addStep(itemCertificationAction, itemZero, [stepTwo, stepThree], roleId, roleId)
@@ -308,13 +308,13 @@ contract('SupplyChain', (accounts) => {
             const certificationZero = 300;
 
             const stepOne = (
-                await supplyChain.addStep(productCreationAction, productZero, [], roleId, roleId)
+                await supplyChain.addRootStep(productCreationAction, productZero, roleId, roleId)
             ).logs[0].args.step;
             const stepTwo = (
                 await supplyChain.addStep(itemCreationAction, itemZero, [stepOne], roleId, roleId)
             ).logs[0].args.step;
             const stepThree = (
-                await supplyChain.addStep(certificationCreationAction, certificationZero, [], roleId, roleId)
+                await supplyChain.addRootStep(certificationCreationAction, certificationZero, roleId, roleId)
             ).logs[0].args.step;
             const stepFour = (
                 await supplyChain.addStep(itemCertificationAction, itemZero, [stepTwo, stepThree], roleId, roleId)
@@ -373,7 +373,7 @@ contract('SupplyChain', (accounts) => {
                 const itemZero = 100;
     
                 const stepOne = (
-                    await supplyChain.addStep(itemCreationAction, itemZero, [], appender1, admin1, { from: root })
+                    await supplyChain.addRootStep(itemCreationAction, itemZero, appender1, admin1, { from: root })
                 ).logs[0].args.step;
             },
             'Creator not in appenders.',
@@ -388,10 +388,10 @@ contract('SupplyChain', (accounts) => {
                 const itemZero = 202;
                 
                 const stepOne = (
-                    await supplyChain.addStep(itemCreationAction, partZero, [], appenderRole1, adminRole1, { from: appender1 })
+                    await supplyChain.addRootStep(itemCreationAction, partZero, appenderRole1, adminRole1, { from: appender1 })
                 ).logs[0].args.step;
                 const stepTwo = (
-                    await supplyChain.addStep(itemCreationAction, partOne, [], appenderRole2, adminRole2, { from: appender2 })
+                    await supplyChain.addRootStep(itemCreationAction, partOne, appenderRole2, adminRole2, { from: appender2 })
                 ).logs[0].args.step;
                 
                 const stepThree = (
@@ -411,10 +411,10 @@ contract('SupplyChain', (accounts) => {
 
 
                 const stepOne = (
-                    await supplyChain.addStep(itemCreationAction, partZero, [], appenderRole1, adminRole1, { from: appender1 })
+                    await supplyChain.addRootStep(itemCreationAction, partZero, appenderRole1, adminRole1, { from: appender1 })
                 ).logs[0].args.step;
                 const stepTwo = (
-                    await supplyChain.addStep(itemCreationAction, partOne, [], appenderRole2, adminRole2, { from: appender2 })
+                    await supplyChain.addRootStep(itemCreationAction, partOne, appenderRole2, adminRole2, { from: appender2 })
                 ).logs[0].args.step;
                 
                 const stepThree = (
@@ -432,10 +432,10 @@ contract('SupplyChain', (accounts) => {
 
 
             const stepOne = (
-                await supplyChain.addStep(itemCreationAction, partZero, [], appenderRole1, adminRole1, { from: appender1 })
+                await supplyChain.addRootStep(itemCreationAction, partZero, appenderRole1, adminRole1, { from: appender1 })
             ).logs[0].args.step;
             const stepTwo = (
-                await supplyChain.addStep(itemCreationAction, partOne, [], appenderRole2, adminRole2, { from: appender2 })
+                await supplyChain.addRootStep(itemCreationAction, partOne, appenderRole2, adminRole2, { from: appender2 })
             ).logs[0].args.step;
             
             const stepThree = (
@@ -450,20 +450,18 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addBearer(appender1, adminRole2, { from: root });
 
             const stepOne = (
-                await supplyChain.addStep(
+                await supplyChain.addRootStep(
                     itemCreationAction, 
                     partZero, 
-                    [], 
                     appenderRole1, 
                     adminRole1, 
                     { from: appender1 }
                 )
             ).logs[0].args.step;
             const stepTwo = (
-                await supplyChain.addStep(
+                await supplyChain.addRootStep(
                     itemCreationAction, 
                     partOne, 
-                    [], 
                     appenderRole2, 
                     adminRole2, 
                     { from: appender2 }
@@ -490,20 +488,18 @@ contract('SupplyChain', (accounts) => {
 
 
             const stepOne = (
-                await supplyChain.addStep(
+                await supplyChain.addRootStep(
                     itemCreationAction, 
                     partZero, 
-                    [], 
                     appenderRole1, 
                     adminRole1, 
                     { from: appender1 }
                 )
             ).logs[0].args.step;
             const stepTwo = (
-                await supplyChain.addStep(
+                await supplyChain.addRootStep(
                     itemCreationAction, 
                     partOne, 
-                    [], 
                     appenderRole2, 
                     adminRole2, 
                     { from: appender2 }
