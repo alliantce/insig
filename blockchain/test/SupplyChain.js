@@ -25,295 +25,6 @@ contract('SupplyChain', (accounts) => {
         supplyChain = await SupplyChain.deployed();
     });
 
-    describe('Actions', () => {
-        beforeEach(async () => {
-            supplyChain = await SupplyChain.new();
-        });
-
-        it('addAction creates a action.', async () => {
-            productCreationDescription = 'Product line created.';
-
-            transaction = await supplyChain.addAction(productCreationDescription, { from: root });
-
-            assert.equal(transaction.logs.length, 1);
-            assert.equal(transaction.logs[0].event, 'ActionCreated');
-            assert.equal(transaction.logs[0].args.action.toNumber(), 1);
-
-            assert.equal(
-                await supplyChain.actionDescription(transaction.logs[0].args.action.toNumber()),
-                productCreationDescription,
-            );
-            let totalActions = (await supplyChain.totalActions()).toNumber();
-            assert.equal(
-                totalActions,
-                1,
-            );
-
-            itemCreationDescription = 'Instance';
-            transaction = await supplyChain.addAction(itemCreationDescription, { from: root });
-
-            assert.equal(transaction.logs.length, 1);
-            assert.equal(transaction.logs[0].event, 'ActionCreated');
-            assert.equal(transaction.logs[0].args.action.toNumber(), 2);
-
-            assert.equal(
-                await supplyChain.actionDescription(transaction.logs[0].args.action.toNumber()),
-                itemCreationDescription,
-            );
-            totalActions = (await supplyChain.totalActions()).toNumber();
-            assert.equal(
-                totalActions,
-                2,
-            );
-        });
-    });
-
-    describe('Steps as a graph', () => {
-        beforeEach(async () => {
-            supplyChain = await SupplyChain.new();
-
-            productCreationDescription = 'Product line created.';
-            transaction = await supplyChain.addAction(productCreationDescription);
-            productCreationAction = transaction.logs[0].args.action;
-
-            itemCreationDescription = 'Instance created.';
-            transaction = await supplyChain.addAction(itemCreationDescription);
-            itemCreationAction = transaction.logs[0].args.action;
-
-            certificationCreationDescription = 'Certification created';
-            transaction = await supplyChain.addAction(certificationCreationDescription);
-            certificationCreationAction = transaction.logs[0].args.action;
-
-            itemCertificationDescription = 'Instance certified';
-            transaction = await supplyChain.addAction(itemCertificationDescription);
-            itemCertificationAction = transaction.logs[0].args.action;
-
-            transaction = await supplyChain.addRootRole("OnlyRole");
-            roleId = transaction.logs[0].args.role;
-        });
-
-        it('addRootStep creates a step.', async () => {
-            const productZero = 100;
-            const productOne = 101;
-
-            const stepOne = (
-                await supplyChain.addRootStep(productCreationAction, productZero, roleId, roleId)
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.addRootStep(productCreationAction, productOne, roleId, roleId)
-            ).logs[0].args.step;
-
-            assert.equal(stepOne, 1);
-            assert.equal(stepTwo, 2);
-        });
-
-        it('addStep creates chains.', async () => {
-            const itemZero = 100;
-
-            const stepOne = (
-                await supplyChain.addRootStep(productCreationAction, itemZero, roleId, roleId)
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.addStep(itemCreationAction, itemZero, [stepOne])
-            ).logs[0].args.step;
-            const stepThree = (
-                await supplyChain.addStep(itemCertificationAction, itemZero, [stepTwo])
-            ).logs[0].args.step;
-
-            assert.equal(
-                (await supplyChain.getPrecedents(stepTwo))[0].toNumber(),
-                stepOne.toNumber(),
-            );
-            assert.equal(
-                (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
-                stepTwo.toNumber(),
-            );
-        });
-
-        it('addStep maintains lastSteps.', async () => {
-            const itemZero = 200;
-
-            const stepOne = (
-                await supplyChain.addRootStep(itemCreationAction, itemZero, roleId, roleId)
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.addStep(itemCreationAction, itemZero, [stepOne])
-            ).logs[0].args.step;
-
-            assert.isFalse(
-                (await supplyChain.isLastStep(10))
-            );
-            assert.isFalse(
-                (await supplyChain.isLastStep(stepOne))
-            );
-            assert.isTrue(
-                (await supplyChain.isLastStep(stepTwo))
-            );
-        });
-
-        itShouldThrow(
-            'append only on last steps',
-            async () => {    
-                const itemZero = 100;
-    
-                const stepOne = (
-                    await supplyChain.addRootStep(itemCreationAction, itemZero, roleId, roleId)
-                ).logs[0].args.step;
-                const stepTwo = (
-                    await supplyChain.addStep(itemCertificationAction, itemZero, [stepOne])
-                ).logs[0].args.step;
-                const stepThree = (
-                    await supplyChain.addStep(itemCertificationAction, itemZero, [stepOne])
-                ).logs[0].args.step;
-            },
-            'Append only on last steps.',
-        );
-
-        it('addStep allows multiple precedents.', async () => {
-            const itemZero = 200;
-            const itemOne = 201;
-
-            const stepOne = (
-                await supplyChain.addRootStep(itemCreationAction, itemZero, roleId, roleId)
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.addRootStep(itemCreationAction, itemOne, roleId, roleId)
-            ).logs[0].args.step;
-            const stepThree = (
-                await supplyChain.addStep(itemCreationAction, itemZero, [stepOne, stepTwo])
-            ).logs[0].args.step;
-
-            assert.equal(
-                (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
-                stepOne.toNumber(),
-            );
-            assert.equal(
-                (await supplyChain.getPrecedents(stepThree))[1].toNumber(),
-                stepTwo.toNumber(),
-            );
-        });
-
-        itShouldThrow(
-            'item must be the same as a direct precedent.',
-            async () => {    
-                const itemZero = 200;
-                const itemOne = 201;
-    
-                const stepOne = (
-                    await supplyChain.addRootStep(itemCreationAction, itemZero, roleId, roleId)
-                ).logs[0].args.step;
-                const stepTwo = (
-                    await supplyChain.addStep(itemCertificationAction, itemOne, [stepOne])
-                ).logs[0].args.step;
-            },
-            'Item not valid.',
-        );
-
-        it('addStep records action.', async () => {
-            const productZero = 100;
-
-            const stepOne = (
-                await supplyChain.addRootStep(productCreationAction, productZero, roleId, roleId)
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.addStep(itemCreationAction, productZero, [stepOne])
-            ).logs[0].args.step;
-
-            assert.equal(
-                ((await supplyChain.steps.call(stepOne)).action).toNumber(),
-                productCreationAction.toNumber(),
-            );
-            assert.equal(
-                ((await supplyChain.steps.call(stepTwo)).action).toNumber(),
-                itemCreationAction.toNumber(),
-            );
-        });
-
-        it('addStep records item.', async () => {
-            const itemZero = 200;
-            const certificationZero = 300;
-
-            const stepOne = (
-                await supplyChain.addRootStep(productCreationAction, itemZero, roleId, roleId)
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.addStep(itemCreationAction, itemZero, [stepOne])
-            ).logs[0].args.step;
-            const stepThree = (
-                await supplyChain.addRootStep(certificationCreationAction, certificationZero, roleId, roleId)
-            ).logs[0].args.step;
-            const stepFour = (
-                await supplyChain.addStep(itemCertificationAction, itemZero, [stepTwo, stepThree])
-            ).logs[0].args.step;
-
-            assert.equal(
-                ((await supplyChain.steps.call(stepOne)).item).toNumber(),
-                itemZero,
-            );
-            assert.equal(
-                ((await supplyChain.steps.call(stepTwo)).item).toNumber(),
-                itemZero,
-            );
-            assert.equal(
-                ((await supplyChain.steps.call(stepThree)).item).toNumber(),
-                certificationZero,
-            );
-            assert.equal(
-                ((await supplyChain.steps.call(stepFour)).item).toNumber(),
-                itemZero,
-            );
-        });
-
-        it('lastSteps records item.', async () => {
-            const itemZero = 200;
-            const certificationZero = 300;
-
-            const stepOne = (
-                await supplyChain.addRootStep(productCreationAction, itemZero, roleId, roleId)
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.addStep(itemCreationAction, itemZero, [stepOne])
-            ).logs[0].args.step;
-            const stepThree = (
-                await supplyChain.addRootStep(certificationCreationAction, certificationZero, roleId, roleId)
-            ).logs[0].args.step;
-            const stepFour = (
-                await supplyChain.addStep(itemCertificationAction, itemZero, [stepTwo, stepThree])
-            ).logs[0].args.step;
-
-            assert.equal(
-                ((await supplyChain.lastSteps.call(itemZero))).toNumber(),
-                stepFour,
-            );
-            assert.equal(
-                ((await supplyChain.lastSteps.call(certificationZero))).toNumber(),
-                stepThree,
-            );
-        });
-
-        it('addStep records step creator.', async () => {
-            const itemZero = 200;
-            const certificationZero = 300;
-
-            const stepOne = (
-                await supplyChain.addRootStep(productCreationAction, itemZero, roleId, roleId)
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.addStep(itemCreationAction, itemZero, [stepOne])
-            ).logs[0].args.step;
-            const stepThree = (
-                await supplyChain.addRootStep(certificationCreationAction, certificationZero, roleId, roleId)
-            ).logs[0].args.step;
-            const stepFour = (
-                await supplyChain.addStep(itemCertificationAction, itemZero, [stepTwo, stepThree])
-            ).logs[0].args.step;
-
-            const certifier = (await supplyChain.steps.call(stepThree)).creator;
-
-            assert.equal(certifier, root);
-        });
-    });
-
     describe('Item ownership', () => {
         beforeEach(async () => {
             supplyChain = await SupplyChain.new();
@@ -477,7 +188,7 @@ contract('SupplyChain', (accounts) => {
             const partZero = 200;
             const partOne = 201;
             await supplyChain.addBearer(appender1, appenderRole2, { from: admin2 });
-            await supplyChain.addBearer(appender1, adminRole2, { from: root });
+            // await supplyChain.addBearer(appender1, adminRole2, { from: root });
 
 
             const stepOne = (
@@ -521,5 +232,279 @@ contract('SupplyChain', (accounts) => {
                 partOne,
             );
         });
+
+        itShouldThrow(
+            'addPartOfStep - Composite item does not exist.',
+            async () => {    
+                const itemOne = 201;
+                const itemTwo = 202;
+
+                // RootStep(1)
+                const stepOne = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemOne, 
+                        appenderRole1, 
+                        adminRole1, 
+                        { from: appender1 }
+                    )
+                ).logs[0].args.step;
+                // RootStep(1) <- PartOf(2) X
+                const stepTwo = (
+                    await supplyChain.addPartOfStep(
+                        itemCreationAction, 
+                        [stepOne],
+                        itemTwo, 
+                        {from: appender1}
+                    )
+                ).logs[0].args.step;
+            },
+            'Composite item does not exist.',
+        );
+
+        itShouldThrow(
+            'addPartOfStep - Needs admin for partOf.',
+            async () => {    
+                const itemOne = 201;
+                const itemTwo = 202;
+
+                // RootStep(1)
+                const stepOne = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemOne, 
+                        appenderRole1, 
+                        adminRole1, 
+                        { from: appender1 }
+                    )
+                ).logs[0].args.step;
+                // RootStep(1) <- TransformStep(2)
+                const stepTwo = (
+                    await supplyChain.addTransformStep(
+                        itemCreationAction, 
+                        itemTwo, 
+                        [stepOne], 
+                        {from: appender1}
+                    )
+                ).logs[0].args.step;
+                // RootStep(1) <- PartOf(2) X
+                const stepThree = (
+                    await supplyChain.addPartOfStep(
+                        itemCreationAction, 
+                        [stepOne],
+                        itemTwo, 
+                        {from: appender1}
+                    )
+                ).logs[0].args.step;
+            },
+            'Needs admin for partOf.',
+        );
+
+        it('getComposite returns item pointed by partOf.', async () => {
+            const itemOne = 201;
+            const itemTwo = 202;
+
+            // RootStep(1)
+            const stepOne = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    appenderRole1, 
+                    adminRole1, 
+                    { from: appender1 }
+                )
+            ).logs[0].args.step;
+            // RootStep(1) <- TransformStep(2)
+            const stepTwo = (
+                await supplyChain.addTransformStep(
+                    itemCreationAction, 
+                    itemTwo, 
+                    [stepOne], 
+                    {from: appender1}
+                )
+            ).logs[0].args.step;
+            // RootStep(1) <- PartOf(2)
+            const stepThree = (
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    [stepOne],
+                    itemTwo, 
+                    {from: admin1}
+                )
+            ).logs[0].args.step;
+
+            assert.equal(
+                (await supplyChain.getComposite(stepThree)).toNumber(),
+                itemTwo,
+            );
+        });
+
+        it('getComposite returns item pointed by partOf recursively.', async () => {
+            const itemOne = 201;
+            const itemTwo = 202;
+            const itemThree = 203;
+
+            // RootStep(1)
+            const stepOne = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    appenderRole1, 
+                    adminRole1, 
+                    { from: appender1 }
+                )
+            ).logs[0].args.step;
+            // RootStep(1) <- TransformStep(2)
+            const stepTwo = (
+                await supplyChain.addTransformStep(
+                    itemCreationAction, 
+                    itemTwo, 
+                    [stepOne], 
+                    {from: appender1}
+                )
+            ).logs[0].args.step;
+            // RootStep(1) <- PartOf(2)
+            const stepThree = (
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    [stepOne],
+                    itemTwo, 
+                    {from: admin1}
+                )
+            ).logs[0].args.step;
+            // TransformStep(2) <- TransformStep(3)
+            const stepFour = (
+                await supplyChain.addTransformStep(
+                    itemCreationAction, 
+                    itemThree, 
+                    [stepTwo], 
+                    {from: appender1}
+                )
+            ).logs[0].args.step;
+            // TransformStep(2) <- PartOf(3)
+            const stepFive = (
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    [stepTwo],
+                    itemThree, 
+                    {from: admin1}
+                )
+            ).logs[0].args.step;
+
+            assert.equal(
+                (await supplyChain.getComposite(stepThree)).toNumber(),
+                itemThree,
+            );
+        });
+
+        itShouldThrow(
+            'addPartOfStep - derive appenders from composite.',
+            async () => {
+                const itemOne = 201;
+                const itemTwo = 202;
+
+                // RootStep(1)
+                const stepOne = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemOne, 
+                        appenderRole1, 
+                        adminRole1, 
+                        { from: appender1 }
+                    )
+                ).logs[0].args.step;
+                // RootStep(1) <- TransformStep(2)
+                const stepTwo = (
+                    await supplyChain.addTransformStep(
+                        itemCreationAction, 
+                        itemTwo, 
+                        [stepOne], 
+                        {from: appender1}
+                    )
+                ).logs[0].args.step;
+                // RootStep(1) <- PartOf(2)
+                const stepThree = (
+                    await supplyChain.addPartOfStep(
+                        itemCreationAction, 
+                        [stepOne],
+                        itemTwo, 
+                        {from: admin1}
+                    )
+                ).logs[0].args.step;
+                // TransformStep(2) <- HandoverStep(2)
+                const stepFour = (
+                    await supplyChain.addHandoverStep(
+                        itemCreationAction, 
+                        itemTwo, 
+                        appenderRole2, 
+                        adminRole2, 
+                        {from: admin1}
+                    )
+                ).logs[0].args.step; 
+                // PartOf(2) <- Appender(1) X
+                const stepFive = (
+                    await supplyChain.addStep(
+                        itemCreationAction, 
+                        itemOne, 
+                        [stepThree], 
+                        {from: appender1}
+                    )
+                ).logs[0].args.step;
+            },
+            'Not an appender of precedents.',
+        );
+
+        it('addPartOfStep - sanity check.', async () => {
+            const itemOne = 201;
+            const itemTwo = 202;
+
+            // RootStep(1)
+            const stepOne = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    appenderRole1, 
+                    adminRole1, 
+                    { from: appender1 }
+                )
+            ).logs[0].args.step;
+            // RootStep(1) <- TransformStep(2)
+            const stepTwo = (
+                await supplyChain.addTransformStep(
+                    itemCreationAction, 
+                    itemTwo, 
+                    [stepOne], 
+                    {from: appender1}
+                )
+            ).logs[0].args.step;
+            // RootStep(1) <- PartOf(2)
+            const stepThree = (
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    [stepOne],
+                    itemTwo, 
+                    {from: admin1}
+                )
+            ).logs[0].args.step;
+            // TransformStep(2) <- HandoverStep(2)
+            const stepFour = (
+                await supplyChain.addHandoverStep(
+                    itemCreationAction, 
+                    itemTwo, 
+                    appenderRole2, 
+                    adminRole2, 
+                    {from: admin1}
+                )
+            ).logs[0].args.step; 
+            // PartOf(2) <- Appender(2)
+            const stepFive = (
+                await supplyChain.addStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    [stepThree],
+                    {from: appender2}
+                )
+            ).logs[0].args.step;
+        });
     });
-});
+})

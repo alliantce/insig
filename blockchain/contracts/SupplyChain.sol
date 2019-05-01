@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
 
-// import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./RBAC.sol";
 
 
@@ -10,7 +9,6 @@ import "./RBAC.sol";
  * @notice Implements a basic compositional supply chain contract.
  */
 contract SupplyChain is RBAC {
-    // using SafeMath for uint256;
 
     uint256 constant NO_ACTION = 0;
     uint256 constant NO_ITEM = 0;
@@ -19,6 +17,7 @@ contract SupplyChain is RBAC {
 
     event ActionCreated(uint256 action);
     event StepCreated(uint256 step);
+    event debug(uint256 x);
 
     /**
      * @notice Supply chain step data. By chaining these and not allowing them to be modified
@@ -50,6 +49,12 @@ contract SupplyChain is RBAC {
      */
     Step[] public steps;
 
+    /**
+     * @notice The step actions, defined by their index in an array of their descriptions. Examples
+     * could be Creation, Certification, Handover, Split, Merge, Destruction
+     */
+    string[] internal actions;
+
     /** 
      * @notice Item counter 
      */
@@ -59,12 +64,6 @@ contract SupplyChain is RBAC {
      * @notice Mapping from item id to the last step in the lifecycle of that item.
      */
     mapping(uint256 => uint256) public lastSteps;
-
-    /**
-     * @notice The step actions, defined by their index in an array of their descriptions. Examples
-     * could be Creation, Certification, Handover, Split, Merge, Destruction
-     */
-    string[] internal actions;
 
     /**
      * @notice The contract constructor, empty as of now.
@@ -138,6 +137,76 @@ contract SupplyChain is RBAC {
         return steps.length - 1;
     }
 
+    /**
+     * @notice A method to verify whether a step is the last of an item.
+     * @param _step The step id of the step to verify.
+     * @return Whether a step is the last of an item.
+     */
+    function isLastStep(uint256 _step)
+        public
+        view
+        returns(bool)
+    {
+        if (_step > totalSteps()) return false;
+        return lastSteps[steps[_step].item] == _step;
+    }
+
+    /**
+     * @notice A method to retrieve the immediate precedents of a step.
+     * @param _step The step id of the step to retrieve precedents for.
+     * @return An array with the step ids of the immediate precedents of the step given as a parameter.
+     */
+    function getPrecedents(uint256 _step)
+        public
+        view
+        returns(uint256[] memory)
+    {
+        return steps[_step].precedents;
+    }
+
+    /**
+     * @notice A method to retrieve the composite item this step refers to.
+     * @param _step The step id of the step to start looking from.
+     * @return The composite item this step refers to.
+     */
+    function getComposite(uint256 _step)
+        public
+        view
+        returns(uint256)
+    {
+        uint256 step = _step;
+        while (steps[step].partOf != NO_ITEM){
+            step = lastSteps[steps[step].partOf];
+        }
+        return steps[step].item;
+    }
+
+    /**
+     * @notice Retrieve the authorized appender role for a step, taking into account composition.
+     * @param _step The step id of the step to retrieve appenders for.
+     * @return The authorized appenders for this step.
+     */
+    function getAppenders(uint256 _step)
+        public
+        view
+        returns(uint256)
+    {
+        return steps[lastSteps[getComposite(_step)]].appenders;
+    }
+
+    /**
+     * @notice Retrieve the authorized admin role for a step, taking into account composition.
+     * @param _step The step id of the step to retrieve admins for.
+     * @return The authorized admins for this step.
+     */
+    function getAdmins(uint256 _step)
+        public
+        view
+        returns(uint256)
+    {
+        return steps[lastSteps[getComposite(_step)]].admins;
+    }
+
     function pushStep
     (
         address _creator,
@@ -205,19 +274,9 @@ contract SupplyChain is RBAC {
         }
         require (repeatItem, "Item not valid.");
 
-        uint256[] memory precedents = _precedents;
-        uint256 item = _item;
-
-        // If the precedent is a partOf retrieve the precedents of the composite item
-        if (precedents.length == 1 && steps[precedents[0]].partOf != NO_PARTOF){
-            item = getComposite(_item);
-            precedents = steps[lastSteps[getComposite(item)]].precedents;
-        }
-
         // Check user belongs to the appenders of all precedents.
-        for (uint i = 0; i < precedents.length; i++){
-            uint256 appenders = steps[precedents[i]].appenders;
-            require(hasRole(msg.sender, appenders), "Not an appender of precedents.");
+        for (uint i = 0; i < _precedents.length; i++){
+            require(hasRole(msg.sender, getAppenders(_precedents[i])), "Not an appender of precedents.");
         }
         
         return pushStep(
@@ -226,65 +285,9 @@ contract SupplyChain is RBAC {
             _item,
             _precedents,
             NO_PARTOF,
-            steps[precedents[0]].appenders,
-            steps[precedents[0]].admins
+            getAppenders(_precedents[0]),
+            getAdmins(_precedents[0])
         );
-    }
-
-    /**
-     * @notice A method to create a new supply chain step implying a transformation and a new item.
-     * @param _action The index for the step action as defined in the actions array.
-     * @param _item The item id that this step is for. This must be either the item 
-     * of one of the steps in _precedents, or an item that has never been used before. 
-     * @param _precedents An array of the step ids for steps considered to be predecessors to
-     * this one. Permissions are inherited from the first one.
-     * @return The step id of the step created.
-     */
-    function addTransformStep
-    (
-        uint256 _action, 
-        uint256 _item, 
-        uint256[] memory _precedents
-    )
-        public
-        returns(uint256)
-    {
-        require(_precedents.length > 0, "No precedents, use addRootStep.");
-
-        require(_action < actions.length, "Event action not recognized.");
-
-        require(lastSteps[_item] == 0, "Item not valid.");
-
-        for (uint i = 0; i < _precedents.length; i++){
-            require(isLastStep(_precedents[i]), "Append only on last steps.");
-        }
-
-        // Check user belongs to the appenders of all precedents.
-        for (uint i = 0; i < _precedents.length; i++){
-            uint256 precedentStepId = _precedents[i];
-            uint256 appenders;
-            if(steps[precedentStepId].partOf != NO_PARTOF){
-                uint256 compositeItem = getComposite(precedentStepId);
-                appenders = steps[lastSteps[compositeItem]].appenders;
-            }
-            else{
-                appenders = steps[precedentStepId].appenders;
-            }
-            require(hasRole(msg.sender, appenders), "Not an appender of precedents.");
-        }
-        
-        totalItems += 1;
-        Step memory mainPrecedentStep = steps[_precedents[0]];
-        uint256 stepId =  pushStep(
-            msg.sender,
-            _action,
-            _item,
-            _precedents,
-            NO_PARTOF,
-            mainPrecedentStep.appenders,
-            mainPrecedentStep.admins
-        );
-        return stepId;
     }
 
     /**
@@ -332,6 +335,52 @@ contract SupplyChain is RBAC {
     }
 
     /**
+     * @notice A method to create a new supply chain step implying a transformation and a new item.
+     * @param _action The index for the step action as defined in the actions array.
+     * @param _item The item id that this step is for. This must be either the item 
+     * of one of the steps in _precedents, or an item that has never been used before. 
+     * @param _precedents An array of the step ids for steps considered to be predecessors to
+     * this one. Permissions are inherited from the first one.
+     * @return The step id of the step created.
+     */
+    function addTransformStep
+    (
+        uint256 _action, 
+        uint256 _item, 
+        uint256[] memory _precedents
+    )
+        public
+        returns(uint256)
+    {
+        require(_precedents.length > 0, "No precedents, use addRootStep.");
+
+        require(_action < actions.length, "Event action not recognized.");
+
+        require(lastSteps[_item] == 0, "Item not valid.");
+
+        for (uint i = 0; i < _precedents.length; i++){
+            require(isLastStep(_precedents[i]), "Append only on last steps.");
+        }
+
+        // Check user belongs to the appenders of all precedents.
+        for (uint i = 0; i < _precedents.length; i++){
+            require(hasRole(msg.sender, getAppenders(_precedents[i])), "Not an appender of precedents.");
+        }
+        
+        totalItems += 1;
+        uint256 stepId =  pushStep(
+            msg.sender,
+            _action,
+            _item,
+            _precedents,
+            NO_PARTOF,
+            getAppenders(_precedents[0]),
+            getAdmins(_precedents[0])
+        );
+        return stepId;
+    }
+
+    /**
      * @notice A method to create a new supply chain step representing the handover of an item.
      * In practical terms it is a change in the permissions.
      * @param _action The index for the step action as defined in the actions array.
@@ -354,7 +403,7 @@ contract SupplyChain is RBAC {
         
         require(lastSteps[_item] != 0, "Item does not exist.");
 
-        require(hasRole(msg.sender, steps[lastSteps[_item]].admins), "Needs admin for handover.");
+        require(hasRole(msg.sender, getAdmins(lastSteps[_item])), "Needs admin for handover.");
 
         return pushStep(
             msg.sender,
@@ -374,6 +423,9 @@ contract SupplyChain is RBAC {
      * @param _precedent The last step id for the item being made a part of another.
      * @param _partOf The item id for the item that this one is being made a part of.
      * @return The step id of the step created.
+     * TODO: Make this method internal and part of an addCompositionStep transaction.
+     * TODO: Make this method internal and part of an addTransformStep transaction.
+     * If called directly there is no guarantee that steps[_precedent] is in the same chain as _partOf.
      */
     function addPartOfStep
     (
@@ -389,7 +441,9 @@ contract SupplyChain is RBAC {
         
         require(isLastStep(_precedent), "Append only on last steps.");
 
-        require(hasRole(msg.sender, steps[_precedent].admins), "Needs admin for partOf.");
+        require(lastSteps[_partOf] != 0, "Composite item does not exist.");
+
+        require(hasRole(msg.sender, getAdmins(_precedent)), "Needs admin for partOf.");
 
         return pushStep(
             msg.sender,
@@ -400,49 +454,5 @@ contract SupplyChain is RBAC {
             NO_ROLE,
             NO_ROLE
         );
-    }
-
-    /**
-     * @notice A method to verify whether a step is the last of an item.
-     * @param _step The step id of the step to verify.
-     * @return Whether a step is the last of an item.
-     */
-    function isLastStep(uint256 _step)
-        public
-        view
-        returns(bool)
-    {
-        if (_step > totalSteps()) return false;
-        return lastSteps[steps[_step].item] == _step;
-    }
-
-    /**
-     * @notice A method to retrieve the immediate precedents of a step.
-     * @param _step The step id of the step to retrieve precedents for.
-     * @return An array with the step ids of the immediate precedents of the step given as a parameter.
-     */
-    function getPrecedents(uint256 _step)
-        public
-        view
-        returns(uint256[] memory)
-    {
-        return steps[_step].precedents;
-    }
-
-    /**
-     * @notice A method to retrieve the composite item this step refers to.
-     * @param _step The step id of the step to start looking from.
-     * @return The composite item this step refers to.
-     */
-    function getComposite(uint256 _step)
-        public
-        view
-        returns(uint256)
-    {
-        uint256 step = _step;
-        while (steps[step].partOf != NO_ITEM){
-            step = lastSteps[steps[step].partOf];
-        }
-        return steps[step].item;
     }
 }
