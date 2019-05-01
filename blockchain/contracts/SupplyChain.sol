@@ -77,7 +77,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to create a new step action.
+     * @notice Create a new step action.
      * @param _actionDescription The description of the action being created.
      * @dev Product lines can be implemented with a step action that indicates the creation of a
      * product line that is a parent to all items of that product. The creation of an item
@@ -96,7 +96,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to retrieve the description for a action.
+     * @notice Retrieve the description for a action.
      * @param _action The identifier for the action.
      * @return The action description.
      */
@@ -110,7 +110,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to return the number of actions created.
+     * @notice Return the number of actions created.
      * @dev The zero position of the actions array is reserved for NO_ACTION and doesn't count
      * towards the total of actions.
      * @return The number of actions created.
@@ -124,7 +124,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to return the number of steps created.
+     * @notice Return the number of steps created.
      * @dev The zero position of the actions array is not used for valid steps and doesn't count
      * towards their total.
      * @return The number of steps created.
@@ -138,7 +138,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to verify whether a step is the last of an item.
+     * @notice Verify whether a step is the last of an item.
      * @param _step The step id of the step to verify.
      * @return Whether a step is the last of an item.
      */
@@ -152,7 +152,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to retrieve the immediate precedents of a step.
+     * @notice Retrieve the immediate precedents of a step.
      * @param _step The step id of the step to retrieve precedents for.
      * @return An array with the step ids of the immediate precedents of the step given as a parameter.
      */
@@ -165,7 +165,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to retrieve the composite item this step refers to.
+     * @notice Retrieve the composite item this step refers to.
      * @param _step The step id of the step to start looking from.
      * @return The composite item this step refers to.
      */
@@ -237,7 +237,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to create a new supply chain step. The msg.sender is recorded as the creator
+     * @notice Create a new supply chain step. The msg.sender is recorded as the creator
      * of the step, which might possibly mean creator of the underlying asset as well.
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The item id that this step is for. This must be either the item 
@@ -291,7 +291,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to create a new supply chain step without precedents.
+     * @notice Create a new supply chain step without precedents.
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The item id that this step is for. This must be an item that has never been
      * used before.
@@ -335,7 +335,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to create a new supply chain step implying a transformation and a new item.
+     * @notice Create a new supply chain step implying a transformation and a new item.
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The item id that this step is for. This must be either the item 
      * of one of the steps in _precedents, or an item that has never been used before. 
@@ -381,7 +381,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to create a new supply chain step representing the handover of an item.
+     * @notice Create a new supply chain step representing the handover of an item.
      * In practical terms it is a change in the permissions.
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The item being handed over.
@@ -417,7 +417,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice A method to create a new supply chain step representing that the item in the step
+     * @notice Create a new supply chain step representing that the item in the step
      * passed as a parameter has become a part of another item.
      * @param _action The index for the step action as defined in the actions array.
      * @param _precedent The last step id for the item being made a part of another.
