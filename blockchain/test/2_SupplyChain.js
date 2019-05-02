@@ -25,7 +25,7 @@ contract('SupplyChain', (accounts) => {
         supplyChain = await SupplyChain.deployed();
     });
 
-    describe('Item ownership', () => {
+    describe('Steps as Supply Chain', () => {
         beforeEach(async () => {
             supplyChain = await SupplyChain.new();
 

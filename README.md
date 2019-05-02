@@ -124,7 +124,7 @@ The methods of SupplyChain.sol are limited to:
     * pointed to, but for steps like Creation it could point to the parts this asset is made of.
     * @return The step id of the step created.
     */
-   function newStep(uint256 _item, uint256[] memory _precedents)
+   function addStep(uint256 _item, uint256[] memory _precedents)
        public
        returns(uint256)
    {
@@ -193,21 +193,21 @@ Immutability in blockchain also means that your bugs will haunt you forever, tha
 
     Steps
 
-      ✓ newStep creates a step. (90ms)
+      ✓ addStep creates a step. (90ms)
 
-      ✓ newStep creates chains. (160ms)
+      ✓ addStep creates chains. (160ms)
 
-      ✓ newStep maintains lastSteps. (121ms)
+      ✓ addStep maintains lastSteps. (121ms)
 
       ✓ append only on last steps (107ms)
 
-      ✓ newStep allows multiple precedents. (136ms)
+      ✓ addStep allows multiple precedents. (136ms)
 
       ✓ item must be unique or the same as a direct precedent. (114ms)
 
-      ✓ newStep records step creator. (128ms)
+      ✓ addStep records step creator. (128ms)
 
-      ✓ newStep records item. (165ms)
+      ✓ addStep records item. (165ms)
 
       ✓ lastSteps records item. (138ms)
 
