@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
 import { Sankey } from 'react-vis';
+import Energy from './energy.json';
 
 import './main.scss';
 import './createstep.scss';
 
 
+const BLURRED_LINK_OPACITY = 0.3;
+const FOCUSED_LINK_OPACITY = 1;
 enum DOMNames {
     action = 'action',
     precedents = 'precedents',
@@ -14,6 +17,7 @@ interface ICreateStep {
     action: string;
     precedents: string;
     item: string;
+    activeLink: object;
 }
 class CreateStep extends Component<{}, ICreateStep> {
     constructor(props: any) {
@@ -22,6 +26,7 @@ class CreateStep extends Component<{}, ICreateStep> {
             action: 'default',
             precedents: 'default',
             item: 'default',
+            activeLink: null as any,
         };
     }
 
@@ -42,18 +47,41 @@ class CreateStep extends Component<{}, ICreateStep> {
     }
 
     drawGraph() {
-        const nodes = [{ name: 'a' }, { name: 'b' }, { name: 'c' }];
-        const links = [
-            { source: 0, target: 1, value: 10 },
-            { source: 0, target: 2, value: 20 },
-            { source: 1, target: 2, value: 20 }
-        ];
+        const nodes = Energy.nodes;
+        const links = Energy.links;
+        const { activeLink } = this.state;
+
         return (
             <Sankey
                 nodes={nodes}
-                links={links}
-                width={200}
-                height={200}
+                links={links.map((d, i) => ({
+                    ...d,
+                    opacity:
+                        activeLink && i === (activeLink as any).index
+                            ? FOCUSED_LINK_OPACITY
+                            : BLURRED_LINK_OPACITY
+                }))}
+                width={960}
+                height={500}
+                layout={24}
+                nodeWidth={15}
+                nodePadding={10}
+                style={{
+                    links: {
+                        opacity: 0.3
+                    },
+                    labels: {
+                        fontSize: '8px'
+                    },
+                    rects: {
+                        strokeWidth: 2,
+                        stroke: '#1A3177'
+                    }
+                }}
+                // do not use voronoi in combination with link mouse over
+                hasVoronoi={false}
+                onLinkMouseOver={(node: any) => this.setState({ activeLink: node })}
+                onLinkMouseOut={() => this.setState({ activeLink: null as any })}
             />
         );
     }
