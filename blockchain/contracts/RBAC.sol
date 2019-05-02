@@ -8,18 +8,23 @@ pragma solidity ^0.5.0;
  */
 contract RBAC {
     event RoleCreated(uint256 role);
-    event MemberAdded(address account, uint256 role);
-    event MemberRemoved(address account, uint256 role);
+    event BearerAdded(address account, uint256 role);
+    event BearerRemoved(address account, uint256 role);
+
+    uint256 constant NO_ROLE = 0;
 
     /**
      * @notice A role, which will be used to group users.
      * @dev The role id is its position in the roles array.
      * @param description A description for the role.
-     * @param admin The role that can add or remove users from the role.
+     * @param admin The only role that can add or remove bearers from this role. To have the role
+     * bearers to be also the role admins you should pass roles.length as the admin role.
+     * @param bearers Addresses belonging to this role.
      */
     struct Role {
         string description;
         uint256 admin;
+        address[] bearers;
     }
 
     /**
@@ -28,72 +33,88 @@ contract RBAC {
     Role[] public roles;
 
     /**
-     * @notice Memberships of users to roles.
-     */
-    mapping(uint256 => address[]) public memberships;
-
-    /**
      * @notice The contract constructor, empty as of now.
      */
-    // solium-disable-next-line no-empty-blocks
     constructor() public {
+        addRootRole("NO_ROLE");
+    }
+
+    /**
+     * @notice A method to create a new role that has itself as an admin. 
+     * msg.sender is added as a bearer.
+     * @param _roleDescription The description of the role being created.
+     * @return The role id.
+     */
+    function addRootRole(string memory _roleDescription)
+        public
+        returns(uint256)
+    {
+        uint256 role = addRole(_roleDescription, roles.length);
+        roles[role].bearers.push(msg.sender);
+        emit BearerAdded(msg.sender, role);
     }
 
     /**
      * @notice A method to create a new role.
-     * @dev If the _admin parameter is the id of the newly created role 
-     * msg.sender is added to it automatically.
      * @param _roleDescription The description of the role being created.
-     * @param _admin The role that is allowed to add and remove members from 
+     * @param _admin The role that is allowed to add and remove bearers from 
      * the role being created.
      * @return The role id.
      */
-    function newRole(string memory _roleDescription, uint256 _admin)
+    function addRole(string memory _roleDescription, uint256 _admin)
         public
         returns(uint256)
     {
         require(_admin <= roles.length, "Admin role doesn't exist.");
-        uint256 role = roles.push(Role(_roleDescription, _admin)) - 1;
+        uint256 role = roles.push(
+            Role({
+                description: _roleDescription, 
+                admin: _admin, 
+                bearers: new address[](0)
+            })
+        ) - 1;
         emit RoleCreated(role);
-        if (_admin == role) {
-            memberships[role].push(msg.sender);
-            emit MemberAdded(msg.sender, role);
-        }
         return role;
     }
 
+    /**
+     * @notice A method to retrieve the number of roles in the contract.
+     * @dev The zero position in the roles array is reserved for NO_ROLE and doesn't count towards
+     * this total.
+     */
     function totalRoles()
         public
         view
         returns(uint256)
     {
-        return roles.length;
+        return roles.length - 1;
     }
 
     /**
-     * @notice A method to verify whether an account is a member of a role
+     * @notice A method to verify whether an account is a bearer of a role
      * @param _account The account to verify.
      * @param _role The role to look into.
-     * @return Whether the account is a member of the role.
+     * @return Whether the account is a bearer of the role.
      */
-    function memberOf(address _account, uint256 _role)
+    function hasRole(address _account, uint256 _role)
         public
         view
         returns(bool)
     {
-        address[] memory members = memberships[_role];
-        for (uint256 i = 0; i < members.length; i++){
-            if (members[i] == _account) return true;
+        if (_role >= roles.length ) return false;
+        address[] memory _bearers = roles[_role].bearers;
+        for (uint256 i = 0; i < _bearers.length; i++){
+            if (_bearers[i] == _account) return true;
         }
         return false;
     }
 
     /**
-     * @notice A method to add a member to a role
-     * @param _account The account to add as a member.
-     * @param _role The role to add the member to.
+     * @notice A method to add a bearer to a role
+     * @param _account The account to add as a bearer.
+     * @param _role The role to add the bearer to.
      */
-    function addMember(address _account, uint256 _role)
+    function addBearer(address _account, uint256 _role)
         public
     {
         require(
@@ -101,21 +122,21 @@ contract RBAC {
             "Role doesn't exist."
         );
         require(
-            memberOf(msg.sender, roles[_role].admin),
-            "User not authorized to add members."
+            hasRole(msg.sender, roles[_role].admin),
+            "User not authorized to add bearers."
         );
-        if (memberOf(_account, _role) == false){
-            memberships[_role].push(_account);
-            emit MemberAdded(_account, _role);
+        if (hasRole(_account, _role) == false){
+            roles[_role].bearers.push(_account);
+            emit BearerAdded(_account, _role);
         }
     }
 
     /**
-     * @notice A method to remove a member from a role
-     * @param _account The account to remove as a member.
-     * @param _role The role to remove the member from.
+     * @notice A method to remove a bearer from a role
+     * @param _account The account to remove as a bearer.
+     * @param _role The role to remove the bearer from.
      */
-    function removeMember(address _account, uint256 _role)
+    function removeBearer(address _account, uint256 _role)
         public
     {
         require(
@@ -123,15 +144,15 @@ contract RBAC {
             "Role doesn't exist."
         );
         require(
-            memberOf(msg.sender, roles[_role].admin),
-            "User not authorized to remove members."
+            hasRole(msg.sender, roles[_role].admin),
+            "User not authorized to remove bearers."
         );
-        address[] memory members = memberships[_role];
-        for (uint256 i = 0; i < members.length; i++){
-            if (members[i] == _account){
-                members[i] = members[members.length - 1];
-                memberships[_role].pop();
-                emit MemberRemoved(_account, _role);
+        address[] memory _bearers = roles[_role].bearers;
+        for (uint256 i = 0; i < _bearers.length; i++){
+            if (_bearers[i] == _account){
+                _bearers[i] = _bearers[_bearers.length - 1];
+                roles[_role].bearers.pop();
+                emit BearerRemoved(_account, _role);
             }
         }
     }
