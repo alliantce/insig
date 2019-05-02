@@ -67,15 +67,15 @@ contract('SupplyChain', (accounts) => {
 
         // If there are no precedents check appender1 belongs to appenders of the current step.
         itShouldThrow(
-            'addRootStep - appender must be in current step.',
+            'addRootStep - appender must be admin for created step.',
             async () => {    
                 const itemZero = 100;
     
                 const stepOne = (
-                    await supplyChain.addRootStep(itemCreationAction, itemZero, appender1, admin1, { from: root })
+                    await supplyChain.addRootStep(itemCreationAction, itemZero, appender1, admin1, { from: admin1 })
                 ).logs[0].args.step;
             },
-            'Creator not in appenders.',
+            'Creator not in admins.',
         );
 
         // Check appender1 belongs to the appenders of all precedents.
@@ -87,10 +87,10 @@ contract('SupplyChain', (accounts) => {
                 const itemZero = 202;
                 
                 const stepOne = (
-                    await supplyChain.addRootStep(itemCreationAction, partZero, appenderRole1, adminRole1, { from: appender1 })
+                    await supplyChain.addRootStep(itemCreationAction, partZero, appenderRole1, adminRole1, { from: admin1 })
                 ).logs[0].args.step;
                 const stepTwo = (
-                    await supplyChain.addRootStep(itemCreationAction, partOne, appenderRole2, adminRole2, { from: appender2 })
+                    await supplyChain.addRootStep(itemCreationAction, partOne, appenderRole2, adminRole2, { from: admin2 })
                 ).logs[0].args.step;
                 
                 const stepThree = (
@@ -109,7 +109,7 @@ contract('SupplyChain', (accounts) => {
 
 
                 const stepOne = (
-                    await supplyChain.addRootStep(itemCreationAction, partZero, appenderRole1, adminRole1, { from: appender1 })
+                    await supplyChain.addRootStep(itemCreationAction, partZero, appenderRole1, adminRole1, { from: admin1 })
                 ).logs[0].args.step;
                 const stepTwo = (
                     await supplyChain.addHandoverStep(itemCreationAction, partZero, appenderRole2, adminRole2, {from: appender1})
@@ -130,7 +130,7 @@ contract('SupplyChain', (accounts) => {
                     partZero, 
                     appenderRole1, 
                     adminRole1, 
-                    { from: appender1 }
+                    { from: admin1 }
                 )
             ).logs[0].args.step;
             const stepTwo = (
@@ -139,7 +139,7 @@ contract('SupplyChain', (accounts) => {
                     partOne, 
                     appenderRole2, 
                     adminRole2, 
-                    { from: appender2 }
+                    { from: admin2 }
                 )
             ).logs[0].args.step;
             
@@ -162,10 +162,10 @@ contract('SupplyChain', (accounts) => {
 
 
             const stepOne = (
-                await supplyChain.addRootStep(itemCreationAction, partZero, appenderRole1, adminRole1, { from: appender1 })
+                await supplyChain.addRootStep(itemCreationAction, partZero, appenderRole1, adminRole1, { from: admin1 })
             ).logs[0].args.step;
             const stepTwo = (
-                await supplyChain.addRootStep(itemCreationAction, partOne, appenderRole2, adminRole2, { from: appender2 })
+                await supplyChain.addRootStep(itemCreationAction, partOne, appenderRole2, adminRole2, { from: admin2 })
             ).logs[0].args.step;
             
             const stepThree = (
@@ -177,7 +177,7 @@ contract('SupplyChain', (accounts) => {
             const partZero = 200;
 
             const stepOne = (
-                await supplyChain.addRootStep(itemCreationAction, partZero, appenderRole1, adminRole1, { from: appender1 })
+                await supplyChain.addRootStep(itemCreationAction, partZero, appenderRole1, adminRole1, { from: admin1 })
             ).logs[0].args.step;
             const stepTwo = (
                 await supplyChain.addHandoverStep(itemCreationAction, partZero, appenderRole2, adminRole2, {from: admin1})
@@ -197,7 +197,7 @@ contract('SupplyChain', (accounts) => {
                     partZero, 
                     appenderRole1, 
                     adminRole1, 
-                    { from: appender1 }
+                    { from: admin1 }
                 )
             ).logs[0].args.step;
             const stepTwo = (
@@ -206,7 +206,7 @@ contract('SupplyChain', (accounts) => {
                     partOne, 
                     appenderRole2, 
                     adminRole2, 
-                    { from: appender2 }
+                    { from: admin2 }
                 )
             ).logs[0].args.step;
             
@@ -246,7 +246,7 @@ contract('SupplyChain', (accounts) => {
                         itemOne, 
                         appenderRole1, 
                         adminRole1, 
-                        { from: appender1 }
+                        { from: admin1 }
                     )
                 ).logs[0].args.step;
                 // RootStep(1) <- PartOf(2) X
@@ -275,7 +275,7 @@ contract('SupplyChain', (accounts) => {
                         itemOne, 
                         appenderRole1, 
                         adminRole1, 
-                        { from: appender1 }
+                        { from: admin1 }
                     )
                 ).logs[0].args.step;
                 // RootStep(1) <- TransformStep(2)
@@ -311,7 +311,7 @@ contract('SupplyChain', (accounts) => {
                     itemOne, 
                     appenderRole1, 
                     adminRole1, 
-                    { from: appender1 }
+                    { from: admin1 }
                 )
             ).logs[0].args.step;
             // RootStep(1) <- TransformStep(2)
@@ -351,7 +351,7 @@ contract('SupplyChain', (accounts) => {
                     itemOne, 
                     appenderRole1, 
                     adminRole1, 
-                    { from: appender1 }
+                    { from: admin1 }
                 )
             ).logs[0].args.step;
             // RootStep(1) <- TransformStep(2)
@@ -410,7 +410,7 @@ contract('SupplyChain', (accounts) => {
                         itemOne, 
                         appenderRole1, 
                         adminRole1, 
-                        { from: appender1 }
+                        { from: admin1 }
                     )
                 ).logs[0].args.step;
                 // RootStep(1) <- TransformStep(2)
@@ -465,7 +465,7 @@ contract('SupplyChain', (accounts) => {
                     itemOne, 
                     appenderRole1, 
                     adminRole1, 
-                    { from: appender1 }
+                    { from: admin1 }
                 )
             ).logs[0].args.step;
             // RootStep(1) <- TransformStep(2)

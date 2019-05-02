@@ -207,6 +207,9 @@ contract SupplyChain is RBAC {
         return steps[lastSteps[getComposite(_step)]].admins;
     }
 
+    /** 
+     * @notice Create a new step with no checks.
+     */
     function pushStep
     (
         address _creator,
@@ -218,7 +221,6 @@ contract SupplyChain is RBAC {
         uint256 _admins
     )
         internal
-        returns(uint256)
     {
         uint256 stepId = steps.push(
             Step(
@@ -232,8 +234,7 @@ contract SupplyChain is RBAC {
             )
         ) - 1;
         lastSteps[_item] = stepId;
-        emit StepCreated(stepId);
-        return stepId;        
+        emit StepCreated(stepId);        
     }
 
     /**
@@ -245,7 +246,6 @@ contract SupplyChain is RBAC {
      * @param _precedents An array of the step ids for steps considered to be predecessors to
      * this one. Often this would just mean that the event refers to the same asset as the event
      * pointed to, but for steps like Creation it could point to the parts this asset is made of.
-     * @return The step id of the step created.
      */
     function addStep
     (
@@ -254,7 +254,6 @@ contract SupplyChain is RBAC {
         uint256[] memory _precedents
     )
         public
-        returns(uint256)
     {
         require(_precedents.length > 0, "No precedents, use addRootStep.");
 
@@ -279,7 +278,7 @@ contract SupplyChain is RBAC {
             require(hasRole(msg.sender, getAppenders(_precedents[i])), "Not an appender of precedents.");
         }
         
-        return pushStep(
+        pushStep(
             msg.sender,
             _action,
             _item,
@@ -297,8 +296,6 @@ contract SupplyChain is RBAC {
      * used before.
      * @param _appenders The roles allowed to append steps to this one.
      * @param _admins The roles allowed to append steps with different permissions.
-     * @return The step id of the step created.
-     * TODO: creator should belong to admins
      */
     function addRootStep
     (
@@ -308,7 +305,6 @@ contract SupplyChain is RBAC {
         uint256 _admins
     )
         public
-        returns(uint256)
     {
 
         require(_action < actions.length, "Event action not recognized.");
@@ -320,10 +316,10 @@ contract SupplyChain is RBAC {
         require(lastSteps[_item] == 0, "Item not valid.");
         totalItems += 1;
 
-        require(hasRole(msg.sender, _appenders), "Creator not in appenders.");
+        require(hasRole(msg.sender, _admins), "Creator not in admins.");
         
         uint256[] memory emptyArray;
-        return pushStep(
+        pushStep(
             msg.sender,
             _action,
             _item,
@@ -337,11 +333,9 @@ contract SupplyChain is RBAC {
     /**
      * @notice Create a new supply chain step implying a transformation and a new item.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The item id that this step is for. This must be either the item 
-     * of one of the steps in _precedents, or an item that has never been used before. 
+     * @param _item The new item id which must not have been used before. 
      * @param _precedents An array of the step ids for steps considered to be predecessors to
      * this one. Permissions are inherited from the first one.
-     * @return The step id of the step created.
      */
     function addTransformStep
     (
@@ -350,7 +344,6 @@ contract SupplyChain is RBAC {
         uint256[] memory _precedents
     )
         public
-        returns(uint256)
     {
         require(_precedents.length > 0, "No precedents, use addRootStep.");
 
@@ -368,7 +361,7 @@ contract SupplyChain is RBAC {
         }
         
         totalItems += 1;
-        uint256 stepId =  pushStep(
+        pushStep(
             msg.sender,
             _action,
             _item,
@@ -377,7 +370,6 @@ contract SupplyChain is RBAC {
             getAppenders(_precedents[0]),
             getAdmins(_precedents[0])
         );
-        return stepId;
     }
 
     /**
@@ -387,7 +379,6 @@ contract SupplyChain is RBAC {
      * @param _item The item being handed over.
      * @param _appenders The roles allowed to append steps to this one.
      * @param _admins The roles allowed to append steps with different permissions.
-     * @return The step id of the step created.
      */
     function addHandoverStep
     (
@@ -397,7 +388,6 @@ contract SupplyChain is RBAC {
         uint256 _admins
     )
         public
-        returns(uint256)
     {
         require(_action < actions.length, "Event action not recognized.");
         
@@ -405,7 +395,7 @@ contract SupplyChain is RBAC {
 
         require(hasRole(msg.sender, getAdmins(lastSteps[_item])), "Needs admin for handover.");
 
-        return pushStep(
+        pushStep(
             msg.sender,
             _action,
             _item,
@@ -422,10 +412,8 @@ contract SupplyChain is RBAC {
      * @param _action The index for the step action as defined in the actions array.
      * @param _precedent The last step id for the item being made a part of another.
      * @param _partOf The item id for the item that this one is being made a part of.
-     * @return The step id of the step created.
-     * TODO: Make this method internal and part of an addCompositionStep transaction.
-     * TODO: Make this method internal and part of an addTransformStep transaction.
-     * If called directly there is no guarantee that steps[_precedent] is in the same chain as _partOf.
+     * TODO: Make this method internal. If called directly there is no guarantee that
+     * steps[_precedent] is in the same chain as _partOf.
      */
     function addPartOfStep
     (
@@ -434,7 +422,6 @@ contract SupplyChain is RBAC {
         uint256 _partOf
     )
         public
-        returns(uint256)
     {
 
         require(_action < actions.length, "Event action not recognized.");
@@ -445,7 +432,7 @@ contract SupplyChain is RBAC {
 
         require(hasRole(msg.sender, getAdmins(_precedent)), "Needs admin for partOf.");
 
-        return pushStep(
+        pushStep(
             msg.sender,
             _action,
             steps[_precedent].item,
@@ -454,5 +441,28 @@ contract SupplyChain is RBAC {
             NO_ROLE,
             NO_ROLE
         );
+    }
+
+    /**
+     * @notice Create new supply chain step implying a composition of a new item from others.
+     * This method creates in a transaction one partOfStep for each precedent, and one 
+     * TransformStep per call.
+     * @param _action The index for the step action as defined in the actions array.
+     * @param _item The new item id which must not have been used before. 
+     * @param _precedents An array of the step ids for steps considered to be predecessors to
+     * this one. Permissions are inherited from the first one.
+     */
+    function addComposeStep
+    (
+        uint256 _action, 
+        uint256 _item, 
+        uint256[] memory _precedents
+    )
+    public
+    {
+        addTransformStep(_action, _item, _precedents);
+        for (uint256 i = 0; i < _precedents.length; i++){
+            addPartOfStep(_action, _precedents[i], _item);
+        }
     }
 }
