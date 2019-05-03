@@ -30,8 +30,8 @@ contract SupplyChain is RBAC {
      * @param item The id of the object that this step refers to.
      * @param precedents The ids of the steps that precede this one in the supply chain.
      * @param partOf The id of some other item that this is part of and inherits permissions from.
-     * @param appenders The roles allowed to append steps to this one.
-     * @param admins The roles allowed to append steps with different permissions.
+     * @param operatorRole The roles allowed to append steps to this one.
+     * @param ownerRole The roles allowed to append steps with different permissions.
      */
     struct Step {
         address creator;
@@ -39,8 +39,8 @@ contract SupplyChain is RBAC {
         uint256 item;
         uint256[] precedents;
         uint256 partOf;
-        uint256 appenders;
-        uint256 admins;
+        uint256 operatorRole;
+        uint256 ownerRole;
     }
 
     /**
@@ -182,29 +182,29 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Retrieve the authorized appender role for a step, taking into account composition.
-     * @param _step The step id of the step to retrieve appenders for.
-     * @return The authorized appenders for this step.
+     * @notice Retrieve the authorized operator role for a step, taking into account composition.
+     * @param _step The step id of the step to retrieve operatorRole for.
+     * @return The authorized operatorRole for this step.
      */
-    function getAppenders(uint256 _step)
+    function getoperatorRole(uint256 _step)
         public
         view
         returns(uint256)
     {
-        return steps[lastSteps[getComposite(_step)]].appenders;
+        return steps[lastSteps[getComposite(_step)]].operatorRole;
     }
 
     /**
-     * @notice Retrieve the authorized admin role for a step, taking into account composition.
-     * @param _step The step id of the step to retrieve admins for.
-     * @return The authorized admins for this step.
+     * @notice Retrieve the authorized owner role for a step, taking into account composition.
+     * @param _step The step id of the step to retrieve ownerRole for.
+     * @return The authorized ownerRole for this step.
      */
-    function getAdmins(uint256 _step)
+    function getownerRole(uint256 _step)
         public
         view
         returns(uint256)
     {
-        return steps[lastSteps[getComposite(_step)]].admins;
+        return steps[lastSteps[getComposite(_step)]].ownerRole;
     }
 
     /** 
@@ -217,8 +217,8 @@ contract SupplyChain is RBAC {
         uint256 _item,
         uint256[] memory _precedents,
         uint256 _partOf,
-        uint256 _appenders,
-        uint256 _admins
+        uint256 _operatorRole,
+        uint256 _ownerRole
     )
         internal
     {
@@ -229,8 +229,8 @@ contract SupplyChain is RBAC {
                 _item,
                 _precedents,
                 _partOf,
-                _appenders,
-                _admins
+                _operatorRole,
+                _ownerRole
             )
         ) - 1;
         lastSteps[_item] = stepId;
@@ -273,9 +273,9 @@ contract SupplyChain is RBAC {
         }
         require (repeatItem, "Item not valid.");
 
-        // Check user belongs to the appenders of all precedents.
+        // Check user belongs to the operatorRole of all precedents.
         for (uint i = 0; i < _precedents.length; i++){
-            require(hasRole(msg.sender, getAppenders(_precedents[i])), "Not an appender of precedents.");
+            require(hasRole(msg.sender, getoperatorRole(_precedents[i])), "Not an operator of precedents.");
         }
         
         pushStep(
@@ -284,8 +284,8 @@ contract SupplyChain is RBAC {
             _item,
             _precedents,
             NO_PARTOF,
-            getAppenders(_precedents[0]),
-            getAdmins(_precedents[0])
+            getoperatorRole(_precedents[0]),
+            getownerRole(_precedents[0])
         );
     }
 
@@ -294,29 +294,29 @@ contract SupplyChain is RBAC {
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The item id that this step is for. This must be an item that has never been
      * used before.
-     * @param _appenders The roles allowed to append steps to this one.
-     * @param _admins The roles allowed to append steps with different permissions.
+     * @param _operatorRole The roles allowed to append steps to this one.
+     * @param _ownerRole The roles allowed to append steps with different permissions.
      */
     function addRootStep
     (
         uint256 _action, 
         uint256 _item, 
-        uint256 _appenders,
-        uint256 _admins
+        uint256 _operatorRole,
+        uint256 _ownerRole
     )
         public
     {
 
         require(_action < actions.length, "Event action not recognized.");
 
-        require(_appenders != NO_ROLE, "An appender role is required.");
+        require(_operatorRole != NO_ROLE, "An operator role is required.");
 
-        require(_admins != NO_ROLE, "An admin role is required.");
+        require(_ownerRole != NO_ROLE, "An owner role is required.");
         
         require(lastSteps[_item] == 0, "Item not valid.");
         totalItems += 1;
 
-        require(hasRole(msg.sender, _admins), "Creator not in admins.");
+        require(hasRole(msg.sender, _ownerRole), "Creator not in ownerRole.");
         
         uint256[] memory emptyArray;
         pushStep(
@@ -325,8 +325,8 @@ contract SupplyChain is RBAC {
             _item,
             emptyArray,
             NO_PARTOF,
-            _appenders,
-            _admins
+            _operatorRole,
+            _ownerRole
         );
     }
 
@@ -355,9 +355,9 @@ contract SupplyChain is RBAC {
             require(isLastStep(_precedents[i]), "Append only on last steps.");
         }
 
-        // Check user belongs to the appenders of all precedents.
+        // Check user belongs to the operatorRole of all precedents.
         for (uint i = 0; i < _precedents.length; i++){
-            require(hasRole(msg.sender, getAppenders(_precedents[i])), "Not an appender of precedents.");
+            require(hasRole(msg.sender, getoperatorRole(_precedents[i])), "Not an operator of precedents.");
         }
         
         totalItems += 1;
@@ -367,8 +367,8 @@ contract SupplyChain is RBAC {
             _item,
             _precedents,
             NO_PARTOF,
-            getAppenders(_precedents[0]),
-            getAdmins(_precedents[0])
+            getoperatorRole(_precedents[0]),
+            getownerRole(_precedents[0])
         );
     }
 
@@ -377,15 +377,15 @@ contract SupplyChain is RBAC {
      * In practical terms it is a change in the permissions.
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The item being handed over.
-     * @param _appenders The roles allowed to append steps to this one.
-     * @param _admins The roles allowed to append steps with different permissions.
+     * @param _operatorRole The roles allowed to append steps to this one.
+     * @param _ownerRole The roles allowed to append steps with different permissions.
      */
     function addHandoverStep
     (
         uint256 _action, 
         uint256 _item,
-        uint256 _appenders,
-        uint256 _admins
+        uint256 _operatorRole,
+        uint256 _ownerRole
     )
         public
     {
@@ -393,7 +393,7 @@ contract SupplyChain is RBAC {
         
         require(lastSteps[_item] != 0, "Item does not exist.");
 
-        require(hasRole(msg.sender, getAdmins(lastSteps[_item])), "Needs admin for handover.");
+        require(hasRole(msg.sender, getownerRole(lastSteps[_item])), "Needs owner for handover.");
 
         pushStep(
             msg.sender,
@@ -401,8 +401,8 @@ contract SupplyChain is RBAC {
             _item,
             new uint256[](lastSteps[_item]),
             NO_PARTOF,
-            _appenders,
-            _admins
+            _operatorRole,
+            _ownerRole
         );
     }
 
@@ -430,7 +430,7 @@ contract SupplyChain is RBAC {
 
         require(lastSteps[_partOf] != 0, "Composite item does not exist.");
 
-        require(hasRole(msg.sender, getAdmins(_precedent)), "Needs admin for partOf.");
+        require(hasRole(msg.sender, getownerRole(_precedent)), "Needs owner for partOf.");
 
         pushStep(
             msg.sender,

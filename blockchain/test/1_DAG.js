@@ -16,10 +16,10 @@ contract('SupplyChain', (accounts) => {
     let itemCertificationAction;
     let transaction;
     const root = accounts[0];
-    const appender1 = accounts[1];
-    const appender2 = accounts[2];
-    const admin1 = accounts[3];
-    const admin2 = accounts[4];
+    const operator1 = accounts[1];
+    const operator2 = accounts[2];
+    const owner1 = accounts[3];
+    const owner2 = accounts[4];
 
     before(async () => {
         supplyChain = await SupplyChain.deployed();
