@@ -188,7 +188,7 @@ contract SupplyChain is RBAC {
      * @param _item The item id of the item to retrieve operatorRole for.
      * @return The authorized operatorRole for this step.
      */
-    function getoperatorRole(uint256 _item)
+    function getOperatorRole(uint256 _item)
         public
         view
         returns(uint256)
@@ -201,12 +201,38 @@ contract SupplyChain is RBAC {
      * @param _item The item id of the item to retrieve ownerRole for.
      * @return The authorized ownerRole for this step.
      */
-    function getownerRole(uint256 _item)
+    function getOwnerRole(uint256 _item)
         public
         view
         returns(uint256)
     {
         return steps[lastSteps[getComposite(_item)]].ownerRole;
+    }
+
+    /**
+     * @notice Check if an address can operate an item in the supply chain
+     * @param _address The address to check operator role for.
+     * @param _item The id of the item to check
+     */
+    function isOperator(address _address, uint256 _item)
+        public
+        view
+        returns(bool)
+    {
+        return hasRole(_address, getOperatorRole(_item));
+    }
+
+    /**
+     * @notice Check if an address owns an item in the supply chain
+     * @param _address The address to check ownership for.
+     * @param _item The id of the item to check
+     */
+    function isOwner(address _address, uint256 _item)
+        public
+        view
+        returns(bool)
+    {
+        return hasRole(_address, getOwnerRole(_item));
     }
 
     /** 
@@ -276,7 +302,7 @@ contract SupplyChain is RBAC {
 
         // Check user belongs to the operatorRole of all precedents.
         for (uint i = 0; i < _precedents.length; i++){
-            require(hasRole(msg.sender, getoperatorRole(_precedents[i])), "Not an operator of precedents.");
+            require(isOperator(msg.sender, _precedents[i]), "Not an operator of precedents.");
         }
         
         pushStep(
@@ -285,8 +311,8 @@ contract SupplyChain is RBAC {
             _item,
             _precedents,
             NO_PARTOF,
-            getoperatorRole(_precedents[0]),
-            getownerRole(_precedents[0])
+            getOperatorRole(_precedents[0]),
+            getOwnerRole(_precedents[0])
         );
     }
 
@@ -359,7 +385,7 @@ contract SupplyChain is RBAC {
 
         // Check user belongs to the operatorRole of all precedents.
         for (uint i = 0; i < _precedents.length; i++){
-            require(hasRole(msg.sender, getoperatorRole(_precedents[i])), "Not an operator of precedents.");
+            require(isOperator(msg.sender, _precedents[i]), "Not an operator of precedents.");
         }
         
         totalItems += 1;
@@ -369,8 +395,8 @@ contract SupplyChain is RBAC {
             _item,
             _precedents,
             NO_PARTOF,
-            getoperatorRole(_precedents[0]),
-            getownerRole(_precedents[0])
+            getOperatorRole(_precedents[0]),
+            getOwnerRole(_precedents[0])
         );
     }
 
@@ -395,7 +421,7 @@ contract SupplyChain is RBAC {
         
         require(lastSteps[_item] != 0, "Item does not exist.");
 
-        require(hasRole(msg.sender, getownerRole(_item)), "Needs owner for handover.");
+        require(isOwner(msg.sender, _item), "Needs owner for handover.");
 
         pushStep(
             msg.sender,
@@ -432,7 +458,7 @@ contract SupplyChain is RBAC {
 
         require(lastSteps[_partOf] != 0, "Composite item does not exist.");
 
-        require(hasRole(msg.sender, getownerRole(_item)), "Needs owner for partOf.");
+        require(isOwner(msg.sender, _item), "Needs owner for partOf.");
 
         pushStep(
             msg.sender,
