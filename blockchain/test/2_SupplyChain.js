@@ -94,7 +94,7 @@ contract('SupplyChain', (accounts) => {
                 ).logs[0].args.step;
                 
                 const stepThree = (
-                    await supplyChain.addTransformStep(itemCreationAction, itemZero, [stepOne, stepTwo], {from: operator1})
+                    await supplyChain.addTransformStep(itemCreationAction, itemZero, [partZero, partOne], {from: operator1})
                 ).logs[0].args.step;    
             },
             'Not an operator of precedents.',
@@ -106,7 +106,6 @@ contract('SupplyChain', (accounts) => {
             async () => {    
                 const partZero = 200;
                 await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
-
 
                 const stepOne = (
                     await supplyChain.addRootStep(itemCreationAction, partZero, operatorRole1, ownerRole1, { from: owner1 })
@@ -146,8 +145,8 @@ contract('SupplyChain', (accounts) => {
             const stepThree = (
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
-                    partOne, 
-                    [stepOne, stepTwo], 
+                    partZero, 
+                    [partZero, partOne], 
                     {from: operator1}
                 )
             ).logs[0].args.step;
@@ -169,7 +168,7 @@ contract('SupplyChain', (accounts) => {
             ).logs[0].args.step;
             
             const stepThree = (
-                await supplyChain.addTransformStep(itemCreationAction, partTwo, [stepOne, stepTwo], {from: operator1})
+                await supplyChain.addTransformStep(itemCreationAction, partTwo, [partZero, partOne], {from: operator1})
             ).logs[0].args.step;  
         });
 
@@ -213,22 +212,22 @@ contract('SupplyChain', (accounts) => {
             const stepThree = (
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
-                    partOne, 
-                    [stepOne, stepTwo], 
+                    partZero, 
+                    [partZero, partOne], 
                     {from: operator1}
                 )
             ).logs[0].args.step;
 
             assert.equal(
-                (await supplyChain.getComposite(stepOne)).toNumber(),
+                (await supplyChain.getComposite(partZero)).toNumber(),
                 partZero,
             );
             assert.equal(
-                (await supplyChain.getComposite(stepTwo)).toNumber(),
+                (await supplyChain.getComposite(partOne)).toNumber(),
                 partOne,
             );
             assert.equal(
-                (await supplyChain.getComposite(stepThree)).toNumber(),
+                (await supplyChain.getComposite(partOne)).toNumber(),
                 partOne,
             );
         });
@@ -253,7 +252,7 @@ contract('SupplyChain', (accounts) => {
                 const stepTwo = (
                     await supplyChain.addPartOfStep(
                         itemCreationAction, 
-                        [stepOne],
+                        itemOne,
                         itemTwo, 
                         {from: operator1}
                     )
@@ -283,7 +282,7 @@ contract('SupplyChain', (accounts) => {
                     await supplyChain.addTransformStep(
                         itemCreationAction, 
                         itemTwo, 
-                        [stepOne], 
+                        [itemOne], 
                         {from: operator1}
                     )
                 ).logs[0].args.step;
@@ -291,7 +290,7 @@ contract('SupplyChain', (accounts) => {
                 const stepThree = (
                     await supplyChain.addPartOfStep(
                         itemCreationAction, 
-                        [stepOne],
+                        itemOne,
                         itemTwo, 
                         {from: operator1}
                     )
@@ -319,7 +318,7 @@ contract('SupplyChain', (accounts) => {
                 await supplyChain.addTransformStep(
                     itemCreationAction, 
                     itemTwo, 
-                    [stepOne], 
+                    [itemOne], 
                     {from: operator1}
                 )
             ).logs[0].args.step;
@@ -327,14 +326,14 @@ contract('SupplyChain', (accounts) => {
             const stepThree = (
                 await supplyChain.addPartOfStep(
                     itemCreationAction, 
-                    [stepOne],
+                    [itemOne],
                     itemTwo, 
                     {from: owner1}
                 )
             ).logs[0].args.step;
 
             assert.equal(
-                (await supplyChain.getComposite(stepThree)).toNumber(),
+                (await supplyChain.getComposite(itemOne)).toNumber(),
                 itemTwo,
             );
         });
@@ -359,7 +358,7 @@ contract('SupplyChain', (accounts) => {
                 await supplyChain.addTransformStep(
                     itemCreationAction, 
                     itemTwo, 
-                    [stepOne], 
+                    [itemOne], 
                     {from: operator1}
                 )
             ).logs[0].args.step;
@@ -367,7 +366,7 @@ contract('SupplyChain', (accounts) => {
             const stepThree = (
                 await supplyChain.addPartOfStep(
                     itemCreationAction, 
-                    [stepOne],
+                    itemOne,
                     itemTwo, 
                     {from: owner1}
                 )
@@ -377,7 +376,7 @@ contract('SupplyChain', (accounts) => {
                 await supplyChain.addTransformStep(
                     itemCreationAction, 
                     itemThree, 
-                    [stepTwo], 
+                    [itemTwo], 
                     {from: operator1}
                 )
             ).logs[0].args.step;
@@ -385,14 +384,14 @@ contract('SupplyChain', (accounts) => {
             const stepFive = (
                 await supplyChain.addPartOfStep(
                     itemCreationAction, 
-                    [stepTwo],
+                    itemTwo,
                     itemThree, 
                     {from: owner1}
                 )
             ).logs[0].args.step;
 
             assert.equal(
-                (await supplyChain.getComposite(stepThree)).toNumber(),
+                (await supplyChain.getComposite(itemOne)).toNumber(),
                 itemThree,
             );
         });
@@ -418,7 +417,7 @@ contract('SupplyChain', (accounts) => {
                     await supplyChain.addTransformStep(
                         itemCreationAction, 
                         itemTwo, 
-                        [stepOne], 
+                        [itemOne], 
                         {from: operator1}
                     )
                 ).logs[0].args.step;
@@ -426,7 +425,7 @@ contract('SupplyChain', (accounts) => {
                 const stepThree = (
                     await supplyChain.addPartOfStep(
                         itemCreationAction, 
-                        [stepOne],
+                        itemOne,
                         itemTwo, 
                         {from: owner1}
                     )
@@ -446,7 +445,7 @@ contract('SupplyChain', (accounts) => {
                     await supplyChain.addInfoStep(
                         itemCreationAction, 
                         itemOne, 
-                        [stepThree], 
+                        [itemOne], 
                         {from: operator1}
                     )
                 ).logs[0].args.step;
@@ -473,7 +472,7 @@ contract('SupplyChain', (accounts) => {
                 await supplyChain.addTransformStep(
                     itemCreationAction, 
                     itemTwo, 
-                    [stepOne], 
+                    [itemOne], 
                     {from: operator1}
                 )
             ).logs[0].args.step;
@@ -481,7 +480,7 @@ contract('SupplyChain', (accounts) => {
             const stepThree = (
                 await supplyChain.addPartOfStep(
                     itemCreationAction, 
-                    [stepOne],
+                    itemOne,
                     itemTwo, 
                     {from: owner1}
                 )
@@ -501,7 +500,7 @@ contract('SupplyChain', (accounts) => {
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemOne, 
-                    [stepThree],
+                    [itemOne],
                     {from: operator2}
                 )
             ).logs[0].args.step;

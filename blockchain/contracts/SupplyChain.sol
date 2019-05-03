@@ -165,46 +165,48 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Retrieve the composite item this step refers to.
-     * @param _step The step id of the step to start looking from.
-     * @return The composite item this step refers to.
+     * @notice Retrieve the composite item of another one, if existing.
+     * @param _item The item id to start looking from.
+     * @return The ultimate composite item this step refers to.
      */
-    function getComposite(uint256 _step)
+    function getComposite(uint256 _item)
         public
         view
         returns(uint256)
     {
-        uint256 step = _step;
-        while (steps[step].partOf != NO_ITEM){
-            step = lastSteps[steps[step].partOf];
+        uint256 item = _item;
+        Step memory step = steps[lastSteps[item]];
+        while (step.partOf != NO_ITEM){
+            item = step.partOf;
+            step = steps[lastSteps[item]];
         }
-        return steps[step].item;
+        return item;
     }
 
     /**
-     * @notice Retrieve the authorized operator role for a step, taking into account composition.
-     * @param _step The step id of the step to retrieve operatorRole for.
+     * @notice Retrieve the authorized operator role for an item, taking into account composition.
+     * @param _item The item id of the item to retrieve operatorRole for.
      * @return The authorized operatorRole for this step.
      */
-    function getoperatorRole(uint256 _step)
+    function getoperatorRole(uint256 _item)
         public
         view
         returns(uint256)
     {
-        return steps[lastSteps[getComposite(_step)]].operatorRole;
+        return steps[lastSteps[getComposite(_item)]].operatorRole;
     }
 
     /**
-     * @notice Retrieve the authorized owner role for a step, taking into account composition.
-     * @param _step The step id of the step to retrieve ownerRole for.
+     * @notice Retrieve the authorized owner role for an item, taking into account composition.
+     * @param _item The item id of the item to retrieve ownerRole for.
      * @return The authorized ownerRole for this step.
      */
-    function getownerRole(uint256 _step)
+    function getownerRole(uint256 _item)
         public
         view
         returns(uint256)
     {
-        return steps[lastSteps[getComposite(_step)]].ownerRole;
+        return steps[lastSteps[getComposite(_item)]].ownerRole;
     }
 
     /** 
@@ -242,9 +244,8 @@ contract SupplyChain is RBAC {
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The item id that this step is for. This must be either the item 
      * of one of the steps in _precedents, or an item that has never been used before. 
-     * @param _precedents An array of the step ids for steps considered to be predecessors to
-     * this one. Often this would just mean that the event refers to the same asset as the event
-     * pointed to, but for steps like Creation it could point to the parts this asset is made of.
+     * @param _precedents An array of the item ids for items considered to be predecessors to
+     * this one. The operatorRole and ownerRole are inherited from the first item in this array.
      */
     function addInfoStep
     (
@@ -258,19 +259,20 @@ contract SupplyChain is RBAC {
 
         require(_action < actions.length, "Event action not recognized.");
         
+        // Check all precedents exist.
         for (uint i = 0; i < _precedents.length; i++){
-            require(isLastStep(_precedents[i]), "Append only on last steps.");
+            require(lastSteps[_precedents[i]] != 0, "Precedent item does not exist.");
         }
 
-        // Check the item id is consistent
+        // Check the item id is in precedents
         bool repeatItem = false;
         for (uint i = 0; i < _precedents.length; i++){
-            if (steps[_precedents[i]].item == _item) {
+            if (_precedents[i] == _item) {
                 repeatItem = true;
                 break;
             }
         }
-        require (repeatItem, "Item not valid.");
+        require (repeatItem, "Item not in precedents.");
 
         // Check user belongs to the operatorRole of all precedents.
         for (uint i = 0; i < _precedents.length; i++){
@@ -312,7 +314,7 @@ contract SupplyChain is RBAC {
 
         require(_ownerRole != NO_ROLE, "An owner role is required.");
         
-        require(lastSteps[_item] == 0, "Item not valid.");
+        require(lastSteps[_item] == 0, "New item already exists.");
         totalItems += 1;
 
         require(hasRole(msg.sender, _ownerRole), "Creator not in ownerRole.");
@@ -348,10 +350,11 @@ contract SupplyChain is RBAC {
 
         require(_action < actions.length, "Event action not recognized.");
 
-        require(lastSteps[_item] == 0, "Item not valid.");
+        require(lastSteps[_item] == 0, "New item already exists.");
 
+        // Check all precedents exist.
         for (uint i = 0; i < _precedents.length; i++){
-            require(isLastStep(_precedents[i]), "Append only on last steps.");
+            require(lastSteps[_precedents[i]] != 0, "Precedent item does not exist.");
         }
 
         // Check user belongs to the operatorRole of all precedents.
@@ -392,7 +395,7 @@ contract SupplyChain is RBAC {
         
         require(lastSteps[_item] != 0, "Item does not exist.");
 
-        require(hasRole(msg.sender, getownerRole(lastSteps[_item])), "Needs owner for handover.");
+        require(hasRole(msg.sender, getownerRole(_item)), "Needs owner for handover.");
 
         pushStep(
             msg.sender,
@@ -406,10 +409,10 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Create a new supply chain step representing that the item in the step
-     * passed as a parameter has become a part of another item.
+     * @notice Create a new supply chain step representing that an item has become a part of
+     * another item.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _precedent The last step id for the item being made a part of another.
+     * @param _item The item being made a part of another.
      * @param _partOf The item id for the item that this one is being made a part of.
      * TODO: Make this method internal. If called directly there is no guarantee that
      * steps[_precedent] is in the same chain as _partOf.
@@ -417,7 +420,7 @@ contract SupplyChain is RBAC {
     function addPartOfStep
     (
         uint256 _action,
-        uint256 _precedent,
+        uint256 _item,
         uint256 _partOf
     )
         public
@@ -425,17 +428,17 @@ contract SupplyChain is RBAC {
 
         require(_action < actions.length, "Event action not recognized.");
         
-        require(isLastStep(_precedent), "Append only on last steps.");
+        require(lastSteps[_item] != 0, "Item does not exist.");
 
         require(lastSteps[_partOf] != 0, "Composite item does not exist.");
 
-        require(hasRole(msg.sender, getownerRole(_precedent)), "Needs owner for partOf.");
+        require(hasRole(msg.sender, getownerRole(_item)), "Needs owner for partOf.");
 
         pushStep(
             msg.sender,
             _action,
-            steps[_precedent].item,
-            new uint256[](_precedent),
+            _item,
+            new uint256[](_item),
             _partOf,
             NO_ROLE,
             NO_ROLE
