@@ -118,7 +118,7 @@ contract('SupplyChain', (accounts) => {
             'Needs owner for handover.',
         );
 
-        it('sanity check addRootStep and addStep', async () => {
+        it('sanity check addRootStep and addInfoStep', async () => {
             const partZero = 200;
             const partOne = 201;
             await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
@@ -144,7 +144,7 @@ contract('SupplyChain', (accounts) => {
             ).logs[0].args.step;
             
             const stepThree = (
-                await supplyChain.addStep(
+                await supplyChain.addInfoStep(
                     itemCreationAction, 
                     partOne, 
                     [stepOne, stepTwo], 
@@ -211,7 +211,7 @@ contract('SupplyChain', (accounts) => {
             ).logs[0].args.step;
             
             const stepThree = (
-                await supplyChain.addStep(
+                await supplyChain.addInfoStep(
                     itemCreationAction, 
                     partOne, 
                     [stepOne, stepTwo], 
@@ -443,7 +443,7 @@ contract('SupplyChain', (accounts) => {
                 ).logs[0].args.step; 
                 // PartOf(2) <- operator(1) X
                 const stepFive = (
-                    await supplyChain.addStep(
+                    await supplyChain.addInfoStep(
                         itemCreationAction, 
                         itemOne, 
                         [stepThree], 
@@ -498,7 +498,7 @@ contract('SupplyChain', (accounts) => {
             ).logs[0].args.step; 
             // PartOf(2) <- operator(2)
             const stepFive = (
-                await supplyChain.addStep(
+                await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemOne, 
                     [stepThree],

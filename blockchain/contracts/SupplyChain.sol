@@ -238,8 +238,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Create a new supply chain step. The msg.sender is recorded as the creator
-     * of the step, which might possibly mean creator of the underlying asset as well.
+     * @notice Create a new supply chain step with no changes on ownership or item.
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The item id that this step is for. This must be either the item 
      * of one of the steps in _precedents, or an item that has never been used before. 
@@ -247,7 +246,7 @@ contract SupplyChain is RBAC {
      * this one. Often this would just mean that the event refers to the same asset as the event
      * pointed to, but for steps like Creation it could point to the parts this asset is made of.
      */
-    function addStep
+    function addInfoStep
     (
         uint256 _action, 
         uint256 _item, 
