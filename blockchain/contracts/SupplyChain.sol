@@ -165,9 +165,77 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Retrieve the composite item of another one, if existing.
+     * @notice Explore the step tree backwards, to a depth of one item transformation in each
+     * branch, to find all the items that contributed directly to this one.
+     * @param _item The item id verify if it's part of another one.
+     * @return The direct composite item.
+     */
+    function getParts(uint256 _item)
+        public
+        view
+        returns(uint256[] memory)
+    {
+        uint256[] memory parts = new uint256[](countPrecedentItems(_item));
+        uint256 count = 0;
+        Step memory thisStep = steps[lastSteps[_item]];
+        Step memory nextStep;
+        for(uint256 i = 0; i < thisStep.precedents.length; i += 1){
+            Step memory precedentStep = steps[thisStep.precedents[i]];
+            if (precedentStep.item != _item){
+                if (steps[lastSteps[precedentStep.item]].partOf != NO_PARTOF){
+                    parts[i] = precedentStep.item;
+                    count += 1;
+                }
+            }
+            else{
+                nextStep = precedentStep;
+            }
+            thisStep = nextStep;
+        }
+        return parts;
+    }
+
+    function countPrecedentItems(uint256 _item)
+        public
+        view
+        returns(uint256)
+    {
+        // For all precedents to an item, only one of them can share the same item id
+        // If a precedent shares the same item id, store the step id and continue with it after exploring precedents with different ids
+        // For each precedent with a different item id, add 1 to the counter.
+        uint256 count = 0;
+        Step memory thisStep = steps[lastSteps[_item]];
+        Step memory nextStep;
+        for(uint256 i = 0; i < thisStep.precedents.length; i += 1){
+            Step memory precedentStep = steps[thisStep.precedents[i]];
+            if (precedentStep.item != _item){
+                count += 1;
+            }
+            else{
+                nextStep = precedentStep;
+            }
+            thisStep = nextStep;
+        }
+        return count;
+    }
+
+    /**
+     * @notice Retrieve the direct composite item of another one, if existing.
+     * @param _item The item id verify if it's part of another one.
+     * @return The direct composite item.
+     */
+    function getPartOf(uint256 _item)
+        public
+        view
+        returns(uint256)
+    {
+        return steps[lastSteps[_item]].partOf;
+    }
+
+    /**
+     * @notice Retrieve the ultimate composite item of another one, if existing.
      * @param _item The item id to start looking from.
-     * @return The ultimate composite item this step refers to.
+     * @return The ultimate composite item.
      */
     function getComposite(uint256 _item)
         public
@@ -235,7 +303,7 @@ contract SupplyChain is RBAC {
         return hasRole(_address, getOwnerRole(_item));
     }
 
-    /** 
+    /**
      * @notice Create a new step with no checks.
      */
     function pushStep
@@ -262,21 +330,21 @@ contract SupplyChain is RBAC {
             )
         ) - 1;
         lastSteps[_item] = stepId;
-        emit StepCreated(stepId);        
+        emit StepCreated(stepId);
     }
 
     /**
      * @notice Create a new supply chain step with no changes on ownership or item.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The item id that this step is for. This must be either the item 
-     * of one of the steps in _precedents, or an item that has never been used before. 
+     * @param _item The item id that this step is for. This must be either the item
+     * of one of the steps in _precedents, or an item that has never been used before.
      * @param _precedents An array of the item ids for items considered to be predecessors to
      * this one. The operatorRole and ownerRole are inherited from the first item in this array.
      */
     function addInfoStep
     (
-        uint256 _action, 
-        uint256 _item, 
+        uint256 _action,
+        uint256 _item,
         uint256[] memory _precedents
     )
         public
@@ -326,8 +394,8 @@ contract SupplyChain is RBAC {
      */
     function addRootStep
     (
-        uint256 _action, 
-        uint256 _item, 
+        uint256 _action,
+        uint256 _item,
         uint256 _operatorRole,
         uint256 _ownerRole
     )
@@ -360,14 +428,14 @@ contract SupplyChain is RBAC {
     /**
      * @notice Create a new supply chain step implying a transformation and a new item.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The new item id which must not have been used before. 
+     * @param _item The new item id which must not have been used before.
      * @param _precedents An array of the step ids for steps considered to be predecessors to
      * this one. Permissions are inherited from the first one.
      */
     function addTransformStep
     (
-        uint256 _action, 
-        uint256 _item, 
+        uint256 _action,
+        uint256 _item,
         uint256[] memory _precedents
     )
         public
@@ -387,7 +455,7 @@ contract SupplyChain is RBAC {
         for (uint i = 0; i < _precedents.length; i++){
             require(isOperator(msg.sender, _precedents[i]), "Not an operator of precedents.");
         }
-        
+
         totalItems += 1;
         pushStep(
             msg.sender,
@@ -410,7 +478,7 @@ contract SupplyChain is RBAC {
      */
     function addHandoverStep
     (
-        uint256 _action, 
+        uint256 _action,
         uint256 _item,
         uint256 _operatorRole,
         uint256 _ownerRole
@@ -418,7 +486,7 @@ contract SupplyChain is RBAC {
         public
     {
         require(_action < actions.length, "Event action not recognized.");
-        
+
         require(lastSteps[_item] != 0, "Item does not exist.");
 
         require(isOwner(msg.sender, _item), "Needs owner for handover.");
@@ -453,7 +521,7 @@ contract SupplyChain is RBAC {
     {
 
         require(_action < actions.length, "Event action not recognized.");
-        
+
         require(lastSteps[_item] != 0, "Item does not exist.");
 
         require(lastSteps[_partOf] != 0, "Composite item does not exist.");
@@ -473,17 +541,17 @@ contract SupplyChain is RBAC {
 
     /**
      * @notice Create new supply chain step implying a composition of a new item from others.
-     * This method creates in a transaction one partOfStep for each precedent, and one 
+     * This method creates in a transaction one partOfStep for each precedent, and one
      * TransformStep per call.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The new item id which must not have been used before. 
+     * @param _item The new item id which must not have been used before.
      * @param _precedents An array of the step ids for steps considered to be predecessors to
      * this one. Permissions are inherited from the first one.
      */
     function addComposeStep
     (
-        uint256 _action, 
-        uint256 _item, 
+        uint256 _action,
+        uint256 _item,
         uint256[] memory _precedents
     )
     public
