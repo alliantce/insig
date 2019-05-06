@@ -167,7 +167,7 @@ contract SupplyChain is RBAC {
     /**
      * @notice Explore the step tree backwards, to a depth of one item transformation in each
      * branch, to find all the items that contributed directly to this one.
-     * @param _item The item id verify if it's part of another one.
+     * @param _item The item id to find parts for.
      * @return The direct composite item.
      */
     function getParts(uint256 _item)
@@ -195,6 +195,14 @@ contract SupplyChain is RBAC {
         return parts;
     }
 
+    /**
+     * @notice Explore the step tree backwards, to a depth of one item transformation in each
+     * branch, to count all the items that contributed directly to this one.
+     * @dev The whole purpose of this function is to allow getParts to instantiate an array of the
+     * required length to return the item ids, since dynamic arrays are not supported in memory.
+     * @param _item The item id to count parts for.
+     * @return The direct composite item.
+     */
     function countPrecedentItems(uint256 _item)
         public
         view
