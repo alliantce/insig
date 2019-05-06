@@ -55,8 +55,8 @@ contract SupplyChain is RBAC {
      */
     string[] internal actions;
 
-    /** 
-     * @notice Item counter 
+    /**
+     * @notice Item counter
      */
     uint256 public totalItems;
 
@@ -175,22 +175,22 @@ contract SupplyChain is RBAC {
         view
         returns(uint256[] memory)
     {
-        uint256[] memory parts = new uint256[](countPrecedentItems(_item));
+        uint256[] memory parts = new uint256[](countParts(_item));
         uint256 count = 0;
-        Step memory thisStep = steps[lastSteps[_item]];
-        Step memory nextStep;
-        for(uint256 i = 0; i < thisStep.precedents.length; i += 1){
-            Step memory precedentStep = steps[thisStep.precedents[i]];
-            if (precedentStep.item != _item){
-                if (steps[lastSteps[precedentStep.item]].partOf != NO_PARTOF){
-                    parts[i] = precedentStep.item;
+        uint256 nextStepId = lastSteps[_item];
+        while (nextStepId != NO_STEP){
+            Step memory step = steps[nextStepId];
+            nextStepId = NO_STEP;
+            for(uint256 i = 0; i < step.precedents.length; i += 1){
+                uint256 precedentStepId = step.precedents[i];
+                if (steps[precedentStepId].item != _item){
+                    parts[count] = steps[precedentStepId].item;
                     count += 1;
                 }
+                else{ // Only one of this can exist, store it to continue at the end of precedents.
+                    nextStepId = precedentStepId;
+                }
             }
-            else{
-                nextStep = precedentStep;
-            }
-            thisStep = nextStep;
         }
         return parts;
     }
@@ -203,7 +203,7 @@ contract SupplyChain is RBAC {
      * @param _item The item id to count parts for.
      * @return The direct composite item.
      */
-    function countPrecedentItems(uint256 _item)
+    function countParts(uint256 _item)
         public
         view
         returns(uint256)
@@ -212,18 +212,21 @@ contract SupplyChain is RBAC {
         // If a precedent shares the same item id, store the step id and continue with it after exploring precedents with different ids
         // For each precedent with a different item id, add 1 to the counter.
         uint256 count = 0;
-        Step memory thisStep = steps[lastSteps[_item]];
-        Step memory nextStep;
-        for(uint256 i = 0; i < thisStep.precedents.length; i += 1){
-            Step memory precedentStep = steps[thisStep.precedents[i]];
-            if (precedentStep.item != _item){
-                count += 1;
+        uint256 nextStepId = lastSteps[_item];
+        while (nextStepId != NO_STEP){
+            Step memory step = steps[nextStepId];
+            nextStepId = NO_STEP;
+            for(uint256 i = 0; i < step.precedents.length; i += 1){
+                uint256 precedentStepId = step.precedents[i];
+                if (steps[precedentStepId].item != _item){
+                    count += 1;
+                }
+                else{ // Only one of this can exist, store it to continue at the end of precedents.
+                    nextStepId = precedentStepId;
+                }
             }
-            else{
-                nextStep = precedentStep;
-            }
-            thisStep = nextStep;
         }
+
         return count;
     }
 
@@ -326,6 +329,8 @@ contract SupplyChain is RBAC {
     )
         internal
     {
+        // TODO: Should I at least assert that everything exists?
+
         uint256 stepId = steps.push(
             Step(
                 _creator,
@@ -346,30 +351,30 @@ contract SupplyChain is RBAC {
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The item id that this step is for. This must be either the item
      * of one of the steps in _precedents, or an item that has never been used before.
-     * @param _precedents An array of the item ids for items considered to be predecessors to
+     * @param _precedentItems An array of the item ids for items considered to be predecessors to
      * this one. The operatorRole and ownerRole are inherited from the first item in this array.
      */
     function addInfoStep
     (
         uint256 _action,
         uint256 _item,
-        uint256[] memory _precedents
+        uint256[] memory _precedentItems
     )
         public
     {
-        require(_precedents.length > 0, "No precedents, use addRootStep.");
+        require(_precedentItems.length > 0, "No precedents, use addRootStep.");
 
         require(_action < actions.length, "Event action not recognized.");
         
         // Check all precedents exist.
-        for (uint i = 0; i < _precedents.length; i++){
-            require(lastSteps[_precedents[i]] != 0, "Precedent item does not exist.");
+        for (uint i = 0; i < _precedentItems.length; i++){
+            require(lastSteps[_precedentItems[i]] != 0, "Precedent item does not exist.");
         }
 
         // Check the item id is in precedents
         bool repeatItem = false;
-        for (uint i = 0; i < _precedents.length; i++){
-            if (_precedents[i] == _item) {
+        for (uint i = 0; i < _precedentItems.length; i++){
+            if (_precedentItems[i] == _item) {
                 repeatItem = true;
                 break;
             }
@@ -377,18 +382,24 @@ contract SupplyChain is RBAC {
         require (repeatItem, "Item not in precedents.");
 
         // Check user belongs to the operatorRole of all precedents.
-        for (uint i = 0; i < _precedents.length; i++){
-            require(isOperator(msg.sender, _precedents[i]), "Not an operator of precedents.");
+        for (uint i = 0; i < _precedentItems.length; i++){
+            require(isOperator(msg.sender, _precedentItems[i]), "Not an operator of precedents.");
         }
-        
+
+        // Build precedents array out of steps from lastSteps[_precedents[i]]
+        uint256[] memory precedents = new uint256[](_precedentItems.length);
+        for (uint i = 0; i < _precedentItems.length; i++){
+            precedents[i] = lastSteps[_precedentItems[i]];
+        }
+
         pushStep(
             msg.sender,
             _action,
             _item,
-            _precedents,
+            precedents,
             NO_PARTOF,
-            getOperatorRole(_precedents[0]),
-            getOwnerRole(_precedents[0])
+            getOperatorRole(_precedentItems[0]),
+            getOwnerRole(_precedentItems[0])
         );
     }
 
@@ -415,12 +426,12 @@ contract SupplyChain is RBAC {
         require(_operatorRole != NO_ROLE, "An operator role is required.");
 
         require(_ownerRole != NO_ROLE, "An owner role is required.");
-        
+
         require(lastSteps[_item] == 0, "New item already exists.");
         totalItems += 1;
 
         require(hasRole(msg.sender, _ownerRole), "Creator not in ownerRole.");
-        
+
         uint256[] memory emptyArray;
         pushStep(
             msg.sender,
@@ -437,31 +448,37 @@ contract SupplyChain is RBAC {
      * @notice Create a new supply chain step implying a transformation and a new item.
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The new item id which must not have been used before.
-     * @param _precedents An array of the step ids for steps considered to be predecessors to
+     * @param _precedentItems An array of the item ids for items considered to be predecessors to
      * this one. Permissions are inherited from the first one.
      */
     function addTransformStep
     (
         uint256 _action,
         uint256 _item,
-        uint256[] memory _precedents
+        uint256[] memory _precedentItems
     )
         public
     {
-        require(_precedents.length > 0, "No precedents, use addRootStep.");
+        require(_precedentItems.length > 0, "No precedents, use addRootStep.");
 
         require(_action < actions.length, "Event action not recognized.");
 
         require(lastSteps[_item] == 0, "New item already exists.");
 
         // Check all precedents exist.
-        for (uint i = 0; i < _precedents.length; i++){
-            require(lastSteps[_precedents[i]] != 0, "Precedent item does not exist.");
+        for (uint i = 0; i < _precedentItems.length; i++){
+            require(lastSteps[_precedentItems[i]] != 0, "Precedent item does not exist.");
         }
 
         // Check user belongs to the operatorRole of all precedents.
-        for (uint i = 0; i < _precedents.length; i++){
-            require(isOperator(msg.sender, _precedents[i]), "Not an operator of precedents.");
+        for (uint i = 0; i < _precedentItems.length; i++){
+            require(isOperator(msg.sender, _precedentItems[i]), "Not an operator of precedents.");
+        }
+
+        // Build precedents array out of steps from lastSteps[_precedents[i]]
+        uint256[] memory precedents = new uint256[](_precedentItems.length);
+        for (uint i = 0; i < _precedentItems.length; i++){
+            precedents[i] = lastSteps[_precedentItems[i]];
         }
 
         totalItems += 1;
@@ -469,10 +486,10 @@ contract SupplyChain is RBAC {
             msg.sender,
             _action,
             _item,
-            _precedents,
+            precedents,
             NO_PARTOF,
-            getOperatorRole(_precedents[0]),
-            getOwnerRole(_precedents[0])
+            getOperatorRole(_precedentItems[0]),
+            getOwnerRole(_precedentItems[0])
         );
     }
 
@@ -540,7 +557,7 @@ contract SupplyChain is RBAC {
             msg.sender,
             _action,
             _item,
-            new uint256[](_item),
+            new uint256[](lastSteps[_item]),
             _partOf,
             NO_ROLE,
             NO_ROLE

@@ -169,7 +169,16 @@ contract('SupplyChain', (accounts) => {
             
             const stepThree = (
                 await supplyChain.addTransformStep(itemCreationAction, partTwo, [partZero, partOne], {from: operator1})
-            ).logs[0].args.step;  
+            ).logs[0].args.step;
+
+            assert.equal(
+                (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
+                stepOne,
+            );
+            assert.equal(
+                (await supplyChain.getPrecedents(stepThree))[1].toNumber(),
+                stepTwo,
+            );
         });
 
         it('sanity check addHandoverStep', async () => {
@@ -504,6 +513,208 @@ contract('SupplyChain', (accounts) => {
                     {from: operator2}
                 )
             ).logs[0].args.step;
+        });
+
+        it('getParts for an item without parts.', async () => {
+            const itemOne = 201;
+            const itemTwo = 202;
+            const itemThree = 203;
+
+            // RootStep(1)
+            const stepOne = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.step;
+
+            assert.equal(
+                (await supplyChain.countParts(itemOne)).toNumber(),
+                0,
+            );
+        });
+
+        it('getParts for an item with one part.', async () => {
+            const itemOne = 201;
+            const itemTwo = 202;
+            const itemThree = 203;
+
+            // RootStep(1)
+            const stepOne = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.step;
+            // RootStep(1) <- TransformStep(2)
+            const stepTwo = (
+                await supplyChain.addTransformStep(
+                    itemCreationAction, 
+                    itemTwo, 
+                    [itemOne], 
+                    {from: operator1}
+                )
+            ).logs[0].args.step;
+
+            assert.equal(
+                (await supplyChain.getPrecedents(stepTwo))[0].toNumber(),
+                stepOne,
+            );
+            assert.equal(
+                (await supplyChain.countParts(itemTwo)).toNumber(),
+                1,
+            );
+            assert.equal(
+                (await supplyChain.getParts(itemTwo))[0].toNumber(),
+                itemOne,
+            );
+        });
+
+        it('getParts for an item with two parts.', async () => {
+            const itemOne = 201;
+            const itemTwo = 202;
+            const itemThree = 203;
+
+            // RootStep(1)
+            const stepOne = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.step;
+            // RootStep(2)
+            const stepTwo = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemTwo, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.step;
+            // RootStep(1,2) <- TransformStep(3)
+            const stepThree = (
+                await supplyChain.addTransformStep(
+                    itemCreationAction, 
+                    itemThree, 
+                    [itemOne, itemTwo], 
+                    {from: operator1}
+                )
+            ).logs[0].args.step;
+
+            assert.equal(
+                (await supplyChain.countParts(itemThree)).toNumber(),
+                2,
+            );
+            assert.equal(
+                (await supplyChain.getParts(itemThree))[0].toNumber(),
+                itemOne,
+            );
+            assert.equal(
+                (await supplyChain.getParts(itemThree))[1].toNumber(),
+                itemTwo,
+            );
+        });
+
+        it('getParts going deep.', async () => {
+            const itemOne = 201;
+            const itemTwo = 202;
+            const itemThree = 203;
+            const itemFour = 204;
+
+            // RootStep(1)
+            const stepOne = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.step;
+            // RootStep(2)
+            const stepTwo = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemTwo, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.step;
+            // RootStep(3)
+            const stepThree = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemThree, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.step;
+            // RootStep(4)
+            const stepFour = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemFour, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.step;
+            // Item(1,2) <- AddInfo(1)
+            const stepFive = (
+                await supplyChain.addInfoStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    [itemOne, itemTwo],
+                    {from: operator1}
+                )
+            ).logs[0].args.step;
+            // Item(1,3) <- AddInfo(1)
+            const stepSix = (
+                await supplyChain.addInfoStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    [itemOne, itemThree],
+                    {from: operator1}
+                )
+            ).logs[0].args.step;
+            // Item(1,4) <- AddInfo(1)
+            const stepSeven = (
+                await supplyChain.addInfoStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    [itemOne, itemFour],
+                    {from: operator1}
+                )
+            ).logs[0].args.step;
+
+            assert.equal(
+                (await supplyChain.countParts(itemOne)).toNumber(),
+                3,
+            );
+            assert.equal(
+                (await supplyChain.getParts(itemOne))[0].toNumber(),
+                itemFour,
+            );
+            assert.equal(
+                (await supplyChain.getParts(itemOne))[1].toNumber(),
+                itemThree,
+            );
+            assert.equal(
+                (await supplyChain.getParts(itemOne))[2].toNumber(),
+                itemTwo,
+            );
         });
     });
 })

@@ -122,11 +122,11 @@ contract('SupplyChain', (accounts) => {
 
             assert.equal(
                 (await supplyChain.getPrecedents(stepTwo))[0].toNumber(),
-                itemZero,
+                stepOne,
             );
             assert.equal(
                 (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
-                itemZero,
+                stepTwo,
             );
         });
 
@@ -183,11 +183,11 @@ contract('SupplyChain', (accounts) => {
 
             assert.equal(
                 (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
-                itemZero,
+                stepOne,
             );
             assert.equal(
                 (await supplyChain.getPrecedents(stepThree))[1].toNumber(),
-                itemOne,
+                stepTwo,
             );
         });
 
