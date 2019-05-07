@@ -82,3 +82,6 @@ typings/
 
 # images
 *.png
+
+# generated documentation
+docs/
