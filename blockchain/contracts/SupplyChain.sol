@@ -138,20 +138,6 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Verify whether a step is the last of an item.
-     * @param _step The step id of the step to verify.
-     * @return Whether a step is the last of an item.
-     */
-    function isLastStep(uint256 _step)
-        public
-        view
-        returns(bool)
-    {
-        if (_step > totalSteps()) return false;
-        return lastSteps[steps[_step].item] == _step;
-    }
-
-    /**
      * @notice Retrieve the immediate precedents of a step.
      * @param _step The step id of the step to retrieve precedents for.
      * @return An array with the step ids of the immediate precedents of the step given as a parameter.
@@ -316,7 +302,13 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Create a new step with no checks.
+     * @notice Create a new step.
+     * @param _action The action of this step.
+     * @param _item The id of the object that this step refers to.
+     * @param _precedents The ids of the steps that precede this one in the supply chain.
+     * @param _partOf The id of some other item that this is part of and inherits permissions from.
+     * @param _operatorRole The roles allowed to append steps to this one.
+     * @param _ownerRole The roles allowed to append steps with different permissions.
      */
     function pushStep
     (
@@ -557,6 +549,7 @@ contract SupplyChain is RBAC {
      * @param _precedents An array of the step ids for steps considered to be predecessors to
      * this one. Permissions are inherited from the first one.
      */
+     // TODO: Test
     function addComposeStep
     (
         uint256 _action,

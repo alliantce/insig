@@ -284,42 +284,5 @@ contract('SupplyChain', (accounts) => {
                 stepThree,
             );
         });
-
-
-        it('isLastStep', async () => {
-            const itemZero = 200;
-
-            const stepOne = (
-                await supplyChain.pushStep(
-                    itemCreationAction,
-                    itemZero,
-                    [],
-                    0,
-                    roleId,
-                    roleId,
-                )
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.pushStep(
-                    itemCreationAction,
-                    itemZero,
-                    [stepOne],
-                    0,
-                    roleId,
-                    roleId,
-                )
-            ).logs[0].args.step;
-
-            assert.isFalse(
-                (await supplyChain.isLastStep(10))
-            );
-            assert.isFalse(
-                (await supplyChain.isLastStep(stepOne))
-            );
-            assert.isTrue(
-                (await supplyChain.isLastStep(stepTwo))
-            );
-        });
-
     });
 })

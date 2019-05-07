@@ -58,12 +58,6 @@ contract Token is ERC721 {
         return true;
     }
 
-    // TODO: Test fails if minter not in ownerRole
-    // TODO: Test fails if item is part of another and the token for the composite hasn't been instantiated.
-    // TODO: Test fails if item is part of another and msg.sender is not the owner of the composite.
-    // TODO: Test _to receives the token
-    // TODO: Test the faceValue of the minted token is recorded
-
     /**
      * @dev Function to burn tokens.
      * @param _tokenId The id of the token to burn.
@@ -88,8 +82,16 @@ contract Token is ERC721 {
         return true;
     }
 
-    // TODO: Test fails if burner not in ownerRole
-    // TODO: Test fails if item has parts with instantiated tokens.
-    // TODO: Test the token is burned
-    // TODO: Test the faceValue of the minted token is deleted
+    /**
+     * @notice Returns whether the specified token exists
+     * @param tokenId uint256 ID of the token to query the existence of
+     * @return bool whether the token exists
+     */
+    function exists(uint256 tokenId)
+        public
+        view
+        returns (bool)
+    {
+        return _exists(tokenId);
+    }
 }
