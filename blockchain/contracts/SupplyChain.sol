@@ -10,10 +10,10 @@ import "./RBAC.sol";
  */
 contract SupplyChain is RBAC {
 
-    uint256 constant NO_ACTION = 0;
-    uint256 constant NO_ITEM = 0;
-    uint256 constant NO_PARTOF = NO_ITEM;
-    uint256 constant NO_STEP = 0;
+    uint256 constant public NO_ACTION = 0;
+    uint256 constant public NO_ITEM = 0;
+    uint256 constant public NO_PARTOF = NO_ITEM;
+    uint256 constant public NO_STEP = 0;
 
     event ActionCreated(uint256 action);
     event StepCreated(uint256 step);

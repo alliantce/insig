@@ -12,6 +12,9 @@ contract Token is ERC721 {
 
     address internal supplyChain;
 
+    // Mapping of token to face value
+    mapping (uint256 => uint256) public faceValue;
+
     /**
      * @notice The constructor links the Token contract to the Supply Chain contract.
      * @param _supplychain The address of the SupplyChain.sol contract.
@@ -24,9 +27,10 @@ contract Token is ERC721 {
      * @notice Function to mint tokens.
      * @param _to The address that will receive the minted tokens.
      * @param _tokenId The id of the token to mint.
+     * @param _faceValue The face value of the token.
      * @return A boolean that indicates if the operation was successful.
      */
-    function mint(address _to, uint256 _tokenId)
+    function mint(address _to, uint256 _tokenId, uint256 _faceValue)
         public
         returns(bool)
     {
@@ -38,18 +42,27 @@ contract Token is ERC721 {
         // To mint a token its underlying item cannot be part of another item without an instantiated token.
         // This means that to instantiate a part of a composite item several calls will be required to instantiate the path to the part.
         require(
-            _exists(_supplychain.getPartOf(_tokenId)),
+            _supplychain.getPartOf(_tokenId) == _supplychain.NO_PARTOF() ||
+                _exists(_supplychain.getPartOf(_tokenId)),
             "Instantiate composite first."
         );
-        // To mint a token its underlying item cannot be part of another item owned by a different role.
+        // To mint a token its underlying item cannot be part of another item with a token owned by a different role.
         // This means that a token should be instantiated before its handed over to another party.
         require(
-            msg.sender == ownerOf(_supplychain.getPartOf(_tokenId)),
-            "Not owner of composite."
+            _supplychain.getPartOf(_tokenId) == _supplychain.NO_PARTOF() ||
+                msg.sender == ownerOf(_supplychain.getPartOf(_tokenId)),
+            "Not owner of composite token."
         );
         _mint(_to, _tokenId);
+        faceValue[_tokenId] = _faceValue;
         return true;
     }
+
+    // TODO: Test fails if minter not in ownerRole
+    // TODO: Test fails if item is part of another and the token for the composite hasn't been instantiated.
+    // TODO: Test fails if item is part of another and msg.sender is not the owner of the composite.
+    // TODO: Test _to receives the token
+    // TODO: Test the faceValue of the minted token is recorded
 
     /**
      * @dev Function to burn tokens.
@@ -71,6 +84,12 @@ contract Token is ERC721 {
             require(!_exists(parts[i]), "Burn part tokens first.");
         }
         _burn(_tokenId);
+        delete faceValue[_tokenId];
         return true;
     }
+
+    // TODO: Test fails if burner not in ownerRole
+    // TODO: Test fails if item has parts with instantiated tokens.
+    // TODO: Test the token is burned
+    // TODO: Test the faceValue of the minted token is deleted
 }
