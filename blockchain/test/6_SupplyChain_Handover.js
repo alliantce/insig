@@ -65,6 +65,8 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addBearer(operator2, operatorRole2, { from: owner2 });
         });
 
+        // TODO: Test fails if item doesn't exist
+
         // If permissions are different to a precedent with the same instance id check user belongs to its ownerRole.
         itShouldThrow(
             'addHandoverStep - only ownerRole can change permissions.',
@@ -81,6 +83,8 @@ contract('SupplyChain', (accounts) => {
             },
             'Needs owner for handover.',
         );
+
+        // TODO: Test precedent is previous last step for item
 
         it('sanity check addHandoverStep', async () => {
             const partZero = 200;

@@ -86,6 +86,14 @@ contract('SupplyChain', (accounts) => {
             },
             'Not an operator of precedents.',
         );
+        
+        // TODO: Test fails with no precedents
+        // TODO: Test fails with existing item
+        // TODO: Test fails with a precedent that doesn't exist in an array
+        // TODO: Test fails with msg.sender not in the operator role of a precedent from an array
+        // TODO: Test precedents built of last steps for precedentItems
+        // TODO: Test operatorRole inherited from precedentItems[0]
+        // TODO: Test ownerRole inherited from precedentItems[0]
 
         it('sanity check addTransformStep', async () => {
             const partZero = 200;

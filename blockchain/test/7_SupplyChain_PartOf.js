@@ -211,6 +211,8 @@ contract('SupplyChain', (accounts) => {
             );
         });
 
+        // TODO: Test fails if item does not exist
+
         itShouldThrow(
             'addPartOfStep - Composite item does not exist.',
             async () => {    
@@ -277,6 +279,8 @@ contract('SupplyChain', (accounts) => {
             },
             'Needs owner for partOf.',
         );
+
+        // TODO: Test precedent is previous last step for item
 
         itShouldThrow(
             'addPartOfStep - derive operatorRole from composite.',

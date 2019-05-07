@@ -65,6 +65,10 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addBearer(operator2, operatorRole2, { from: owner2 });
         });
 
+        // TODO: Test fails with _operatorRole == NO_ROLE
+        // TODO: Test fails with _ownerRole == NO_ROLE
+        // TODO: Test fails with _item that already exists
+
         // If there are no precedents check operator1 belongs to operators of the current step.
         itShouldThrow(
             'addRootStep - operator must be owner for created step.',
@@ -102,6 +106,9 @@ contract('SupplyChain', (accounts) => {
                     { from: owner2 }
                 )
             ).logs[0].args.step;
+
+            // TODO: Test totalItems increased by one
+            // TODO: Test step has no precedents
         });
     });
 })

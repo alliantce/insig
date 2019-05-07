@@ -347,6 +347,44 @@ contract SupplyChain is RBAC {
     }
 
     /**
+     * @notice Create a new supply chain step without precedents.
+     * @param _action The index for the step action as defined in the actions array.
+     * @param _item The item id that this step is for. This must be an item that has never been
+     * used before.
+     * @param _operatorRole The roles allowed to append steps to this one.
+     * @param _ownerRole The roles allowed to append steps with different permissions.
+     */
+    function addRootStep
+    (
+        uint256 _action,
+        uint256 _item,
+        uint256 _operatorRole,
+        uint256 _ownerRole
+    )
+        public
+    {
+        require(_operatorRole != NO_ROLE, "An operator role is required.");
+
+        require(_ownerRole != NO_ROLE, "An owner role is required.");
+
+        require(lastSteps[_item] == 0, "New item already exists.");
+
+        require(hasRole(msg.sender, _ownerRole), "Creator not in ownerRole.");
+
+        totalItems += 1;
+
+        uint256[] memory emptyArray;
+        pushStep(
+            _action,
+            _item,
+            emptyArray,
+            NO_PARTOF,
+            _operatorRole,
+            _ownerRole
+        );
+    }
+
+    /**
      * @notice Create a new supply chain step with no changes on ownership or item.
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The item id that this step is for. This must be either the item
@@ -397,43 +435,6 @@ contract SupplyChain is RBAC {
             NO_PARTOF,
             getOperatorRole(_precedentItems[0]),
             getOwnerRole(_precedentItems[0])
-        );
-    }
-
-    /**
-     * @notice Create a new supply chain step without precedents.
-     * @param _action The index for the step action as defined in the actions array.
-     * @param _item The item id that this step is for. This must be an item that has never been
-     * used before.
-     * @param _operatorRole The roles allowed to append steps to this one.
-     * @param _ownerRole The roles allowed to append steps with different permissions.
-     */
-    function addRootStep
-    (
-        uint256 _action,
-        uint256 _item,
-        uint256 _operatorRole,
-        uint256 _ownerRole
-    )
-        public
-    {
-        require(_operatorRole != NO_ROLE, "An operator role is required.");
-
-        require(_ownerRole != NO_ROLE, "An owner role is required.");
-
-        require(lastSteps[_item] == 0, "New item already exists.");
-        totalItems += 1;
-
-        require(hasRole(msg.sender, _ownerRole), "Creator not in ownerRole.");
-
-        uint256[] memory emptyArray;
-        pushStep(
-            _action,
-            _item,
-            emptyArray,
-            NO_PARTOF,
-            _operatorRole,
-            _ownerRole
         );
     }
 

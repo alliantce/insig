@@ -101,6 +101,14 @@ contract('SupplyChain', (accounts) => {
             'Precedent item does not exist.',
         );
 
+        // TODO: Test fails with no precedents
+        // TODO: Test fails with a precedent that doesn't exist in an array of existing precedents
+        // TODO: Test fails if item not in precedent steps
+        // TODO: Test fails if msg.sender not in operator role for one of the precedents
+        // TODO: Test precedents point to last steps of items passed as parameters
+        // TODO: Test operatorRole inherited from precedents[0]
+        // TODO: Test ownerRole inherited from precedents[0]
+
         it('sanity check addInfoStep', async () => {
             const partZero = 200;
             const partOne = 201;
