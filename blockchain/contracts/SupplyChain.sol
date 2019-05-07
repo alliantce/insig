@@ -164,36 +164,6 @@ contract SupplyChain is RBAC {
         return steps[_step].precedents;
     }
 
-    /**
-     * @notice Explore the step tree backwards, to a depth of one item transformation in each
-     * branch, to find all the items that contributed directly to this one.
-     * @param _item The item id to find parts for.
-     * @return The direct composite item.
-     */
-    function getParts(uint256 _item)
-        public
-        view
-        returns(uint256[] memory)
-    {
-        uint256[] memory parts = new uint256[](countParts(_item));
-        uint256 count = 0;
-        uint256 nextStepId = lastSteps[_item];
-        while (nextStepId != NO_STEP){
-            Step memory step = steps[nextStepId];
-            nextStepId = NO_STEP;
-            for(uint256 i = 0; i < step.precedents.length; i += 1){
-                uint256 precedentStepId = step.precedents[i];
-                if (steps[precedentStepId].item != _item){
-                    parts[count] = steps[precedentStepId].item;
-                    count += 1;
-                }
-                else{ // Only one of this can exist, store it to continue at the end of precedents.
-                    nextStepId = precedentStepId;
-                }
-            }
-        }
-        return parts;
-    }
 
     /**
      * @notice Explore the step tree backwards, to a depth of one item transformation in each
@@ -228,6 +198,37 @@ contract SupplyChain is RBAC {
         }
 
         return count;
+    }
+
+    /**
+     * @notice Explore the step tree backwards, to a depth of one item transformation in each
+     * branch, to find all the items that contributed directly to this one.
+     * @param _item The item id to find parts for.
+     * @return The direct composite item.
+     */
+    function getParts(uint256 _item)
+        public
+        view
+        returns(uint256[] memory)
+    {
+        uint256[] memory parts = new uint256[](countParts(_item));
+        uint256 count = 0;
+        uint256 nextStepId = lastSteps[_item];
+        while (nextStepId != NO_STEP){
+            Step memory step = steps[nextStepId];
+            nextStepId = NO_STEP;
+            for(uint256 i = 0; i < step.precedents.length; i += 1){
+                uint256 precedentStepId = step.precedents[i];
+                if (steps[precedentStepId].item != _item){
+                    parts[count] = steps[precedentStepId].item;
+                    count += 1;
+                }
+                else{ // Only one of this can exist, store it to continue at the end of precedents.
+                    nextStepId = precedentStepId;
+                }
+            }
+        }
+        return parts;
     }
 
     /**
@@ -319,7 +320,6 @@ contract SupplyChain is RBAC {
      */
     function pushStep
     (
-        address _creator,
         uint256 _action,
         uint256 _item,
         uint256[] memory _precedents,
@@ -327,13 +327,13 @@ contract SupplyChain is RBAC {
         uint256 _operatorRole,
         uint256 _ownerRole
     )
-        internal
+        public // TODO: Make internal and run tests through a mock.
     {
-        // TODO: Should I at least assert that everything exists?
+        require(_action < actions.length, "Event action not recognized.");
 
         uint256 stepId = steps.push(
             Step(
-                _creator,
+                msg.sender,
                 _action,
                 _item,
                 _precedents,
@@ -364,8 +364,6 @@ contract SupplyChain is RBAC {
     {
         require(_precedentItems.length > 0, "No precedents, use addRootStep.");
 
-        require(_action < actions.length, "Event action not recognized.");
-        
         // Check all precedents exist.
         for (uint i = 0; i < _precedentItems.length; i++){
             require(lastSteps[_precedentItems[i]] != 0, "Precedent item does not exist.");
@@ -393,7 +391,6 @@ contract SupplyChain is RBAC {
         }
 
         pushStep(
-            msg.sender,
             _action,
             _item,
             precedents,
@@ -420,9 +417,6 @@ contract SupplyChain is RBAC {
     )
         public
     {
-
-        require(_action < actions.length, "Event action not recognized.");
-
         require(_operatorRole != NO_ROLE, "An operator role is required.");
 
         require(_ownerRole != NO_ROLE, "An owner role is required.");
@@ -434,7 +428,6 @@ contract SupplyChain is RBAC {
 
         uint256[] memory emptyArray;
         pushStep(
-            msg.sender,
             _action,
             _item,
             emptyArray,
@@ -461,8 +454,6 @@ contract SupplyChain is RBAC {
     {
         require(_precedentItems.length > 0, "No precedents, use addRootStep.");
 
-        require(_action < actions.length, "Event action not recognized.");
-
         require(lastSteps[_item] == 0, "New item already exists.");
 
         // Check all precedents exist.
@@ -483,7 +474,6 @@ contract SupplyChain is RBAC {
 
         totalItems += 1;
         pushStep(
-            msg.sender,
             _action,
             _item,
             precedents,
@@ -510,14 +500,11 @@ contract SupplyChain is RBAC {
     )
         public
     {
-        require(_action < actions.length, "Event action not recognized.");
-
         require(lastSteps[_item] != 0, "Item does not exist.");
 
         require(isOwner(msg.sender, _item), "Needs owner for handover.");
 
         pushStep(
-            msg.sender,
             _action,
             _item,
             new uint256[](lastSteps[_item]),
@@ -544,9 +531,6 @@ contract SupplyChain is RBAC {
     )
         public
     {
-
-        require(_action < actions.length, "Event action not recognized.");
-
         require(lastSteps[_item] != 0, "Item does not exist.");
 
         require(lastSteps[_partOf] != 0, "Composite item does not exist.");
@@ -554,7 +538,6 @@ contract SupplyChain is RBAC {
         require(isOwner(msg.sender, _item), "Needs owner for partOf.");
 
         pushStep(
-            msg.sender,
             _action,
             _item,
             new uint256[](lastSteps[_item]),
