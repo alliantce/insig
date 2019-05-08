@@ -8,4 +8,4 @@ install:
     - cd client && npm install
 script:
     - npm run install
-    - npm run coverage:ci
+    - npm run coverage
