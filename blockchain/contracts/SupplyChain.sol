@@ -530,9 +530,20 @@ contract SupplyChain is RBAC {
     {
         require(lastSteps[_item] != 0, "Item does not exist.");
 
+        require(isOwner(msg.sender, _item), "Needs owner for partOf.");
+
         require(lastSteps[_partOf] != 0, "Composite item does not exist.");
 
-        require(isOwner(msg.sender, _item), "Needs owner for partOf.");
+        // TODO: Require that a step for _item is in of steps[lastSteps[_partOf]].precedents
+        bool isPrecedent = false;
+        uint256[] memory precedents = steps[lastSteps[_partOf]].precedents;
+        for (uint256 i = 0; i < precedents.length; i += 1){
+            if (steps[precedents[i]].item == _item){
+                isPrecedent = true;
+                break;
+            }
+        }
+        require(isPrecedent, "Item not precedent of partOf.");
 
         pushStep(
             _action,

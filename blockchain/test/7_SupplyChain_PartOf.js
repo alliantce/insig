@@ -211,10 +211,37 @@ contract('SupplyChain', (accounts) => {
             );
         });
 
-        // TODO: Test fails if item does not exist
+        itShouldThrow(
+            'addPartOfStep - Item must exist.',
+            async () => {    
+                const itemOne = 201;
+                const itemTwo = 202;
+
+                // RootStep(1)
+                const stepOne = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemOne, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.step;
+                // RootStep(1) <- PartOf(2) X
+                const stepTwo = (
+                    await supplyChain.addPartOfStep(
+                        itemCreationAction, 
+                        itemTwo,
+                        itemTwo, 
+                        {from: owner1}
+                    )
+                ).logs[0].args.step;
+            },
+            'Item does not exist.',
+        );
 
         itShouldThrow(
-            'addPartOfStep - Composite item does not exist.',
+            'addPartOfStep - Composite item must exist.',
             async () => {    
                 const itemOne = 201;
                 const itemTwo = 202;
@@ -235,7 +262,7 @@ contract('SupplyChain', (accounts) => {
                         itemCreationAction, 
                         itemOne,
                         itemTwo, 
-                        {from: operator1}
+                        {from: owner1}
                     )
                 ).logs[0].args.step;
             },
@@ -280,7 +307,44 @@ contract('SupplyChain', (accounts) => {
             'Needs owner for partOf.',
         );
 
-        // TODO: Test precedent is previous last step for item
+        itShouldThrow(
+            'addPartOfStep - Item must be precedent of partOf.',
+            async () => {    
+                const itemOne = 201;
+                const itemTwo = 202;
+
+                // RootStep(1)
+                const stepOne = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemOne, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.step;
+                // RootStep(2)
+                const stepTwo = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemTwo, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.step;
+                // RootStep(1) <- PartOf(2) X
+                const stepThree = (
+                    await supplyChain.addPartOfStep(
+                        itemCreationAction, 
+                        itemOne,
+                        itemTwo, 
+                        {from: owner1}
+                    )
+                ).logs[0].args.step;
+            },
+            'Item not precedent of partOf.',
+        );
 
         itShouldThrow(
             'addPartOfStep - derive operatorRole from composite.',

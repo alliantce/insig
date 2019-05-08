@@ -85,14 +85,13 @@ contract('Token', (accounts) => {
                         { from: owner1 }
                     )
                 ).logs[0].args.step;
-                // RootStep(2)
+                // RootStep(1) <- TransformStep(2)
                 const stepTwo = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addTransformStep(
                         itemCreationAction, 
-                        itemTwo, 
-                        operatorRole1, 
-                        ownerRole1, 
-                        { from: owner1 }
+                        itemTwo,
+                        [itemOne], 
+                        { from: operator1 }
                     )
                 ).logs[0].args.step;
                 // RootStep(1) <- PartOf(2) X
@@ -131,14 +130,13 @@ contract('Token', (accounts) => {
                         { from: owner1 }
                     )
                 ).logs[0].args.step;
-                // RootStep(2)
+                // RootStep(1) <- TransformStep(2)
                 const stepTwo = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addTransformStep(
                         itemCreationAction, 
-                        itemTwo, 
-                        operatorRole1, 
-                        ownerRole1, 
-                        { from: owner1 }
+                        itemTwo,
+                        [itemOne], 
+                        { from: operator1 }
                     )
                 ).logs[0].args.step;
                 // RootStep(1) <- PartOf(2) X
@@ -206,14 +204,13 @@ contract('Token', (accounts) => {
                     { from: owner1 }
                 )
             ).logs[0].args.step;
-            // RootStep(2)
+            // RootStep(1) <- TransformStep(2)
             const stepTwo = (
-                await supplyChain.addRootStep(
+                await supplyChain.addTransformStep(
                     itemCreationAction, 
-                    itemTwo, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemTwo,
+                    [itemOne], 
+                    { from: operator1 }
                 )
             ).logs[0].args.step;
             // RootStep(1) <- PartOf(2) X
@@ -273,14 +270,13 @@ contract('Token', (accounts) => {
                         { from: owner1 }
                     )
                 ).logs[0].args.step;
-                // RootStep(2)
+                // RootStep(1) <- TransformStep(2)
                 const stepTwo = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addTransformStep(
                         itemCreationAction, 
-                        itemTwo, 
-                        operatorRole1, 
-                        ownerRole1, 
-                        { from: owner1 }
+                        itemTwo,
+                        [itemOne], 
+                        { from: operator1 }
                     )
                 ).logs[0].args.step;
                 // RootStep(1) <- PartOf(2) X
