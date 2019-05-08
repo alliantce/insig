@@ -2,10 +2,7 @@ dist: xenial
 language: node_js
 node_js:
     - "lts/dubnium"
-install:
-    - npm install
-    - cd blockchain && npm install
-    - cd client && npm install
+install: ./install-dependencies.sh
 script:
     - npm run install
     - npm run coverage
