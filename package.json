@@ -27,6 +27,7 @@
     },
     "homepage": "https://github.com/HQ20/SupplyChain#readme",
     "dependencies": {
-        "lerna": "^3.13.4"
+        "lerna": "^3.13.4",
+        "coveralls": "3.0.3"
     }
 }
