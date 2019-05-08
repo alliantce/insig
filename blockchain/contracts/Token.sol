@@ -54,8 +54,9 @@ contract Token is ERC721 {
         );
         // To mint a token its underlying item cannot be part of another item without an instantiated token.
         // This means that to instantiate a part of a composite item several calls will be required to instantiate the path to the part.
+        uint256 partOf = _supplychain.getPartOf(_tokenId);
         require(
-            _supplychain.getPartOf(_tokenId) == _supplychain.NO_PARTOF() ||
+            partOf == _supplychain.NO_PARTOF() ||
                 _exists(_supplychain.getPartOf(_tokenId)),
             "Instantiate composite first."
         );
@@ -66,8 +67,21 @@ contract Token is ERC721 {
                 msg.sender == ownerOf(_supplychain.getPartOf(_tokenId)),
             "Not owner of composite token."
         );
-        // TODO: require that _faceValue < faceValue[_item.partOf] + faceValue[getParts(_item.partOf)]
+
         // TODO: Consider using a tree of item compositions as an index to avoid frequent calls to getParts()
+        // TODO: require that the face value of composite is higher or equal than all the parts combined
+        if (partOf != _supplychain.NO_PARTOF()){
+            uint256 combinedFaceValue = _faceValue;
+            uint256[] memory parts = _supplychain.getParts(partOf);
+            for (uint256 i = 0; i < parts.length; i += 1){
+                combinedFaceValue += faceValue[parts[i]]; // TODO: Need SafeMath here.
+            }
+            require(
+                combinedFaceValue <= faceValue[partOf],
+                "Face value exceeds available."
+            );
+        }
+
         _mint(_to, _tokenId);
         faceValue[_tokenId] = _faceValue;
         return true;

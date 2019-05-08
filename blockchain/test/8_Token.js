@@ -310,6 +310,59 @@ contract('Token', (accounts) => {
             },
             'Not owner of composite token.',
         );
+
+        itShouldThrow(
+            'Fails if face value higher than composite\'s',
+            async () => {    
+                const itemOne = 201;
+                const itemTwo = 202;
+    
+                // RootStep(1)
+                const stepOne = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemOne, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.step;
+                // RootStep(1) <- TransformStep(2)
+                const stepTwo = (
+                    await supplyChain.addTransformStep(
+                        itemCreationAction, 
+                        itemTwo,
+                        [itemOne], 
+                        { from: operator1 }
+                    )
+                ).logs[0].args.step;
+                // RootStep(1) <- PartOf(2) X
+                const stepThree = (
+                    await supplyChain.addPartOfStep(
+                        itemCreationAction, 
+                        itemOne,
+                        itemTwo, 
+                        {from: owner1}
+                    )
+                ).logs[0].args.step;
+    
+                await token.mint(
+                    owner1,
+                    itemTwo,
+                    100,
+                    { from: owner1 },
+                );
+                await token.mint(
+                    owner1,
+                    itemOne,
+                    150,
+                    { from: owner1 },
+                );
+            },
+            'Face value exceeds available.',
+        );
+
+        // TODO: Test for face value below that of composite but above composite + parts
     });
 
     describe('Burn', () => {
