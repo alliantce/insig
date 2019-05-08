@@ -19,7 +19,7 @@
         "lint": "npm run lint:sol && npm run lint:js",
         "security": "docker run --rm --memory=3g -v $(pwd):/tmp -w \"/tmp/\" mythril/myth --truffle",
         "coverage": "solidity-coverage",
-        "coverage:ci": "solidity-coverage",
+        "coverage:ci": "solidity-coverage && cat coverage/lcov.info | coveralls",
         "docs": "soldoc docs/ contracts"
     },
     "keywords": [],
@@ -50,6 +50,7 @@
         "ganache-cli": "6.4.2",
         "solidity-coverage": "0.6.0-beta.3",
         "truffle": "5.0.11",
-        "soldoc": "0.1.0-beta.0"
+        "soldoc": "0.1.0-beta.0",
+        "coveralls": "3.0.3"
     }
 }

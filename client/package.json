@@ -41,7 +41,8 @@
         "tslint": "5.16.0",
         "tslint-react": "4.0.0",
         "typedoc": "0.14.2",
-        "typescript-tslint-plugin": "0.3.1"
+        "typescript-tslint-plugin": "0.3.1",
+        "coveralls": "3.0.3"
     },
     "scripts": {
         "start": "react-scripts start",
@@ -51,7 +52,7 @@
         "test:ci": "CI=true react-scripts test --env=jsdom",
         "lint": "tslint -c tslint.json 'src/**/*.ts'",
         "coverage": "react-scripts test --env=jsdom --coverage",
-        "coverage:ci": "CI=true react-scripts test --env=jsdom --coverage",
+        "coverage:ci": "CI=true react-scripts test --env=jsdom --coverage && cat coverage/lcov.info | coveralls",
         "pretest:final": "npm run deploy-contracts && npm run test-config",
         "test:final": "react-scripts test --env=jsdom --coverage",
         "posttest:final": "DEPLOY_ACTION=stop scripts/local_with_node.sh",
