@@ -175,6 +175,8 @@ contract SupplyChain is RBAC {
             for(uint256 i = 0; i < step.precedents.length; i += 1){
                 uint256 precedentStepId = step.precedents[i];
                 if (steps[precedentStepId].item != _item){
+                    // TODO: Make this exclusive for partOf relationships
+                    // TODO: Except when steps[precedentStepId].partOf == _item && lastSteps[steps[precedentStepId].item] != precedentStepId
                     count += 1;
                 }
                 else{ // Only one of this can exist, store it to continue at the end of precedents.
@@ -206,6 +208,8 @@ contract SupplyChain is RBAC {
             for(uint256 i = 0; i < step.precedents.length; i += 1){
                 uint256 precedentStepId = step.precedents[i];
                 if (steps[precedentStepId].item != _item){
+                    // TODO: Make this exclusive for partOf relationships
+                    // TODO: Except when steps[precedentStepId].partOf == _item && lastSteps[steps[precedentStepId].item] != precedentStepId
                     parts[count] = steps[precedentStepId].item;
                     count += 1;
                 }

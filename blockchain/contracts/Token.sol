@@ -24,6 +24,19 @@ contract Token is ERC721 {
     }
 
     /**
+     * @notice Returns whether the specified token exists
+     * @param tokenId uint256 ID of the token to query the existence of
+     * @return bool whether the token exists
+     */
+    function exists(uint256 tokenId)
+        public
+        view
+        returns (bool)
+    {
+        return _exists(tokenId);
+    }
+
+    /**
      * @notice Function to mint tokens.
      * @param _to The address that will receive the minted tokens.
      * @param _tokenId The id of the token to mint.
@@ -53,13 +66,15 @@ contract Token is ERC721 {
                 msg.sender == ownerOf(_supplychain.getPartOf(_tokenId)),
             "Not owner of composite token."
         );
+        // TODO: require that _faceValue < faceValue[_item.partOf] + faceValue[getParts(_item.partOf)]
+        // TODO: Consider using a tree of item compositions as an index to avoid frequent calls to getParts()
         _mint(_to, _tokenId);
         faceValue[_tokenId] = _faceValue;
         return true;
     }
 
     /**
-     * @dev Function to burn tokens.
+     * @notice Function to burn tokens.
      * @param _tokenId The id of the token to burn.
      * @return A boolean that indicates if the operation was successful.
      */
@@ -82,16 +97,24 @@ contract Token is ERC721 {
         return true;
     }
 
-    /**
-     * @notice Returns whether the specified token exists
-     * @param tokenId uint256 ID of the token to query the existence of
-     * @return bool whether the token exists
-     */
-    function exists(uint256 tokenId)
+    /* function distributeRevenue(
+        address _distributedTokenContract,
+        uint256 _distributedTokenAmount,
+        uint256 _tokenId
+    )
         public
-        view
-        returns (bool)
     {
-        return _exists(tokenId);
-    }
+        // For each item in getParts(_tokenId){}
+        //     distributeRevenue(
+        //         _distributedTokenContract,
+        //         _distributedTokenAmount / faceValue[parts[i]],
+        //         parts[i]
+        //     );
+        //     _distributedTokenAmount -= _distributedTokenAmount / faceValue[parts[i]];
+        // }
+        // IERC20(_distributedTokenContract).transfer(
+        //     ownerOf(_tokenId),
+        //     _distributedTokenAmount
+        // );
+    } */
 }
