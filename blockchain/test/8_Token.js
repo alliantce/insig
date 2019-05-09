@@ -85,17 +85,27 @@ contract('Token', (accounts) => {
                         { from: owner1 }
                     )
                 ).logs[0].args.step;
-                // RootStep(1) <- TransformStep(2)
+                // RootStep(2)
                 const stepTwo = (
-                    await supplyChain.addTransformStep(
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemTwo, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.step;
+                // (1,2) <- (2)
+                const stepThree = (
+                    await supplyChain.addInfoStep(
                         itemCreationAction, 
                         itemTwo,
-                        [itemOne], 
+                        [itemOne, itemTwo], 
                         { from: operator1 }
                     )
                 ).logs[0].args.step;
-                // RootStep(1) <- PartOf(2) X
-                const stepThree = (
+                // (1) <- PartOf(2) X
+                const stepFour = (
                     await supplyChain.addPartOfStep(
                         itemCreationAction, 
                         itemOne,
@@ -130,17 +140,27 @@ contract('Token', (accounts) => {
                         { from: owner1 }
                     )
                 ).logs[0].args.step;
-                // RootStep(1) <- TransformStep(2)
+                // RootStep(2)
                 const stepTwo = (
-                    await supplyChain.addTransformStep(
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemTwo, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.step;
+                // (1,2) <- (2)
+                const stepThree = (
+                    await supplyChain.addInfoStep(
                         itemCreationAction, 
                         itemTwo,
-                        [itemOne], 
+                        [itemOne, itemTwo], 
                         { from: operator1 }
                     )
                 ).logs[0].args.step;
-                // RootStep(1) <- PartOf(2) X
-                const stepThree = (
+                // (1) <- PartOf(2) X
+                const stepFour = (
                     await supplyChain.addPartOfStep(
                         itemCreationAction, 
                         itemOne,
@@ -204,17 +224,27 @@ contract('Token', (accounts) => {
                     { from: owner1 }
                 )
             ).logs[0].args.step;
-            // RootStep(1) <- TransformStep(2)
+            // RootStep(2)
             const stepTwo = (
-                await supplyChain.addTransformStep(
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemTwo, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.step;
+            // (1,2) <- (2)
+            const stepThree = (
+                await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemTwo,
-                    [itemOne], 
+                    [itemOne, itemTwo], 
                     { from: operator1 }
                 )
             ).logs[0].args.step;
             // RootStep(1) <- PartOf(2) X
-            const stepThree = (
+            const stepFour = (
                 await supplyChain.addPartOfStep(
                     itemCreationAction, 
                     itemOne,
@@ -270,17 +300,27 @@ contract('Token', (accounts) => {
                         { from: owner1 }
                     )
                 ).logs[0].args.step;
-                // RootStep(1) <- TransformStep(2)
+                // RootStep(2)
                 const stepTwo = (
-                    await supplyChain.addTransformStep(
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemTwo, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.step;
+                // (1,2) <- (2)
+                const stepThree = (
+                    await supplyChain.addInfoStep(
                         itemCreationAction, 
                         itemTwo,
-                        [itemOne], 
+                        [itemOne, itemTwo], 
                         { from: operator1 }
                     )
                 ).logs[0].args.step;
                 // RootStep(1) <- PartOf(2) X
-                const stepThree = (
+                const stepFour = (
                     await supplyChain.addPartOfStep(
                         itemCreationAction, 
                         itemOne,
@@ -327,17 +367,27 @@ contract('Token', (accounts) => {
                         { from: owner1 }
                     )
                 ).logs[0].args.step;
-                // RootStep(1) <- TransformStep(2)
+                // RootStep(2)
                 const stepTwo = (
-                    await supplyChain.addTransformStep(
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemTwo, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.step;
+                // (1,2) <- (2)
+                const stepThree = (
+                    await supplyChain.addInfoStep(
                         itemCreationAction, 
                         itemTwo,
-                        [itemOne], 
+                        [itemOne, itemTwo], 
                         { from: operator1 }
                     )
                 ).logs[0].args.step;
-                // RootStep(1) <- PartOf(2) X
-                const stepThree = (
+                // (1) <- PartOf(2) X
+                const stepFour = (
                     await supplyChain.addPartOfStep(
                         itemCreationAction, 
                         itemOne,
@@ -453,17 +503,27 @@ contract('Token', (accounts) => {
                         { from: owner1 }
                     )
                 ).logs[0].args.step;
-                // TransformStep(2) <- RootStep(1)
+                // RootStep(2)
                 const stepTwo = (
-                    await supplyChain.addTransformStep(
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        itemTwo, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.step;
+                // (1,2) <- (2)
+                const stepThree = (
+                    await supplyChain.addInfoStep(
                         itemCreationAction, 
                         itemTwo,
-                        [itemOne], 
+                        [itemOne, itemTwo], 
                         { from: operator1 }
                     )
                 ).logs[0].args.step;
-                // RootStep(1) <- PartOf(2) X
-                const stepThree = (
+                // (1) <- PartOf(2) X
+                const stepFour = (
                     await supplyChain.addPartOfStep(
                         itemCreationAction, 
                         itemOne,

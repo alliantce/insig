@@ -432,52 +432,6 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Create a new supply chain step implying a transformation and a new item.
-     * @param _action The index for the step action as defined in the actions array.
-     * @param _item The new item id which must not have been used before.
-     * @param _precedentItems An array of the item ids for items considered to be predecessors to
-     * this one. Permissions are inherited from the first one.
-     */
-    function addTransformStep
-    (
-        uint256 _action,
-        uint256 _item,
-        uint256[] memory _precedentItems
-    )
-        public
-    {
-        require(_precedentItems.length > 0, "No precedents, use addRootStep.");
-
-        require(lastSteps[_item] == 0, "New item already exists.");
-
-        // Check all precedents exist.
-        for (uint i = 0; i < _precedentItems.length; i++){
-            require(lastSteps[_precedentItems[i]] != 0, "Precedent item does not exist.");
-        }
-
-        // Check user belongs to the operatorRole of all precedents.
-        for (uint i = 0; i < _precedentItems.length; i++){
-            require(isOperator(msg.sender, _precedentItems[i]), "Not an operator of precedents.");
-        }
-
-        // Build precedents array out of steps from lastSteps[_precedents[i]]
-        uint256[] memory precedents = new uint256[](_precedentItems.length);
-        for (uint i = 0; i < _precedentItems.length; i++){
-            precedents[i] = lastSteps[_precedentItems[i]];
-        }
-
-        totalItems += 1;
-        pushStep(
-            _action,
-            _item,
-            precedents,
-            NO_PARTOF,
-            getOperatorRole(_precedentItems[0]),
-            getOwnerRole(_precedentItems[0])
-        );
-    }
-
-    /**
      * @notice Create a new supply chain step representing the handover of an item.
      * In practical terms it is a change in the permissions.
      * @param _action The index for the step action as defined in the actions array.
@@ -552,27 +506,7 @@ contract SupplyChain is RBAC {
         );
     }
 
-    /**
-     * @notice Create new supply chain step implying a composition of a new item from others.
-     * This method creates in a transaction one partOfStep for each precedent, and one
-     * TransformStep per call.
-     * @param _action The index for the step action as defined in the actions array.
-     * @param _item The new item id which must not have been used before.
-     * @param _precedents An array of the step ids for steps considered to be predecessors to
-     * this one. Permissions are inherited from the first one.
-     */
-     // TODO: Test
-    function addComposeStep
-    (
-        uint256 _action,
-        uint256 _item,
-        uint256[] memory _precedents
-    )
-    public
-    {
-        addTransformStep(_action, _item, _precedents);
-        for (uint256 i = 0; i < _precedents.length; i++){
-            addPartOfStep(_action, _precedents[i], _item);
-        }
-    }
+    // TODO: Consider a new supply chain step implying a composition of a new item from others,
+    // creating an Info and a PartOf steps so that the composition is transactional.
+
 }
