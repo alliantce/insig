@@ -1,42 +1,56 @@
 {
-  "name": "contracts",
-  "version": "0.1.0",
-  "description": "Staking contracts",
-  "repository": {
-    "type": "git"
-  },
-  "main": "truffle-config.js",
-  "directories": {
-    "test": "test"
-  },
-  "scripts": {
-    "deploy:ganache": "truffle deploy --network development",
-    "start:ganache:dev": "ganache-cli -m \"width whip dream dress captain vessel mix drive oxygen broken soap bone\" -p 8545 -i 201903 --debug",
-    "test": "truffle test --network test",
-    "lint:sol": "solium -d contracts",
-    "lint:js": "eslint *.js .",
-    "lint": "npm run lint:sol && npm run lint:js",
-    "security": "docker run --rm --memory=3g -v $(pwd):/tmp -w \"/tmp/\" mythril/myth --truffle",
-    "coverage": "solidity-coverage"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "openzeppelin-solidity": "2.2.0"
-  },
-  "devDependencies": {
-    "chai": "^4.2.0",
-    "chai-bignumber": "^3.0.0",
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-import": "^2.16.0",
-    "eslint-plugin-jsx-a11y": "^6.2.1",
-    "eslint-plugin-react": "^7.12.4",
-    "eth-gas-reporter": "^0.1.12",
-    "ethlint": "1.2.4",
-    "ganache-cli": "6.4.2",
-    "solidity-coverage": "0.6.0-beta.3",
-    "truffle": "5.0.11"
-  }
+    "name": "supplychain.contracts",
+    "version": "0.1.0-alpha",
+    "description": "Staking contracts",
+    "repository": {
+        "type": "git"
+    },
+    "main": "truffle-config.js",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "deploy:ganache": "truffle deploy --network development",
+        "start:ganache:dev": "ganache-cli -m \"width whip dream dress captain vessel mix drive oxygen broken soap bone\" -p 8545 -i 201903 --debug",
+        "test": "truffle test --network test",
+        "test:ci": "truffle test --network test",
+        "lint:sol": "solium -d contracts",
+        "lint:js": "eslint *.js .",
+        "lint": "npm run lint:sol && npm run lint:js",
+        "security": "docker run --rm --memory=3g -v $(pwd):/tmp -w \"/tmp/\" mythril/myth --truffle",
+        "coverage": "solidity-coverage",
+        "coverage:ci": "solidity-coverage && cat coverage/lcov.info | coveralls",
+        "docs": "soldoc docs/ contracts"
+    },
+    "keywords": [],
+    "author": {
+        "name": "Alberto Cañada",
+        "email": "alberto@techhq.io"
+    },
+    "contributors": [
+        {
+            "name": "Bernardo Vieira",
+            "email": "bernardo@techhq.io"
+        }
+    ],
+    "license": "Apache-2.0",
+    "dependencies": {
+        "openzeppelin-solidity": "2.2.0"
+    },
+    "devDependencies": {
+        "chai": "^4.2.0",
+        "chai-bignumber": "^3.0.0",
+        "eslint": "^5.16.0",
+        "eslint-config-airbnb": "^17.1.0",
+        "eslint-plugin-import": "^2.16.0",
+        "eslint-plugin-jsx-a11y": "^6.2.1",
+        "eslint-plugin-react": "^7.12.4",
+        "eth-gas-reporter": "^0.1.12",
+        "ethlint": "1.2.4",
+        "ganache-cli": "6.4.2",
+        "solidity-coverage": "0.6.0-beta.3",
+        "truffle": "5.0.11",
+        "soldoc": "0.1.0-beta.0",
+        "coveralls": "3.0.3"
+    }
 }

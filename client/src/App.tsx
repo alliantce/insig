@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-import Action from './Action';
-import CreateStep from './CreateStep';
+import Action from './Ation/Action';
+import CreateStep from './CreateStep/CreateStep';
 
 class App extends Component {
     public render() {

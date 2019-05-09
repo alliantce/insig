@@ -17,7 +17,6 @@ contract SupplyChain is RBAC {
 
     event ActionCreated(uint256 action);
     event StepCreated(uint256 step);
-    event debug(uint256 x);
 
     /**
      * @notice Supply chain step data. By chaining these and not allowing them to be modified
@@ -55,8 +54,8 @@ contract SupplyChain is RBAC {
      */
     string[] internal actions;
 
-    /** 
-     * @notice Item counter 
+    /**
+     * @notice Item counter
      */
     uint256 public totalItems;
 
@@ -72,6 +71,7 @@ contract SupplyChain is RBAC {
         addAction("NO ACTION");
         uint256[] memory emptyArray;
         steps.push(
+            // solium-disable-next-line arg-overflow
             Step(address(0), 0, 0, emptyArray, 0, 0, 0)
         );
     }
@@ -147,7 +147,9 @@ contract SupplyChain is RBAC {
         view
         returns(bool)
     {
-        if (_step > totalSteps()) return false;
+        if (_step > totalSteps()) {
+            return false;
+        }
         return lastSteps[steps[_step].item] == _step;
     }
 
@@ -176,7 +178,7 @@ contract SupplyChain is RBAC {
     {
         uint256 item = _item;
         Step memory step = steps[lastSteps[item]];
-        while (step.partOf != NO_ITEM){
+        while (step.partOf != NO_ITEM) {
             item = step.partOf;
             step = steps[lastSteps[item]];
         }
@@ -209,48 +211,18 @@ contract SupplyChain is RBAC {
         return steps[lastSteps[getComposite(_item)]].ownerRole;
     }
 
-    /** 
-     * @notice Create a new step with no checks.
-     */
-    function pushStep
-    (
-        address _creator,
-        uint256 _action,
-        uint256 _item,
-        uint256[] memory _precedents,
-        uint256 _partOf,
-        uint256 _operatorRole,
-        uint256 _ownerRole
-    )
-        internal
-    {
-        uint256 stepId = steps.push(
-            Step(
-                _creator,
-                _action,
-                _item,
-                _precedents,
-                _partOf,
-                _operatorRole,
-                _ownerRole
-            )
-        ) - 1;
-        lastSteps[_item] = stepId;
-        emit StepCreated(stepId);        
-    }
-
     /**
      * @notice Create a new supply chain step with no changes on ownership or item.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The item id that this step is for. This must be either the item 
-     * of one of the steps in _precedents, or an item that has never been used before. 
+     * @param _item The item id that this step is for. This must be either the item
+     * of one of the steps in _precedents, or an item that has never been used before.
      * @param _precedents An array of the item ids for items considered to be predecessors to
      * this one. The operatorRole and ownerRole are inherited from the first item in this array.
      */
     function addInfoStep
     (
-        uint256 _action, 
-        uint256 _item, 
+        uint256 _action,
+        uint256 _item,
         uint256[] memory _precedents
     )
         public
@@ -258,15 +230,15 @@ contract SupplyChain is RBAC {
         require(_precedents.length > 0, "No precedents, use addRootStep.");
 
         require(_action < actions.length, "Event action not recognized.");
-        
+
         // Check all precedents exist.
-        for (uint i = 0; i < _precedents.length; i++){
+        for (uint i = 0; i < _precedents.length; i++) {
             require(lastSteps[_precedents[i]] != 0, "Precedent item does not exist.");
         }
 
         // Check the item id is in precedents
         bool repeatItem = false;
-        for (uint i = 0; i < _precedents.length; i++){
+        for (uint i = 0; i < _precedents.length; i++) {
             if (_precedents[i] == _item) {
                 repeatItem = true;
                 break;
@@ -275,10 +247,10 @@ contract SupplyChain is RBAC {
         require (repeatItem, "Item not in precedents.");
 
         // Check user belongs to the operatorRole of all precedents.
-        for (uint i = 0; i < _precedents.length; i++){
+        for (uint i = 0; i < _precedents.length; i++) {
             require(hasRole(msg.sender, getoperatorRole(_precedents[i])), "Not an operator of precedents.");
         }
-        
+
         pushStep(
             msg.sender,
             _action,
@@ -300,8 +272,8 @@ contract SupplyChain is RBAC {
      */
     function addRootStep
     (
-        uint256 _action, 
-        uint256 _item, 
+        uint256 _action,
+        uint256 _item,
         uint256 _operatorRole,
         uint256 _ownerRole
     )
@@ -313,12 +285,12 @@ contract SupplyChain is RBAC {
         require(_operatorRole != NO_ROLE, "An operator role is required.");
 
         require(_ownerRole != NO_ROLE, "An owner role is required.");
-        
+
         require(lastSteps[_item] == 0, "New item already exists.");
         totalItems += 1;
 
         require(hasRole(msg.sender, _ownerRole), "Creator not in ownerRole.");
-        
+
         uint256[] memory emptyArray;
         pushStep(
             msg.sender,
@@ -334,14 +306,14 @@ contract SupplyChain is RBAC {
     /**
      * @notice Create a new supply chain step implying a transformation and a new item.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The new item id which must not have been used before. 
+     * @param _item The new item id which must not have been used before.
      * @param _precedents An array of the step ids for steps considered to be predecessors to
      * this one. Permissions are inherited from the first one.
      */
     function addTransformStep
     (
-        uint256 _action, 
-        uint256 _item, 
+        uint256 _action,
+        uint256 _item,
         uint256[] memory _precedents
     )
         public
@@ -353,15 +325,15 @@ contract SupplyChain is RBAC {
         require(lastSteps[_item] == 0, "New item already exists.");
 
         // Check all precedents exist.
-        for (uint i = 0; i < _precedents.length; i++){
+        for (uint i = 0; i < _precedents.length; i++) {
             require(lastSteps[_precedents[i]] != 0, "Precedent item does not exist.");
         }
 
         // Check user belongs to the operatorRole of all precedents.
-        for (uint i = 0; i < _precedents.length; i++){
+        for (uint i = 0; i < _precedents.length; i++) {
             require(hasRole(msg.sender, getoperatorRole(_precedents[i])), "Not an operator of precedents.");
         }
-        
+
         totalItems += 1;
         pushStep(
             msg.sender,
@@ -384,7 +356,7 @@ contract SupplyChain is RBAC {
      */
     function addHandoverStep
     (
-        uint256 _action, 
+        uint256 _action,
         uint256 _item,
         uint256 _operatorRole,
         uint256 _ownerRole
@@ -392,7 +364,7 @@ contract SupplyChain is RBAC {
         public
     {
         require(_action < actions.length, "Event action not recognized.");
-        
+
         require(lastSteps[_item] != 0, "Item does not exist.");
 
         require(hasRole(msg.sender, getownerRole(_item)), "Needs owner for handover.");
@@ -427,7 +399,7 @@ contract SupplyChain is RBAC {
     {
 
         require(_action < actions.length, "Event action not recognized.");
-        
+
         require(lastSteps[_item] != 0, "Item does not exist.");
 
         require(lastSteps[_partOf] != 0, "Composite item does not exist.");
@@ -447,24 +419,54 @@ contract SupplyChain is RBAC {
 
     /**
      * @notice Create new supply chain step implying a composition of a new item from others.
-     * This method creates in a transaction one partOfStep for each precedent, and one 
+     * This method creates in a transaction one partOfStep for each precedent, and one
      * TransformStep per call.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The new item id which must not have been used before. 
+     * @param _item The new item id which must not have been used before.
      * @param _precedents An array of the step ids for steps considered to be predecessors to
      * this one. Permissions are inherited from the first one.
      */
     function addComposeStep
     (
-        uint256 _action, 
-        uint256 _item, 
+        uint256 _action,
+        uint256 _item,
         uint256[] memory _precedents
     )
     public
     {
         addTransformStep(_action, _item, _precedents);
-        for (uint256 i = 0; i < _precedents.length; i++){
+        for (uint256 i = 0; i < _precedents.length; i++) {
             addPartOfStep(_action, _precedents[i], _item);
         }
+    }
+
+    /**
+     * @notice Create a new step with no checks.
+     */
+    function pushStep
+    (
+        address _creator,
+        uint256 _action,
+        uint256 _item,
+        uint256[] memory _precedents,
+        uint256 _partOf,
+        uint256 _operatorRole,
+        uint256 _ownerRole
+    )
+        internal
+    {
+        uint256 stepId = steps.push(
+            Step(
+                _creator,
+                _action,
+                _item,
+                _precedents,
+                _partOf,
+                _operatorRole,
+                _ownerRole
+            )
+        ) - 1;
+        lastSteps[_item] = stepId;
+        emit StepCreated(stepId);
     }
 }

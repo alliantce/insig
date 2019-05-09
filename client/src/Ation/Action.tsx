@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
+import '../main.scss';
 import './action.scss';
-import './main.scss';
 
 interface IActionState {
     action: string;

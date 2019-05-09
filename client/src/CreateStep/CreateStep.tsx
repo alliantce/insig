@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import { Sankey } from 'react-vis';
 import Energy from './energy.json';
 
+import '../main.scss';
 import './createstep.scss';
-import './main.scss';
 
 
 const BLURRED_LINK_OPACITY = 0.3;
