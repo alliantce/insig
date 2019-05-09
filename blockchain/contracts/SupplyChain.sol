@@ -150,77 +150,6 @@ contract SupplyChain is RBAC {
         return steps[_step].precedents;
     }
 
-
-    /**
-     * @notice Explore the step tree backwards, to a depth of one item transformation in each
-     * branch, to count all the items that contributed directly to this one.
-     * @dev The whole purpose of this function is to allow getParts to instantiate an array of the
-     * required length to return the item ids, since dynamic arrays are not supported in memory.
-     * @param _item The item id to count parts for.
-     * @return The direct composite item.
-     */
-    function countParts(uint256 _item)
-        public
-        view
-        returns(uint256)
-    {
-        // For all precedents to an item, only one of them can share the same item id
-        // If a precedent shares the same item id, store the step id and continue with it after exploring precedents with different ids
-        // For each precedent with a different item id, add 1 to the counter.
-        uint256 count = 0;
-        uint256 nextStepId = lastSteps[_item];
-        while (nextStepId != NO_STEP){
-            Step memory step = steps[nextStepId];
-            nextStepId = NO_STEP;
-            for(uint256 i = 0; i < step.precedents.length; i += 1){
-                uint256 precedentStepId = step.precedents[i];
-                if (steps[precedentStepId].item != _item){
-                    // TODO: Make this exclusive for partOf relationships
-                    // TODO: Except when steps[precedentStepId].partOf == _item && lastSteps[steps[precedentStepId].item] != precedentStepId
-                    count += 1;
-                }
-                else{ // Only one of this can exist, store it to continue at the end of precedents.
-                    nextStepId = precedentStepId;
-                }
-            }
-        }
-
-        return count;
-    }
-
-    /**
-     * @notice Explore the step tree backwards, to a depth of one item transformation in each
-     * branch, to find all the items that contributed directly to this one.
-     * @param _item The item id to find parts for.
-     * @return The direct composite item.
-     */
-    function getParts(uint256 _item)
-        public
-        view
-        returns(uint256[] memory)
-    {
-        uint256[] memory parts = new uint256[](countParts(_item));
-        uint256 count = 0;
-        uint256 nextStepId = lastSteps[_item];
-        while (nextStepId != NO_STEP){
-            Step memory step = steps[nextStepId];
-            nextStepId = NO_STEP;
-            for(uint256 i = 0; i < step.precedents.length; i += 1){
-                uint256 precedentStepId = step.precedents[i];
-                if (steps[precedentStepId].item != _item){
-                    // TODO: Make this exclusive for partOf relationships
-                    // TODO: Except when steps[precedentStepId].partOf == _item && lastSteps[steps[precedentStepId].item] != precedentStepId
-                    parts[count] = steps[precedentStepId].item;
-                    count += 1;
-                }
-                else{ // Only one of this can exist, store it to continue at the end of precedents.
-                    nextStepId = precedentStepId;
-                }
-            }
-        }
-        return parts;
-    }
-
     /**
      * @notice Retrieve the direct composite item of another one, if existing.
      * @param _item The item id verify if it's part of another one.
@@ -251,6 +180,74 @@ contract SupplyChain is RBAC {
             step = steps[lastSteps[item]];
         }
         return item;
+    }
+
+    /**
+     * @notice Explore the step tree backwards, to a depth of one item transformation in each
+     * branch, to count all the items that contributed directly to this one.
+     * @dev The whole purpose of this function is to allow getParts to instantiate an array of the
+     * required length to return the item ids, since dynamic arrays are not supported in memory.
+     * @param _item The item id to count parts for.
+     * @return The direct composite item.
+     */
+    function countParts(uint256 _item)
+        public
+        view
+        returns(uint256)
+    {
+        // For all precedents to an item, only one of them can share the same item id
+        // If a precedent shares the same item id, store the step id and continue with it after exploring precedents with different ids
+        // For each precedent with a different item id which is part of this item, add 1 to the counter.
+        uint256 count = 0;
+        uint256 nextStepId = lastSteps[_item];
+        while (nextStepId != NO_STEP){
+            Step memory step = steps[nextStepId];
+            nextStepId = NO_STEP;
+            for(uint256 i = 0; i < step.precedents.length; i += 1){
+                uint256 precedentStepId = step.precedents[i];
+                if (steps[precedentStepId].item != _item &&
+                    getPartOf(steps[precedentStepId].item) == _item){
+                    count += 1;
+                }
+                else{ // Only one of this can exist, store it to continue at the end of precedents.
+                    nextStepId = precedentStepId;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * @notice Explore the step tree backwards, to a depth of one item transformation in each
+     * branch, to find all the items that contributed directly to this one.
+     * @param _item The item id to find parts for.
+     * @return The direct composite item.
+     */
+    function getParts(uint256 _item)
+        public
+        view
+        returns(uint256[] memory)
+    {
+        uint256[] memory parts = new uint256[](countParts(_item));
+        uint256 count = 0;
+        uint256 nextStepId = lastSteps[_item];
+        while (nextStepId != NO_STEP){
+            Step memory step = steps[nextStepId];
+            nextStepId = NO_STEP;
+            for(uint256 i = 0; i < step.precedents.length; i += 1){
+                uint256 precedentStepId = step.precedents[i];
+                if (steps[precedentStepId].item != _item &&
+                    getPartOf(steps[precedentStepId].item) == _item){
+                    parts[count] = steps[precedentStepId].item;
+                    count += 1;
+                }
+                else{ // Only one of this can exist, store it to continue at the end of precedents.
+                    nextStepId = precedentStepId;
+                }
+            }
+        }
+        return parts;
     }
 
     /**

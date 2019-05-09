@@ -69,10 +69,10 @@ contract Token is ERC721 {
         );
 
         // TODO: Consider using a tree of item compositions as an index to avoid frequent calls to getParts()
-        // TODO: require that the face value of composite is higher or equal than all the parts combined
+        // Require that the face value of composite is higher or equal than all the parts combined
         if (partOf != _supplychain.NO_PARTOF()){
             uint256 combinedFaceValue = _faceValue;
-            uint256[] memory parts = _supplychain.getParts(partOf);
+            uint256[] memory parts = _supplychain.getParts(partOf); // TODO: Make getParts return only parts and not precedent items.
             for (uint256 i = 0; i < parts.length; i += 1){
                 combinedFaceValue += faceValue[parts[i]]; // TODO: Need SafeMath here.
             }
@@ -104,7 +104,7 @@ contract Token is ERC721 {
         // This means that to burn a token all the tokens for its parts need to be burnt first.
         uint256[] memory parts = SupplyChain(supplyChain).getParts(_tokenId);
         for (uint256 i = 0; i < parts.length; i += 1){
-            require(!_exists(parts[i]), "Burn part tokens first.");
+            require(!_exists(parts[i]), "Burn part tokens first."); // TODO: Make getParts return only parts and not precedent items.
         }
         _burn(_tokenId);
         delete faceValue[_tokenId];

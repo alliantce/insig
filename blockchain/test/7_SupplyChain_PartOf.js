@@ -478,6 +478,41 @@ contract('SupplyChain', (accounts) => {
             );
         });
 
+        it('getParts ignores precedents that are not parts.', async () => {
+            const itemOne = 201;
+            const itemTwo = 202;
+            const itemThree = 203;
+
+            // RootStep(1)
+            const stepOne = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.step;
+            // RootStep(1) <- TransformStep(2)
+            const stepTwo = (
+                await supplyChain.addTransformStep(
+                    itemCreationAction, 
+                    itemTwo, 
+                    [itemOne], 
+                    {from: operator1}
+                )
+            ).logs[0].args.step;
+
+            assert.equal(
+                (await supplyChain.getPrecedents(stepTwo))[0].toNumber(),
+                stepOne,
+            );
+            assert.equal(
+                (await supplyChain.countParts(itemTwo)).toNumber(),
+                0,
+            );
+        });
+
         it('getParts for an item with one part.', async () => {
             const itemOne = 201;
             const itemTwo = 202;
@@ -500,6 +535,14 @@ contract('SupplyChain', (accounts) => {
                     itemTwo, 
                     [itemOne], 
                     {from: operator1}
+                )
+            ).logs[0].args.step;
+            const stepThree = (
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    itemOne,
+                    itemTwo, 
+                    {from: owner1}
                 )
             ).logs[0].args.step;
 
@@ -549,6 +592,22 @@ contract('SupplyChain', (accounts) => {
                     itemThree, 
                     [itemOne, itemTwo], 
                     {from: operator1}
+                )
+            ).logs[0].args.step;
+            const stepFour = (
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    itemOne,
+                    itemThree, 
+                    {from: owner1}
+                )
+            ).logs[0].args.step;
+            const stepFive = (
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    itemTwo,
+                    itemThree, 
+                    {from: owner1}
                 )
             ).logs[0].args.step;
 
@@ -621,8 +680,16 @@ contract('SupplyChain', (accounts) => {
                     {from: operator1}
                 )
             ).logs[0].args.step;
-            // Item(1,3) <- AddInfo(1)
             const stepSix = (
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    itemTwo,
+                    itemOne, 
+                    {from: owner1}
+                )
+            ).logs[0].args.step;
+            // Item(1,3) <- AddInfo(1)
+            const stepSeven = (
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemOne, 
@@ -630,13 +697,29 @@ contract('SupplyChain', (accounts) => {
                     {from: operator1}
                 )
             ).logs[0].args.step;
+            const stepEight = (
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    itemThree,
+                    itemOne, 
+                    {from: owner1}
+                )
+            ).logs[0].args.step;
             // Item(1,4) <- AddInfo(1)
-            const stepSeven = (
+            const stepNine = (
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemOne, 
                     [itemOne, itemFour],
                     {from: operator1}
+                )
+            ).logs[0].args.step;
+            const stepTen = (
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    itemFour,
+                    itemOne, 
+                    {from: owner1}
                 )
             ).logs[0].args.step;
 
