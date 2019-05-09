@@ -437,8 +437,8 @@ contract SupplyChain is RBAC {
             _item,
             precedents,
             NO_PARTOF,
-            getOperatorRole(_precedentItems[0]),
-            getOwnerRole(_precedentItems[0])
+            getOperatorRole(_item),
+            getOwnerRole(_item)
         );
     }
 
