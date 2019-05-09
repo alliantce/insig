@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC721/ERC721.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./SupplyChain.sol";
 
 /**
@@ -9,11 +10,17 @@ import "./SupplyChain.sol";
  * @notice Implements a token representation of supply chain items
  */
 contract Token is ERC721 {
+    using SafeMath for uint256;
+
+    event RevenueUpdated(uint256 tokenId, uint256 amount);
 
     address internal supplyChain;
 
     // Mapping of token to face value
     mapping (uint256 => uint256) public faceValue;
+
+    // Mapping of token to accumulated revenues.
+    mapping(uint256 => uint256) public revenues;
 
     /**
      * @notice The constructor links the Token contract to the Supply Chain contract.
@@ -37,7 +44,7 @@ contract Token is ERC721 {
     }
 
     /**
-     * @notice Function to mint tokens.
+     * @notice Mint tokens.
      * @param _to The address that will receive the minted tokens.
      * @param _tokenId The id of the token to mint.
      * @param _faceValue The face value of the token.
@@ -88,7 +95,7 @@ contract Token is ERC721 {
     }
 
     /**
-     * @notice Function to burn tokens.
+     * @notice Burn tokens.
      * @param _tokenId The id of the token to burn.
      * @return A boolean that indicates if the operation was successful.
      */
@@ -111,24 +118,44 @@ contract Token is ERC721 {
         return true;
     }
 
-    /* function distributeRevenue(
-        address _distributedTokenContract,
-        uint256 _distributedTokenAmount,
+    /**
+     * @notice Pay an amount to a token and distribute it if it has parts with instantiated tokens.
+     * @param _tokenId The id of the token to pay to.
+     * @param _amount The amount of the utility token to pay with.
+     */
+    function pay(
+        uint256 _tokenId,
+        uint256 _amount
+    )
+        public
+    {
+        uint256 remaining = _amount;
+        uint256 _faceValue = faceValue[_tokenId];
+        uint256[] memory parts = SupplyChain(supplyChain).getParts(_tokenId);
+        for (uint256 i = 0; i < parts.length; i += 1){
+            uint256 payment = _amount.mul(faceValue[parts[i]]).div(_faceValue);
+            pay(parts[i], payment);
+            remaining = remaining.sub(payment);
+        }
+        revenues[_tokenId] = revenues[_tokenId].add(remaining);
+        emit RevenueUpdated(_tokenId, remaining);
+    }
+
+    /**
+     * @notice Withdraw accumulated revenues for a token.
+     * @param _tokenId The id of the token to withdraw from.
+     */
+    function withdraw(
         uint256 _tokenId
     )
         public
     {
-        // For each item in getParts(_tokenId){}
-        //     distributeRevenue(
-        //         _distributedTokenContract,
-        //         _distributedTokenAmount / faceValue[parts[i]],
-        //         parts[i]
-        //     );
-        //     _distributedTokenAmount -= _distributedTokenAmount / faceValue[parts[i]];
-        // }
-        // IERC20(_distributedTokenContract).transfer(
-        //     ownerOf(_tokenId),
-        //     _distributedTokenAmount
-        // );
-    } */
+        require(
+            SupplyChain(supplyChain).isOwner(msg.sender, _tokenId),
+            "Only owner can withdraw."
+        );
+        // ERC20(UtilityTokenContract).transfer(msg.sender, revenues[_tokenId]);
+        delete revenues[_tokenId];
+        emit RevenueUpdated(_tokenId, 0);
+    }
 }
