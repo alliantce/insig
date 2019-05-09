@@ -24,9 +24,13 @@
         "react-router-dom": "5.0.0",
         "react-scripts": "2.1.8",
         "react-vis": "1.11.7",
-        "typescript": "3.4.3"
+        "truffle-contract": "4.0.14",
+        "typescript": "3.4.3",
+        "web3": "1.0.0-beta.37",
+        "winston": "3.2.1"
     },
     "devDependencies": {
+        "coveralls": "3.0.3",
         "enzyme": "3.9.0",
         "enzyme-adapter-react-16": "1.12.1",
         "enzyme-async-helpers": "0.9.1",
@@ -41,8 +45,7 @@
         "tslint": "5.16.0",
         "tslint-react": "4.0.0",
         "typedoc": "0.14.2",
-        "typescript-tslint-plugin": "0.3.1",
-        "coveralls": "3.0.3"
+        "typescript-tslint-plugin": "0.3.1"
     },
     "scripts": {
         "start": "react-scripts start",
@@ -57,7 +60,10 @@
         "test:final": "react-scripts test --env=jsdom --coverage",
         "posttest:final": "DEPLOY_ACTION=stop scripts/local_with_node.sh",
         "debug:chrome": "google-chrome --remote-debugging-port=9222",
-        "docs": "typedoc --out docs ./src"
+        "docs": "typedoc --out docs ./src",
+        "link-contracts": "run-script-os",
+        "link-contracts:linux:darwin": "cd src && ln -s ../../blockchain/build/contracts contracts",
+        "link-contracts:win32": "cd src && mklink \\D contracts ..\\..\\blockchain\\build\\contracts"
     },
     "eslintConfig": {
         "extends": "react-app"
