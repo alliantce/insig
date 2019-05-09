@@ -32,6 +32,7 @@ contract Token is ERC721 {
 
     /**
      * @notice Returns whether the specified token exists
+     * @dev Only implemented so that it can be called from the client.
      * @param tokenId uint256 ID of the token to query the existence of
      * @return bool whether the token exists
      */
@@ -54,6 +55,8 @@ contract Token is ERC721 {
         public
         returns(bool)
     {
+        require(!exists(_tokenId), "Token already exists.");
+
         SupplyChain _supplychain = SupplyChain(supplyChain);
         require(
             _supplychain.isOwner(msg.sender, _tokenId),
@@ -64,7 +67,7 @@ contract Token is ERC721 {
         uint256 partOf = _supplychain.getPartOf(_tokenId);
         require(
             partOf == _supplychain.NO_PARTOF() ||
-                _exists(_supplychain.getPartOf(_tokenId)),
+                exists(_supplychain.getPartOf(_tokenId)),
             "Instantiate composite first."
         );
         // To mint a token its underlying item cannot be part of another item with a token owned by a different role.
@@ -103,6 +106,8 @@ contract Token is ERC721 {
         public
         returns(bool)
     {
+        require(exists(_tokenId), "Token doesn't exist.");
+
         require(
             SupplyChain(supplyChain).isOwner(msg.sender, _tokenId),
             "Burner not in ownerRole."
@@ -111,7 +116,7 @@ contract Token is ERC721 {
         // This means that to burn a token all the tokens for its parts need to be burnt first.
         uint256[] memory parts = SupplyChain(supplyChain).getParts(_tokenId);
         for (uint256 i = 0; i < parts.length; i += 1){
-            require(!_exists(parts[i]), "Burn part tokens first."); // TODO: Make getParts return only parts and not precedent items.
+            require(!exists(parts[i]), "Burn part tokens first."); // TODO: Make getParts return only parts and not precedent items.
         }
         _burn(_tokenId);
         delete faceValue[_tokenId];
@@ -129,6 +134,8 @@ contract Token is ERC721 {
     )
         public
     {
+        require(exists(_tokenId), "Token doesn't exist.");
+
         uint256 remaining = _amount;
         uint256 _faceValue = faceValue[_tokenId];
         uint256[] memory parts = SupplyChain(supplyChain).getParts(_tokenId);
@@ -140,6 +147,8 @@ contract Token is ERC721 {
         revenues[_tokenId] = revenues[_tokenId].add(remaining);
         emit RevenueUpdated(_tokenId, remaining);
     }
+    // TODO: Test with no tokens.
+    
 
     /**
      * @notice Withdraw accumulated revenues for a token.
@@ -150,6 +159,8 @@ contract Token is ERC721 {
     )
         public
     {
+        require(exists(_tokenId), "Token doesn't exist.");
+
         require(
             SupplyChain(supplyChain).isOwner(msg.sender, _tokenId),
             "Only owner can withdraw."

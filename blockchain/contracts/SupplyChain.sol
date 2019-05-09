@@ -138,6 +138,19 @@ contract SupplyChain is RBAC {
     }
 
     /**
+     * @notice Returns whether an item exists.
+     * @param _item The id for the item.
+     * @return Whether an item exists.
+     */
+    function exists(uint256 _item)
+        public
+        view
+        returns(bool)
+    {
+        return lastSteps[_item] != 0;
+    }
+
+    /**
      * @notice Retrieve the immediate precedents of a step.
      * @param _step The step id of the step to retrieve precedents for.
      * @return An array with the step ids of the immediate precedents of the step given as a parameter.
@@ -360,7 +373,7 @@ contract SupplyChain is RBAC {
 
         require(_ownerRole != NO_ROLE, "An owner role is required.");
 
-        require(lastSteps[_item] == 0, "New item already exists.");
+        require(!exists(_item), "New item already exists.");
 
         require(hasRole(msg.sender, _ownerRole), "Creator not in ownerRole.");
 
@@ -397,7 +410,7 @@ contract SupplyChain is RBAC {
 
         // Check all precedents exist.
         for (uint i = 0; i < _precedentItems.length; i++){
-            require(lastSteps[_precedentItems[i]] != 0, "Precedent item does not exist.");
+            require(exists(_precedentItems[i]), "Precedent item does not exist.");
         }
 
         // Check the item id is in precedents
@@ -448,7 +461,7 @@ contract SupplyChain is RBAC {
     )
         public
     {
-        require(lastSteps[_item] != 0, "Item does not exist.");
+        require(exists(_item), "Item does not exist.");
 
         require(isOwner(msg.sender, _item), "Needs owner for handover.");
 
@@ -479,11 +492,11 @@ contract SupplyChain is RBAC {
     )
         public
     {
-        require(lastSteps[_item] != 0, "Item does not exist.");
+        require(exists(_item), "Item does not exist.");
 
         require(isOwner(msg.sender, _item), "Needs owner for partOf.");
 
-        require(lastSteps[_partOf] != 0, "Composite item does not exist.");
+        require(exists(_partOf), "Composite item does not exist.");
 
         // TODO: Require that a step for _item is in of steps[lastSteps[_partOf]].precedents
         bool isPrecedent = false;
