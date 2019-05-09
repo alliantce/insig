@@ -10,13 +10,14 @@ import "./RBAC.sol";
  */
 contract SupplyChain is RBAC {
 
-    uint256 constant NO_ACTION = 0;
-    uint256 constant NO_ITEM = 0;
-    uint256 constant NO_PARTOF = NO_ITEM;
-    uint256 constant NO_STEP = 0;
+    uint256 constant public NO_ACTION = 0;
+    uint256 constant public NO_ITEM = 0;
+    uint256 constant public NO_PARTOF = NO_ITEM;
+    uint256 constant public NO_STEP = 0;
 
     event ActionCreated(uint256 action);
     event StepCreated(uint256 step);
+    event ItemCreated(uint256 item);
 
     /**
      * @notice Supply chain step data. By chaining these and not allowing them to be modified
@@ -74,6 +75,7 @@ contract SupplyChain is RBAC {
             // solium-disable-next-line arg-overflow
             Step(address(0), 0, 0, emptyArray, 0, 0, 0)
         );
+        totalItems = 0;
     }
 
     /**
@@ -138,19 +140,16 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Verify whether a step is the last of an item.
-     * @param _step The step id of the step to verify.
-     * @return Whether a step is the last of an item.
+     * @notice Returns whether an item exists.
+     * @param _item The id for the item.
+     * @return Whether an item exists.
      */
-    function isLastStep(uint256 _step)
+    function exists(uint256 _item) // TODO: Replace by existsItem;
         public
         view
         returns(bool)
     {
-        if (_step > totalSteps()) {
-            return false;
-        }
-        return lastSteps[steps[_step].item] == _step;
+        return lastSteps[_item] != 0; // TODO: Replace by _item > totalItems;
     }
 
     /**
@@ -167,9 +166,22 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Retrieve the composite item of another one, if existing.
+     * @notice Retrieve the direct composite item of another one, if existing.
+     * @param _item The item id verify if it's part of another one.
+     * @return The direct composite item.
+     */
+    function getPartOf(uint256 _item)
+        public
+        view
+        returns(uint256)
+    {
+        return steps[lastSteps[_item]].partOf;
+    }
+
+    /**
+     * @notice Retrieve the ultimate composite item of another one, if existing.
      * @param _item The item id to start looking from.
-     * @return The ultimate composite item this step refers to.
+     * @return The ultimate composite item.
      */
     function getComposite(uint256 _item)
         public
@@ -186,11 +198,79 @@ contract SupplyChain is RBAC {
     }
 
     /**
+     * @notice Explore the step tree backwards, to a depth of one item transformation in each
+     * branch, to count all the items that contributed directly to this one.
+     * @dev The whole purpose of this function is to allow getParts to instantiate an array of the
+     * required length to return the item ids, since dynamic arrays are not supported in memory.
+     * @param _item The item id to count parts for.
+     * @return The direct composite item.
+     */
+    function countParts(uint256 _item)
+        public
+        view
+        returns(uint256)
+    {
+        // For all precedents to an item, only one of them can share the same item id
+        // If a precedent shares the same item id, store the step id and continue with it after exploring precedents with different ids
+        // For each precedent with a different item id which is part of this item, add 1 to the counter.
+        uint256 count = 0;
+        uint256 nextStepId = lastSteps[_item];
+        while (nextStepId != NO_STEP){
+            Step memory step = steps[nextStepId];
+            nextStepId = NO_STEP;
+            for(uint256 i = 0; i < step.precedents.length; i += 1){
+                uint256 precedentStepId = step.precedents[i];
+                if (steps[precedentStepId].item != _item &&
+                    getPartOf(steps[precedentStepId].item) == _item){
+                    count += 1;
+                }
+                else{ // Only one of this can exist, store it to continue at the end of precedents.
+                    nextStepId = precedentStepId;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * @notice Explore the step tree backwards, to a depth of one item transformation in each
+     * branch, to find all the items that contributed directly to this one.
+     * @param _item The item id to find parts for.
+     * @return The direct composite item.
+     */
+    function getParts(uint256 _item)
+        public
+        view
+        returns(uint256[] memory)
+    {
+        uint256[] memory parts = new uint256[](countParts(_item));
+        uint256 count = 0;
+        uint256 nextStepId = lastSteps[_item];
+        while (nextStepId != NO_STEP){
+            Step memory step = steps[nextStepId];
+            nextStepId = NO_STEP;
+            for(uint256 i = 0; i < step.precedents.length; i += 1){
+                uint256 precedentStepId = step.precedents[i];
+                if (steps[precedentStepId].item != _item &&
+                    getPartOf(steps[precedentStepId].item) == _item){
+                    parts[count] = steps[precedentStepId].item;
+                    count += 1;
+                }
+                else{ // Only one of this can exist, store it to continue at the end of precedents.
+                    nextStepId = precedentStepId;
+                }
+            }
+        }
+        return parts;
+    }
+
+    /**
      * @notice Retrieve the authorized operator role for an item, taking into account composition.
      * @param _item The item id of the item to retrieve operatorRole for.
      * @return The authorized operatorRole for this step.
      */
-    function getoperatorRole(uint256 _item)
+    function getOperatorRole(uint256 _item)
         public
         view
         returns(uint256)
@@ -203,7 +283,7 @@ contract SupplyChain is RBAC {
      * @param _item The item id of the item to retrieve ownerRole for.
      * @return The authorized ownerRole for this step.
      */
-    function getownerRole(uint256 _item)
+    function getOwnerRole(uint256 _item)
         public
         view
         returns(uint256)
@@ -212,90 +292,95 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Create a new supply chain step with no changes on ownership or item.
-     * @param _action The index for the step action as defined in the actions array.
-     * @param _item The item id that this step is for. This must be either the item
-     * of one of the steps in _precedents, or an item that has never been used before.
-     * @param _precedents An array of the item ids for items considered to be predecessors to
-     * this one. The operatorRole and ownerRole are inherited from the first item in this array.
+     * @notice Check if an address can operate an item in the supply chain
+     * @param _address The address to check operator role for.
+     * @param _item The id of the item to check
      */
-    function addInfoStep
+    function isOperator(address _address, uint256 _item)
+        public
+        view
+        returns(bool)
+    {
+        return hasRole(_address, getOperatorRole(_item));
+    }
+
+    /**
+     * @notice Check if an address owns an item in the supply chain
+     * @param _address The address to check ownership for.
+     * @param _item The id of the item to check
+     */
+    function isOwner(address _address, uint256 _item)
+        public
+        view
+        returns(bool)
+    {
+        return hasRole(_address, getOwnerRole(_item));
+    }
+
+    /**
+     * @notice Create a new step.
+     * @param _action The action of this step.
+     * @param _item The id of the object that this step refers to.
+     * @param _precedents The ids of the steps that precede this one in the supply chain.
+     * @param _partOf The id of some other item that this is part of and inherits permissions from.
+     * @param _operatorRole The roles allowed to append steps to this one.
+     * @param _ownerRole The roles allowed to append steps with different permissions.
+     */
+    function pushStep
     (
         uint256 _action,
         uint256 _item,
-        uint256[] memory _precedents
+        uint256[] memory _precedents,
+        uint256 _partOf,
+        uint256 _operatorRole,
+        uint256 _ownerRole
     )
-        public
+        public // TODO: Make internal and run tests through a mock.
     {
-        require(_precedents.length > 0, "No precedents, use addRootStep.");
-
         require(_action < actions.length, "Event action not recognized.");
 
-        // Check all precedents exist.
-        for (uint i = 0; i < _precedents.length; i++) {
-            require(lastSteps[_precedents[i]] != 0, "Precedent item does not exist.");
-        }
-
-        // Check the item id is in precedents
-        bool repeatItem = false;
-        for (uint i = 0; i < _precedents.length; i++) {
-            if (_precedents[i] == _item) {
-                repeatItem = true;
-                break;
-            }
-        }
-        require (repeatItem, "Item not in precedents.");
-
-        // Check user belongs to the operatorRole of all precedents.
-        for (uint i = 0; i < _precedents.length; i++) {
-            require(hasRole(msg.sender, getoperatorRole(_precedents[i])), "Not an operator of precedents.");
-        }
-
-        pushStep(
-            msg.sender,
-            _action,
-            _item,
-            _precedents,
-            NO_PARTOF,
-            getoperatorRole(_precedents[0]),
-            getownerRole(_precedents[0])
-        );
+        uint256 stepId = steps.push(
+            Step(
+                msg.sender,
+                _action,
+                _item,
+                _precedents,
+                _partOf,
+                _operatorRole,
+                _ownerRole
+            )
+        ) - 1;
+        lastSteps[_item] = stepId;
+        emit StepCreated(stepId);
     }
 
     /**
      * @notice Create a new supply chain step without precedents.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The item id that this step is for. This must be an item that has never been
-     * used before.
      * @param _operatorRole The roles allowed to append steps to this one.
      * @param _ownerRole The roles allowed to append steps with different permissions.
      */
     function addRootStep
     (
         uint256 _action,
-        uint256 _item,
         uint256 _operatorRole,
         uint256 _ownerRole
     )
         public
     {
-
-        require(_action < actions.length, "Event action not recognized.");
-
         require(_operatorRole != NO_ROLE, "An operator role is required.");
 
         require(_ownerRole != NO_ROLE, "An owner role is required.");
 
-        require(lastSteps[_item] == 0, "New item already exists.");
-        totalItems += 1;
-
         require(hasRole(msg.sender, _ownerRole), "Creator not in ownerRole.");
+
+        totalItems += 1;
+        emit ItemCreated(totalItems);
 
         uint256[] memory emptyArray;
         pushStep(
-            msg.sender,
             _action,
-            _item,
+            totalItems,
             emptyArray,
             NO_PARTOF,
             _operatorRole,
@@ -304,45 +389,56 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Create a new supply chain step implying a transformation and a new item.
+     * @notice Create a new supply chain step with no changes on ownership or item.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The new item id which must not have been used before.
-     * @param _precedents An array of the step ids for steps considered to be predecessors to
-     * this one. Permissions are inherited from the first one.
+     * @param _item The item id that this step is for. This must be either the item
+     * of one of the steps in _precedents, or an item that has never been used before.
+     * @param _precedentItems An array of the item ids for items considered to be predecessors to
+     * this one. The operatorRole and ownerRole are inherited from the first item in this array.
      */
-    function addTransformStep
+    function addInfoStep
     (
         uint256 _action,
         uint256 _item,
-        uint256[] memory _precedents
+        uint256[] memory _precedentItems
     )
         public
     {
-        require(_precedents.length > 0, "No precedents, use addRootStep.");
-
-        require(_action < actions.length, "Event action not recognized.");
-
-        require(lastSteps[_item] == 0, "New item already exists.");
+        require(_precedentItems.length > 0, "No precedents, use addRootStep.");
 
         // Check all precedents exist.
-        for (uint i = 0; i < _precedents.length; i++) {
-            require(lastSteps[_precedents[i]] != 0, "Precedent item does not exist.");
+        for (uint i = 0; i < _precedentItems.length; i++){
+            require(exists(_precedentItems[i]), "Precedent item does not exist.");
         }
+
+        // Check the item id is in precedents
+        bool repeatItem = false;
+        for (uint i = 0; i < _precedentItems.length; i++){
+            if (_precedentItems[i] == _item) {
+                repeatItem = true;
+                break;
+            }
+        }
+        require (repeatItem, "Item not in precedents."); // TODO: Extract to a function and use in addPartOfStep
 
         // Check user belongs to the operatorRole of all precedents.
-        for (uint i = 0; i < _precedents.length; i++) {
-            require(hasRole(msg.sender, getoperatorRole(_precedents[i])), "Not an operator of precedents.");
+        for (uint i = 0; i < _precedentItems.length; i++){
+            require(isOperator(msg.sender, _precedentItems[i]), "Not an operator of precedents.");
         }
 
-        totalItems += 1;
+        // Build precedents array out of steps from lastSteps[_precedents[i]]
+        uint256[] memory precedents = new uint256[](_precedentItems.length);
+        for (uint i = 0; i < _precedentItems.length; i++){
+            precedents[i] = lastSteps[_precedentItems[i]];
+        }
+
         pushStep(
-            msg.sender,
             _action,
             _item,
-            _precedents,
+            precedents,
             NO_PARTOF,
-            getoperatorRole(_precedents[0]),
-            getownerRole(_precedents[0])
+            getOperatorRole(_precedentItems[0]),
+            getOwnerRole(_precedentItems[0])
         );
     }
 
@@ -363,14 +459,11 @@ contract SupplyChain is RBAC {
     )
         public
     {
-        require(_action < actions.length, "Event action not recognized.");
+        require(exists(_item), "Item does not exist.");
 
-        require(lastSteps[_item] != 0, "Item does not exist.");
-
-        require(hasRole(msg.sender, getownerRole(_item)), "Needs owner for handover.");
+        require(isOwner(msg.sender, _item), "Needs owner for handover.");
 
         pushStep(
-            msg.sender,
             _action,
             _item,
             new uint256[](lastSteps[_item]),
@@ -397,76 +490,34 @@ contract SupplyChain is RBAC {
     )
         public
     {
+        require(exists(_item), "Item does not exist.");
 
-        require(_action < actions.length, "Event action not recognized.");
+        require(isOwner(msg.sender, _item), "Needs owner for partOf.");
 
-        require(lastSteps[_item] != 0, "Item does not exist.");
+        require(exists(_partOf), "Composite item does not exist.");
 
-        require(lastSteps[_partOf] != 0, "Composite item does not exist.");
-
-        require(hasRole(msg.sender, getownerRole(_item)), "Needs owner for partOf.");
+        // TODO: Require that a step for _item is in of steps[lastSteps[_partOf]].precedents
+        bool isPrecedent = false;
+        uint256[] memory precedents = steps[lastSteps[_partOf]].precedents;
+        for (uint256 i = 0; i < precedents.length; i += 1){
+            if (steps[precedents[i]].item == _item){
+                isPrecedent = true;
+                break;
+            }
+        }
+        require(isPrecedent, "Item not precedent of partOf.");
 
         pushStep(
-            msg.sender,
             _action,
             _item,
-            new uint256[](_item),
+            new uint256[](lastSteps[_item]),
             _partOf,
             NO_ROLE,
             NO_ROLE
         );
     }
 
-    /**
-     * @notice Create new supply chain step implying a composition of a new item from others.
-     * This method creates in a transaction one partOfStep for each precedent, and one
-     * TransformStep per call.
-     * @param _action The index for the step action as defined in the actions array.
-     * @param _item The new item id which must not have been used before.
-     * @param _precedents An array of the step ids for steps considered to be predecessors to
-     * this one. Permissions are inherited from the first one.
-     */
-    function addComposeStep
-    (
-        uint256 _action,
-        uint256 _item,
-        uint256[] memory _precedents
-    )
-    public
-    {
-        addTransformStep(_action, _item, _precedents);
-        for (uint256 i = 0; i < _precedents.length; i++) {
-            addPartOfStep(_action, _precedents[i], _item);
-        }
-    }
+    // TODO: Consider a new supply chain step implying a composition of a new item from others,
+    // creating an Info and a PartOf steps so that the composition is transactional.
 
-    /**
-     * @notice Create a new step with no checks.
-     */
-    function pushStep
-    (
-        address _creator,
-        uint256 _action,
-        uint256 _item,
-        uint256[] memory _precedents,
-        uint256 _partOf,
-        uint256 _operatorRole,
-        uint256 _ownerRole
-    )
-        internal
-    {
-        uint256 stepId = steps.push(
-            Step(
-                _creator,
-                _action,
-                _item,
-                _precedents,
-                _partOf,
-                _operatorRole,
-                _ownerRole
-            )
-        ) - 1;
-        lastSteps[_item] = stepId;
-        emit StepCreated(stepId);
-    }
 }
