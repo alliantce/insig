@@ -66,39 +66,51 @@ contract('SupplyChain', (accounts) => {
         });
 
         itShouldThrow(
-            'item must be the same as a direct precedent.',
+            'Precedent items must exist.',
             async () => {    
-                const itemZero = 200;
-                const itemOne = 201;
-                const itemTwo = 202;
-    
-                const stepOne = (
-                    await supplyChain.addRootStep(itemCreationAction, itemZero, roleId, roleId)
-                ).logs[0].args.step;
-                const stepTwo = (
-                    await supplyChain.addRootStep(itemCreationAction, itemOne, roleId, roleId)
-                ).logs[0].args.step;
-                const stepThree = (
-                    await supplyChain.addInfoStep(itemCertificationAction, itemOne, [itemZero])
-                ).logs[0].args.step;
+                const itemOne = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.item;
+                await supplyChain.addInfoStep(
+                    itemCertificationAction, 
+                    itemOne, 
+                    [2]
+                );
             },
-            'Item not in precedents.',
+            'Precedent item does not exist.',
         );
 
         itShouldThrow(
-            'Precedent items must exist.',
-            async () => {    
-                const itemZero = 200;
-                const itemOne = 201;
-    
-                const stepOne = (
-                    await supplyChain.addRootStep(itemCreationAction, itemZero, roleId, roleId)
-                ).logs[0].args.step;
-                const stepTwo = (
-                    await supplyChain.addInfoStep(itemCertificationAction, itemZero, [itemOne])
-                ).logs[0].args.step;
+            'item must be the same as a direct precedent.',
+            async () => {
+                const itemOne = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.item;
+                const itemTwo = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.item;
+                await supplyChain.addInfoStep(
+                    itemCertificationAction, 
+                    itemTwo,
+                    [itemOne]
+                );
             },
-            'Precedent item does not exist.',
+            'Item not in precedents.',
         );
 
         // TODO: Test fails with no precedents
@@ -110,38 +122,32 @@ contract('SupplyChain', (accounts) => {
         // TODO: Test ownerRole inherited from precedents[0]
 
         it('sanity check addInfoStep', async () => {
-            const partZero = 200;
-            const partOne = 201;
             await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
             await supplyChain.addBearer(operator1, ownerRole2, { from: root });
 
-            const stepOne = (
+            const itemOne = (
                 await supplyChain.addRootStep(
                     itemCreationAction, 
-                    partZero, 
                     operatorRole1, 
                     ownerRole1, 
                     { from: owner1 }
                 )
-            ).logs[0].args.step;
-            const stepTwo = (
+            ).logs[0].args.item;
+            const itemTwo = (
                 await supplyChain.addRootStep(
                     itemCreationAction, 
-                    partOne, 
                     operatorRole2, 
                     ownerRole2, 
                     { from: owner2 }
                 )
-            ).logs[0].args.step;
+            ).logs[0].args.item;
             
-            const stepThree = (
-                await supplyChain.addInfoStep(
-                    itemCreationAction, 
-                    partZero, 
-                    [partZero, partOne], 
-                    {from: operator1}
-                )
-            ).logs[0].args.step;
+            await supplyChain.addInfoStep(
+                itemCreationAction, 
+                itemOne, 
+                [itemOne, itemTwo], 
+                {from: operator1}
+            );
         });
     });
 })

@@ -73,41 +73,35 @@ contract('SupplyChain', (accounts) => {
         itShouldThrow(
             'addRootStep - operator must be owner for created step.',
             async () => {    
-                const itemZero = 100;
-    
-                const stepOne = (
-                    await supplyChain.addRootStep(itemCreationAction, itemZero, operator1, owner1, { from: owner1 })
-                ).logs[0].args.step;
+                await supplyChain.addRootStep(itemCreationAction, operator1, owner1, { from: owner1 });
             },
             'Creator not in ownerRole.',
         );
 
         it('sanity check addRootStep', async () => {
-            const partZero = 200;
-            const partOne = 201;
             await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
             await supplyChain.addBearer(operator1, ownerRole2, { from: root });
 
-            const stepOne = (
+            const itemOne = (
                 await supplyChain.addRootStep(
                     itemCreationAction, 
-                    partZero, 
                     operatorRole1, 
                     ownerRole1, 
                     { from: owner1 }
                 )
-            ).logs[0].args.step;
-            const stepTwo = (
+            ).logs[0].args.item;
+
+            const itemTwo = (
                 await supplyChain.addRootStep(
                     itemCreationAction, 
-                    partOne, 
                     operatorRole2, 
                     ownerRole2, 
                     { from: owner2 }
                 )
-            ).logs[0].args.step;
-
-            // TODO: Test totalItems increased by one
+            ).logs[0].args.item;
+            
+            assert.equal(itemOne.toNumber(), 1);
+            assert.equal(itemTwo.toNumber(), 2);
             // TODO: Test step has no precedents
         });
     });

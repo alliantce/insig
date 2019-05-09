@@ -74,12 +74,21 @@ contract('SupplyChain', (accounts) => {
                 const partZero = 200;
                 await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
 
-                const stepOne = (
-                    await supplyChain.addRootStep(itemCreationAction, partZero, operatorRole1, ownerRole1, { from: owner1 })
-                ).logs[0].args.step;
-                const stepTwo = (
-                    await supplyChain.addHandoverStep(itemCreationAction, partZero, operatorRole2, ownerRole2, {from: operator1})
-                ).logs[0].args.step;    
+                const itemOne = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.item;
+                await supplyChain.addHandoverStep(
+                    itemCreationAction,
+                    itemOne,
+                    operatorRole2, 
+                    ownerRole2, 
+                    {from: operator1}
+                );
             },
             'Needs owner for handover.',
         );
@@ -87,14 +96,23 @@ contract('SupplyChain', (accounts) => {
         // TODO: Test precedent is previous last step for item
 
         it('sanity check addHandoverStep', async () => {
-            const partZero = 200;
-
-            const stepOne = (
-                await supplyChain.addRootStep(itemCreationAction, partZero, operatorRole1, ownerRole1, { from: owner1 })
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.addHandoverStep(itemCreationAction, partZero, operatorRole2, ownerRole2, {from: owner1})
-            ).logs[0].args.step;  
+            const itemOne = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.item;
+            const itemTwo = (
+                await supplyChain.addHandoverStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    operatorRole2, 
+                    ownerRole2, 
+                    {from: owner1}
+                )
+            ).logs[0].args.item;  
         });
     });
 })

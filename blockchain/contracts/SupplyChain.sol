@@ -17,7 +17,7 @@ contract SupplyChain is RBAC {
 
     event ActionCreated(uint256 action);
     event StepCreated(uint256 step);
-    event debug(uint256 x);
+    event ItemCreated(uint256 item);
 
     /**
      * @notice Supply chain step data. By chaining these and not allowing them to be modified
@@ -74,6 +74,7 @@ contract SupplyChain is RBAC {
         steps.push(
             Step(address(0), 0, 0, emptyArray, 0, 0, 0)
         );
+        totalItems = 0;
     }
 
     /**
@@ -142,12 +143,12 @@ contract SupplyChain is RBAC {
      * @param _item The id for the item.
      * @return Whether an item exists.
      */
-    function exists(uint256 _item)
+    function exists(uint256 _item) // TODO: Replace by existsItem;
         public
         view
         returns(bool)
     {
-        return lastSteps[_item] != 0;
+        return lastSteps[_item] != 0; // TODO: Replace by _item > totalItems;
     }
 
     /**
@@ -355,15 +356,12 @@ contract SupplyChain is RBAC {
     /**
      * @notice Create a new supply chain step without precedents.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The item id that this step is for. This must be an item that has never been
-     * used before.
      * @param _operatorRole The roles allowed to append steps to this one.
      * @param _ownerRole The roles allowed to append steps with different permissions.
      */
     function addRootStep
     (
         uint256 _action,
-        uint256 _item,
         uint256 _operatorRole,
         uint256 _ownerRole
     )
@@ -373,16 +371,15 @@ contract SupplyChain is RBAC {
 
         require(_ownerRole != NO_ROLE, "An owner role is required.");
 
-        require(!exists(_item), "New item already exists.");
-
         require(hasRole(msg.sender, _ownerRole), "Creator not in ownerRole.");
 
         totalItems += 1;
+        emit ItemCreated(totalItems);
 
         uint256[] memory emptyArray;
         pushStep(
             _action,
-            _item,
+            totalItems,
             emptyArray,
             NO_PARTOF,
             _operatorRole,
@@ -421,7 +418,7 @@ contract SupplyChain is RBAC {
                 break;
             }
         }
-        require (repeatItem, "Item not in precedents.");
+        require (repeatItem, "Item not in precedents."); // TODO: Extract to a function and use in addPartOfStep
 
         // Check user belongs to the operatorRole of all precedents.
         for (uint i = 0; i < _precedentItems.length; i++){
