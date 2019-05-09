@@ -1,0 +1,33 @@
+{
+    "name": "SupplyChain",
+    "version": "0.1.0",
+    "description": "_When consumers purchase a Toyota, they are not simply purchasing a car, truck or van. They are placing their trust in our company. - Akio Toyoda_",
+    "scripts": {
+        "test": "lerna run test:ci",
+        "coverage": "lerna run coverage:ci"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/HQ20/SupplyChain.git"
+    },
+    "keywords": [],
+    "author": {
+        "name": "Alberto Cañada",
+        "email": "alberto@techhq.io"
+    },
+    "contributors": [
+        {
+            "name": "Bernardo Vieira",
+            "email": "bernardo@techhq.io"
+        }
+    ],
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/HQ20/SupplyChain/issues"
+    },
+    "homepage": "https://github.com/HQ20/SupplyChain#readme",
+    "dependencies": {
+        "lerna": "^3.13.4",
+        "coveralls": "3.0.3"
+    }
+}

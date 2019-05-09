@@ -1,0 +1,7 @@
+dist: xenial
+language: node_js
+node_js:
+    - "lts/dubnium"
+install: ./install-dependencies.sh
+script:
+    - npm run coverage

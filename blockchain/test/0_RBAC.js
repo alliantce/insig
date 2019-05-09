@@ -21,7 +21,7 @@ contract('RBAC', (accounts) => {
         });
 
         it('addRootRole creates a role.', async () => {
-            roleDescription = 'Role 1.';
+            const roleDescription = 'Role 1.';
             transaction = await rbac.addRootRole(roleDescription, { from: user1 });
 
             assert.equal(transaction.logs.length, 2);
@@ -35,14 +35,14 @@ contract('RBAC', (accounts) => {
         });
 
         it('hasRole returns false for non existing bearerships', async () => {
-            roleDescription = 'Role 1.';
+            const roleDescription = 'Role 1.';
             transaction = await rbac.addRootRole(roleDescription, { from: user1 });
 
             assert.isFalse(await rbac.hasRole(user2, transaction.logs[0].args.role));
         });
 
         it('addRootRole adds msg.sender as bearer', async () => {
-            roleDescription = 'Role 1.';
+            const roleDescription = 'Role 1.';
             transaction = await rbac.addRootRole(roleDescription, { from: user1 });
 
             assert.isTrue(await rbac.hasRole(user1, transaction.logs[0].args.role));
@@ -64,7 +64,7 @@ contract('RBAC', (accounts) => {
         itShouldThrow(
             'addBearer throws on non existing roles',
             async () => {
-                roleId = (await rbac.totalRoles()).toNumber() + 1;
+                const roleId = (await rbac.totalRoles()).toNumber() + 1;
                 await rbac.addBearer(user1, roleId, { from: user1 });
             },
             'Role doesn\'t exist.',
@@ -72,7 +72,8 @@ contract('RBAC', (accounts) => {
 
         itShouldThrow(
             'addBearer throws on non authorized users',
-            async () => {    
+            async () => {
+                const roleDescription = 'Role 1.';
                 const roleId = (
                     await rbac.addRootRole(roleDescription, { from: user1 })
                 ).logs[0].args.role;
@@ -82,7 +83,7 @@ contract('RBAC', (accounts) => {
         );
 
         it('addBearer does nothing if the bearer already belongs to the role.', async () => {
-            roleDescription = 'Role 1.';
+            const roleDescription = 'Role 1.';
             const roleId = (
                 await rbac.addRootRole(roleDescription, { from: user1 })
             ).logs[0].args.role;
@@ -92,7 +93,7 @@ contract('RBAC', (accounts) => {
         });
 
         it('addBearer adds a bearer to a role.', async () => {
-            roleDescription = 'Role 1.';
+            const roleDescription = 'Role 1.';
             const roleId = (
                 await rbac.addRootRole(roleDescription, { from: user1 })
             ).logs[0].args.role;
@@ -111,6 +112,7 @@ contract('RBAC', (accounts) => {
         itShouldThrow(
             'removeBearer throws on non authorized users',
             async () => {
+                const roleDescription = 'Role 1.';
                 const roleId = (
                     await rbac.addRootRole(roleDescription, { from: user1 })
                 ).logs[0].args.role;
@@ -120,7 +122,7 @@ contract('RBAC', (accounts) => {
         );
 
         it('removeBearer does nothing if the bearer doesn\'t belong to the role.', async () => {
-            roleDescription = 'Role 1.';
+            const roleDescription = 'Role 1.';
             const roleId = (
                 await rbac.addRootRole(roleDescription, { from: user1 })
             ).logs[0].args.role;
@@ -130,7 +132,7 @@ contract('RBAC', (accounts) => {
         });
 
         it('removeBearer removes a bearer from a role.', async () => {
-            roleDescription = 'Role 1.';
+            const roleDescription = 'Role 1.';
             const roleId = (
                 await rbac.addRootRole(roleDescription, { from: user1 })
             ).logs[0].args.role;

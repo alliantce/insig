@@ -72,6 +72,7 @@ contract SupplyChain is RBAC {
         addAction("NO ACTION");
         uint256[] memory emptyArray;
         steps.push(
+            // solium-disable-next-line arg-overflow
             Step(address(0), 0, 0, emptyArray, 0, 0, 0)
         );
         totalItems = 0;
@@ -189,7 +190,7 @@ contract SupplyChain is RBAC {
     {
         uint256 item = _item;
         Step memory step = steps[lastSteps[item]];
-        while (step.partOf != NO_ITEM){
+        while (step.partOf != NO_ITEM) {
             item = step.partOf;
             step = steps[lastSteps[item]];
         }
