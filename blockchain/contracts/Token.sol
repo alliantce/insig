@@ -33,15 +33,15 @@ contract Token is ERC721 {
     /**
      * @notice Returns whether the specified token exists
      * @dev Only implemented so that it can be called from the client.
-     * @param tokenId uint256 ID of the token to query the existence of
+     * @param _tokenId uint256 ID of the token to query the existence of
      * @return bool whether the token exists
      */
-    function exists(uint256 tokenId)
+    function exists(uint256 _tokenId)
         public
         view
         returns (bool)
     {
-        return _exists(tokenId);
+        return _exists(_tokenId);
     }
 
     /**
@@ -82,9 +82,9 @@ contract Token is ERC721 {
         // Require that the face value of composite is higher or equal than all the parts combined
         if (partOf != _supplychain.NO_PARTOF()){
             uint256 combinedFaceValue = _faceValue;
-            uint256[] memory parts = _supplychain.getParts(partOf); // TODO: Make getParts return only parts and not precedent items.
+            uint256[] memory parts = _supplychain.getParts(partOf);
             for (uint256 i = 0; i < parts.length; i += 1){
-                combinedFaceValue += faceValue[parts[i]]; // TODO: Need SafeMath here.
+                combinedFaceValue = combinedFaceValue.add(faceValue[parts[i]]);
             }
             require(
                 combinedFaceValue <= faceValue[partOf],
@@ -116,7 +116,7 @@ contract Token is ERC721 {
         // This means that to burn a token all the tokens for its parts need to be burnt first.
         uint256[] memory parts = SupplyChain(supplyChain).getParts(_tokenId);
         for (uint256 i = 0; i < parts.length; i += 1){
-            require(!exists(parts[i]), "Burn part tokens first."); // TODO: Make getParts return only parts and not precedent items.
+            require(!exists(parts[i]), "Burn part tokens first.");
         }
         _burn(_tokenId);
         delete faceValue[_tokenId];
@@ -147,8 +147,8 @@ contract Token is ERC721 {
         revenues[_tokenId] = revenues[_tokenId].add(remaining);
         emit RevenueUpdated(_tokenId, remaining);
     }
-    // TODO: Test with no tokens.
-    
+
+    // TODO: Test with (1,2) <- (3), (3,4) <- (5) item.
 
     /**
      * @notice Withdraw accumulated revenues for a token.
@@ -169,4 +169,8 @@ contract Token is ERC721 {
         delete revenues[_tokenId];
         emit RevenueUpdated(_tokenId, 0);
     }
+    // TODO: Test fails with no tokens.
+    // TODO: Test fails for non owner.
+    // TODO: Sanity check.
+
 }
