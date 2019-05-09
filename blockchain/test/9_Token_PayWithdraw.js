@@ -339,6 +339,104 @@ contract('Token', (accounts) => {
         });
 
         /* it('Pays in multiple parts levels.', async () => {
+            // (1)
+            const itemOne = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.item;
+            // (2)
+            const itemTwo = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.item;
+            // (3)
+            const itemThree = (
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: owner1 }
+                )
+            ).logs[0].args.item;
+            // (1,2) <- (2)
+            await supplyChain.addInfoStep(
+                itemCreationAction, 
+                itemTwo,
+                [itemTwo, itemOne], 
+                { from: operator1 }
+            );
+            // (1) <- PartOf(2)
+            await supplyChain.addPartOfStep(
+                itemCreationAction, 
+                itemOne,
+                itemTwo, 
+                {from: owner1}
+            );
+
+            // (2,3) <- (3)
+            await supplyChain.addInfoStep(
+                itemCreationAction, 
+                itemThree,
+                [itemThree, itemTwo], 
+                { from: operator1 }
+            );
+            // (2) <- PartOf(3)
+            await supplyChain.addPartOfStep(
+                itemCreationAction, 
+                itemTwo,
+                itemThree, 
+                {from: owner1}
+            );
+
+            await token.mint(
+                owner1,
+                itemThree,
+                200,
+                { from: owner1 },
+            );
+            await token.mint(
+                owner1,
+                itemTwo,
+                100,
+                { from: owner1 },
+            );
+
+            await token.mint(
+                owner1,
+                itemOne,
+                30,
+                { from: owner1 },
+            );
+
+            await token.pay(
+                itemThree,
+                800,
+                { from: root },
+            );
+
+            assert.equal(
+                (await token.revenues.call(itemThree)).toNumber(),
+                400,
+            );
+            assert.equal(
+                (await token.revenues.call(itemTwo)).toNumber(),
+                280,
+            );
+            assert.equal(
+                (await token.revenues.call(itemOne)).toNumber(),
+                120,
+            );
+        }); */
+
+        /* it('Pays in multiple parts levels.', async () => {
             // RootStep(1)
             const itemOne = (
                 await supplyChain.addRootStep(

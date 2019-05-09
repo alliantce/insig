@@ -13,6 +13,9 @@ contract Token is ERC721 {
     using SafeMath for uint256;
 
     event RevenueUpdated(uint256 tokenId, uint256 amount);
+    // event Amount(uint256 tokenId, uint256 amount);
+    // event FaceValue(uint256 tokenId, uint256 facevalue);
+    // event Parts(uint256 tokenId, uint256 parts);
 
     address internal supplyChain;
 
@@ -136,16 +139,21 @@ contract Token is ERC721 {
     {
         require(exists(_tokenId), "Token doesn't exist.");
 
-        uint256 remaining = _amount;
-        uint256 _faceValue = faceValue[_tokenId];
+        // emit Amount(_tokenId, _amount);
+        // emit Parts(_tokenId, SupplyChain(supplyChain).getParts(_tokenId).length);
+
+        uint256 faceValueParts = 0;
+        uint256 faceValueComposite = faceValue[_tokenId];
         uint256[] memory parts = SupplyChain(supplyChain).getParts(_tokenId);
         for (uint256 i = 0; i < parts.length; i += 1){
-            uint256 payment = _amount.mul(faceValue[parts[i]]).div(_faceValue);
+            uint256 payment = _amount.mul(faceValue[parts[i]]).div(faceValueComposite);
             pay(parts[i], payment);
-            remaining = remaining.sub(payment);
+            faceValueParts = faceValueParts.add(faceValue[parts[i]]);
         }
-        revenues[_tokenId] = revenues[_tokenId].add(remaining);
-        emit RevenueUpdated(_tokenId, remaining);
+        revenues[_tokenId] = revenues[_tokenId].add(
+            _amount.mul(faceValueComposite.sub(faceValueParts)).div(faceValueComposite)
+        );
+        emit RevenueUpdated(_tokenId, revenues[_tokenId]);
     }
 
     // TODO: Test with (1,2) <- (3), (3,4) <- (5) item.
