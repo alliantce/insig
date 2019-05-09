@@ -141,7 +141,7 @@ contract('Token', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemTwo,
-                [itemOne, itemTwo], 
+                [itemOne], 
                 { from: operator1 }
             );
             // RootStep(1) <- PartOf(2) X
@@ -199,6 +199,7 @@ contract('Token', (accounts) => {
                     { from: owner1 }
                 )
             ).logs[0].args.item;
+            // RootStep(3)
             const itemThree = (
                 await supplyChain.addRootStep(
                     itemCreationAction, 
@@ -207,24 +208,24 @@ contract('Token', (accounts) => {
                     { from: owner1 }
                 )
             ).logs[0].args.item;
-            // (1,2) <- (2)
+            // (1,2,3) <- (3)
             await supplyChain.addInfoStep(
                 itemCreationAction, 
-                itemTwo,
-                [itemOne, itemTwo, itemThree], 
+                itemThree,
+                [itemOne, itemTwo], 
                 { from: operator1 }
             );
-            // RootStep(1) <- PartOf(2) X
+            // (1) <- PartOf(3)
             await supplyChain.addPartOfStep(
                 itemCreationAction, 
                 itemOne,
-                itemTwo, 
+                itemThree, 
                 {from: owner1}
             );
 
             await token.mint(
                 owner1,
-                itemTwo,
+                itemThree,
                 100,
                 { from: owner1 },
             );
@@ -235,7 +236,7 @@ contract('Token', (accounts) => {
                 { from: owner1 },
             );
             await token.pay(
-                itemTwo,
+                itemThree,
                 400,
                 { from: root },
             );
@@ -245,7 +246,7 @@ contract('Token', (accounts) => {
                 200,
             );
             assert.equal(
-                (await token.revenues.call(itemTwo)).toNumber(),
+                (await token.revenues.call(itemThree)).toNumber(),
                 200,
             );
         });
@@ -282,7 +283,7 @@ contract('Token', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemThree,
-                [itemOne, itemTwo, itemThree], 
+                [itemOne, itemTwo], 
                 { from: operator1 }
             );
             // RootStep(1) <- PartOf(3) X

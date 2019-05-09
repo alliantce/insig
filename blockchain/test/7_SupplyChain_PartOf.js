@@ -90,7 +90,7 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemOne, 
-                [itemOne, itemTwo], 
+                [itemTwo], 
                 {from: operator1}
             );
 
@@ -131,7 +131,7 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemTwo, 
-                [itemTwo, itemOne], 
+                [itemOne], 
                 {from: operator1}
             );
             // RootStep(1) <- PartOf(2)
@@ -171,7 +171,7 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemTwo, 
-                [itemTwo, itemOne], 
+                [itemOne], 
                 {from: operator1}
             );
             // RootStep(1) <- PartOf(2)
@@ -194,7 +194,7 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemThree, 
-                [itemThree, itemTwo], 
+                [itemTwo], 
                 {from: operator1}
             );
             // (2) <- PartOf(3)
@@ -273,7 +273,7 @@ contract('SupplyChain', (accounts) => {
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemTwo, 
-                    [itemTwo, itemOne], 
+                    [itemOne], 
                     {from: operator1}
                 );
                 // (1) <- PartOf(2) X
@@ -344,7 +344,7 @@ contract('SupplyChain', (accounts) => {
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemTwo, 
-                    [itemOne, itemTwo], 
+                    [itemOne], 
                     {from: operator1}
                 );
                 // RootStep(1) <- PartOf(2)
@@ -366,7 +366,7 @@ contract('SupplyChain', (accounts) => {
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemOne, 
-                    [itemOne], 
+                    [], 
                     {from: operator1}
                 );
             },
@@ -396,7 +396,7 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemTwo, 
-                [itemOne, itemTwo], 
+                [itemOne], 
                 {from: operator1}
             );
             // RootStep(1) <- PartOf(2)
@@ -418,7 +418,7 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemOne, 
-                [itemOne],
+                [],
                 {from: operator2}
             );
         });
@@ -464,13 +464,13 @@ contract('SupplyChain', (accounts) => {
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemTwo, 
-                    [itemOne, itemTwo], 
+                    [itemOne], 
                     {from: operator1}
                 )
             ).logs[0].args.step;
 
             assert.equal(
-                (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
+                (await supplyChain.getPrecedents(stepThree))[1].toNumber(),
                 itemOne,
             );
             assert.equal(
@@ -503,7 +503,7 @@ contract('SupplyChain', (accounts) => {
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemTwo, 
-                    [itemOne, itemTwo], 
+                    [itemOne], 
                     {from: operator1}
                 )
             ).logs[0].args.step;
@@ -515,7 +515,7 @@ contract('SupplyChain', (accounts) => {
             );
 
             assert.equal(
-                (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
+                (await supplyChain.getPrecedents(stepThree))[1].toNumber(),
                 itemOne,
             );
             assert.equal(
@@ -560,7 +560,7 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemThree, 
-                [itemOne, itemTwo, itemThree], 
+                [itemOne, itemTwo], 
                 {from: operator1}
             );
             await supplyChain.addPartOfStep(
@@ -631,7 +631,7 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemOne, 
-                [itemOne, itemTwo],
+                [itemTwo],
                 {from: operator1}
             );
             await supplyChain.addPartOfStep(
@@ -644,7 +644,7 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemOne, 
-                [itemOne, itemThree],
+                [itemThree],
                 {from: operator1}
             );
             await supplyChain.addPartOfStep(
@@ -657,7 +657,7 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemOne, 
-                [itemOne, itemFour],
+                [itemFour],
                 {from: operator1}
             );
             await supplyChain.addPartOfStep(

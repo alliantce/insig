@@ -91,7 +91,7 @@ contract('Token', (accounts) => {
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemTwo,
-                    [itemOne, itemTwo], 
+                    [itemOne], 
                     { from: operator1 }
                 )
                 // (1) <- PartOf(2) X
@@ -137,7 +137,7 @@ contract('Token', (accounts) => {
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemTwo,
-                    [itemOne, itemTwo], 
+                    [itemOne], 
                     { from: operator1 }
                 );
                 // (1) <- PartOf(2) X
@@ -208,7 +208,7 @@ contract('Token', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemTwo,
-                [itemOne, itemTwo], 
+                [itemOne], 
                 { from: operator1 }
             );
             // RootStep(1) <- PartOf(2) X
@@ -275,7 +275,7 @@ contract('Token', (accounts) => {
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemTwo,
-                    [itemOne, itemTwo], 
+                    [itemOne], 
                     { from: operator1 }
                 );
                 // RootStep(1) <- PartOf(2) X
@@ -333,7 +333,7 @@ contract('Token', (accounts) => {
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemTwo,
-                    [itemOne, itemTwo], 
+                    [itemOne], 
                     { from: operator1 }
                 );
                 // (1) <- PartOf(2) X
@@ -456,7 +456,7 @@ contract('Token', (accounts) => {
                 await supplyChain.addInfoStep(
                     itemCreationAction, 
                     itemTwo,
-                    [itemOne, itemTwo], 
+                    [itemOne], 
                     { from: operator1 }
                 );
                 // (1) <- PartOf(2) X

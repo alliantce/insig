@@ -86,7 +86,27 @@ contract('SupplyChain', (accounts) => {
         );
 
         itShouldThrow(
-            'item must be the same as a direct precedent.',
+            'item must not be the same as a direct precedent.',
+            async () => {
+                const itemOne = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.item;
+                await supplyChain.addInfoStep(
+                    itemCertificationAction, 
+                    itemOne,
+                    [itemOne]
+                );
+            },
+            'Item in precedents.',
+        );
+
+        itShouldThrow(
+            'msg.sender not in operator role for one of the precedents.',
             async () => {
                 const itemOne = (
                     await supplyChain.addRootStep(
@@ -104,22 +124,26 @@ contract('SupplyChain', (accounts) => {
                         { from: owner1 }
                     )
                 ).logs[0].args.item;
+                const itemThree = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        operatorRole2, 
+                        ownerRole2, 
+                        { from: owner2 }
+                    )
+                ).logs[0].args.item;
                 await supplyChain.addInfoStep(
                     itemCertificationAction, 
-                    itemTwo,
-                    [itemOne]
+                    itemOne,
+                    [itemTwo, itemThree]
                 );
             },
-            'Item not in precedents.',
+            'Not an operator of precedents.',
         );
 
-        // TODO: Test fails with no precedents
-        // TODO: Test fails with a precedent that doesn't exist in an array of existing precedents
-        // TODO: Test fails if item not in precedent steps
-        // TODO: Test fails if msg.sender not in operator role for one of the precedents
         // TODO: Test precedents point to last steps of items passed as parameters
-        // TODO: Test operatorRole inherited from precedents[0]
-        // TODO: Test ownerRole inherited from precedents[0]
+        // TODO: Test operatorRole inherited from item
+        // TODO: Test ownerRole inherited from item
 
         it('sanity check addInfoStep', async () => {
             await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
@@ -145,7 +169,7 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemOne, 
-                [itemOne, itemTwo], 
+                [itemTwo], 
                 {from: operator1}
             );
         });

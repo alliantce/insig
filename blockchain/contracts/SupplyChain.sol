@@ -391,10 +391,10 @@ contract SupplyChain is RBAC {
     /**
      * @notice Create a new supply chain step with no changes on ownership or item.
      * @param _action The index for the step action as defined in the actions array.
-     * @param _item The item id that this step is for. This must be either the item
-     * of one of the steps in _precedents, or an item that has never been used before.
+     * @param _item The item id that this step is for. The operatorRole and ownerRole are inherited
+     * from its last step.
      * @param _precedentItems An array of the item ids for items considered to be predecessors to
-     * this one. The operatorRole and ownerRole are inherited from the first item in this array.
+     * this one. The item passed in the previous parameter is added on to these.
      */
     function addInfoStep
     (
@@ -404,14 +404,14 @@ contract SupplyChain is RBAC {
     )
         public
     {
-        require(_precedentItems.length > 0, "No precedents, use addRootStep.");
-
         // Check all precedents exist.
         for (uint i = 0; i < _precedentItems.length; i++){
             require(exists(_precedentItems[i]), "Precedent item does not exist.");
         }
 
-        // Check the item id is in precedents
+        // TODO: Check for repeated precedents in the array.
+
+        // Check the item id is not in precedents
         bool repeatItem = false;
         for (uint i = 0; i < _precedentItems.length; i++){
             if (_precedentItems[i] == _item) {
@@ -419,17 +419,19 @@ contract SupplyChain is RBAC {
                 break;
             }
         }
-        require (repeatItem, "Item not in precedents."); // TODO: Extract to a function and use in addPartOfStep
+        require (!repeatItem, "Item in precedents."); // TODO: Extract to a function and use in addPartOfStep
 
-        // Check user belongs to the operatorRole of all precedents.
+        // Check user belongs to the operatorRole of item and all precedents.
+        require(isOperator(msg.sender, _item), "Not an operator of precedents.");
         for (uint i = 0; i < _precedentItems.length; i++){
             require(isOperator(msg.sender, _precedentItems[i]), "Not an operator of precedents.");
         }
 
         // Build precedents array out of steps from lastSteps[_precedents[i]]
-        uint256[] memory precedents = new uint256[](_precedentItems.length);
+        uint256[] memory precedents = new uint256[](_precedentItems.length + 1);
+        precedents[0] = lastSteps[_item];
         for (uint i = 0; i < _precedentItems.length; i++){
-            precedents[i] = lastSteps[_precedentItems[i]];
+            precedents[i + 1] = lastSteps[_precedentItems[i]];
         }
 
         pushStep(
@@ -479,8 +481,6 @@ contract SupplyChain is RBAC {
      * @param _action The index for the step action as defined in the actions array.
      * @param _item The item being made a part of another.
      * @param _partOf The item id for the item that this one is being made a part of.
-     * TODO: Make this method internal. If called directly there is no guarantee that
-     * steps[_precedent] is in the same chain as _partOf.
      */
     function addPartOfStep
     (
@@ -496,7 +496,8 @@ contract SupplyChain is RBAC {
 
         require(exists(_partOf), "Composite item does not exist.");
 
-        // TODO: Require that a step for _item is in of steps[lastSteps[_partOf]].precedents
+        // Require that a step for _item is in of steps[lastSteps[_partOf]].precedents
+        // TODO: Check for precedent items, not precedent steps
         bool isPrecedent = false;
         uint256[] memory precedents = steps[lastSteps[_partOf]].precedents;
         for (uint256 i = 0; i < precedents.length; i += 1){
