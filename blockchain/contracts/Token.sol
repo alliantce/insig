@@ -156,8 +156,6 @@ contract Token is ERC721 {
         emit RevenueUpdated(_tokenId, revenues[_tokenId]);
     }
 
-    // TODO: Test with (1,2) <- (3), (3,4) <- (5) item.
-
     /**
      * @notice Withdraw accumulated revenues for a token.
      * @param _tokenId The id of the token to withdraw from.

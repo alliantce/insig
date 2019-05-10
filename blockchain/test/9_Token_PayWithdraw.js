@@ -339,7 +339,7 @@ contract('Token', (accounts) => {
             );
         });
 
-        /* it('Pays in multiple parts levels.', async () => {
+        it('Pays in multiple part levels.', async () => {
             // (1)
             const itemOne = (
                 await supplyChain.addRootStep(
@@ -371,7 +371,7 @@ contract('Token', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemTwo,
-                [itemTwo, itemOne], 
+                [itemOne], 
                 { from: operator1 }
             );
             // (1) <- PartOf(2)
@@ -386,7 +386,7 @@ contract('Token', (accounts) => {
             await supplyChain.addInfoStep(
                 itemCreationAction, 
                 itemThree,
-                [itemThree, itemTwo], 
+                [itemTwo], 
                 { from: operator1 }
             );
             // (2) <- PartOf(3)
@@ -435,156 +435,6 @@ contract('Token', (accounts) => {
                 (await token.revenues.call(itemOne)).toNumber(),
                 120,
             );
-        }); */
-
-        /* it('Pays in multiple parts levels.', async () => {
-            // RootStep(1)
-            const itemOne = (
-                await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
-                )
-            ).logs[0].args.item;
-            // RootStep(2)
-            const itemTwo = (
-                await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
-                )
-            ).logs[0].args.item;
-            // RootStep(2)
-            const itemThree = (
-                await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
-                )
-            ).logs[0].args.item;
-            // (1,2,3) <- (3)
-            await supplyChain.addInfoStep(
-                itemCreationAction, 
-                itemThree,
-                [itemOne, itemTwo, itemThree], 
-                { from: operator1 }
-            );
-            // RootStep(1) <- PartOf(3) X
-            await supplyChain.addPartOfStep(
-                itemCreationAction, 
-                itemOne,
-                itemThree, 
-                {from: owner1}
-            );
-            // RootStep(2) <- PartOf(3) X
-            await supplyChain.addPartOfStep(
-                itemCreationAction, 
-                itemTwo,
-                itemThree, 
-                {from: owner1}
-            );
-
-            // RootStep(4)
-            const itemFour = (
-                await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
-                )
-            ).logs[0].args.item;
-            // RootStep(5)
-            const itemFive = (
-                await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
-                )
-            ).logs[0].args.item;
-            // (3,4) <- (5)
-            await supplyChain.addInfoStep(
-                itemCreationAction, 
-                itemFive,
-                [itemFive, itemThree, itemFour], 
-                { from: operator1 }
-            );
-            // RootStep(3) <- PartOf(5) X
-            await supplyChain.addPartOfStep(
-                itemCreationAction, 
-                itemThree,
-                itemFive, 
-                {from: owner1}
-            );
-            // RootStep(4) <- PartOf(5) X
-            await supplyChain.addPartOfStep(
-                itemCreationAction, 
-                itemFour,
-                itemFive, 
-                {from: owner1}
-            );
-
-            await token.mint(
-                owner1,
-                itemFive,
-                400,
-                { from: owner1 },
-            );
-            await token.mint(
-                owner1,
-                itemFour,
-                100,
-                { from: owner1 },
-            );
-
-            await token.mint(
-                owner1,
-                itemThree,
-                100,
-                { from: owner1 },
-            );
-            await token.mint(
-                owner1,
-                itemTwo,
-                30,
-                { from: owner1 },
-            );
-            await token.mint(
-                owner1,
-                itemOne,
-                20,
-                { from: owner1 },
-            );
-
-            await token.pay(
-                itemFive,
-                800,
-                { from: root },
-            );
-
-            assert.equal(
-                (await token.revenues.call(itemFive)).toNumber(),
-                400,
-            );
-            assert.equal(
-                (await token.revenues.call(itemFour)).toNumber(),
-                200,
-            );
-            assert.equal(
-                (await token.revenues.call(itemThree)).toNumber(),
-                100,
-            );
-            assert.equal(
-                (await token.revenues.call(itemTwo)).toNumber(),
-                60,
-            );
-            assert.equal(
-                (await token.revenues.call(itemOne)).toNumber(),
-                40,
-            );
-        }); */
+        });
     });
 })
