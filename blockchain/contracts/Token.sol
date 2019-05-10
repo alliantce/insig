@@ -4,6 +4,7 @@ import "openzeppelin-solidity/contracts/token/ERC721/ERC721.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./SupplyChain.sol";
 
+
 /**
  * @title Token
  * @author Alberto Cuesta Canada
@@ -83,10 +84,10 @@ contract Token is ERC721 {
 
         // TODO: Consider using a tree of item compositions as an index to avoid frequent calls to getParts()
         // Require that the face value of composite is higher or equal than all the parts combined
-        if (partOf != _supplychain.NO_PARTOF()){
+        if (partOf != _supplychain.NO_PARTOF()) {
             uint256 combinedFaceValue = _faceValue;
             uint256[] memory parts = _supplychain.getParts(partOf);
-            for (uint256 i = 0; i < parts.length; i += 1){
+            for (uint256 i = 0; i < parts.length; i += 1) {
                 combinedFaceValue = combinedFaceValue.add(faceValue[parts[i]]);
             }
             require(
@@ -118,7 +119,7 @@ contract Token is ERC721 {
         // To burn a token its underlying item cannot have parts with instantiated tokens.
         // This means that to burn a token all the tokens for its parts need to be burnt first.
         uint256[] memory parts = SupplyChain(supplyChain).getParts(_tokenId);
-        for (uint256 i = 0; i < parts.length; i += 1){
+        for (uint256 i = 0; i < parts.length; i += 1) {
             require(!exists(parts[i]), "Burn part tokens first.");
         }
         _burn(_tokenId);
@@ -145,7 +146,7 @@ contract Token is ERC721 {
         uint256 faceValueParts = 0;
         uint256 faceValueComposite = faceValue[_tokenId];
         uint256[] memory parts = SupplyChain(supplyChain).getParts(_tokenId);
-        for (uint256 i = 0; i < parts.length; i += 1){
+        for (uint256 i = 0; i < parts.length; i += 1) {
             uint256 payment = _amount.mul(faceValue[parts[i]]).div(faceValueComposite);
             pay(parts[i], payment);
             faceValueParts = faceValueParts.add(faceValue[parts[i]]);

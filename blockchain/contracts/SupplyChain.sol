@@ -215,16 +215,15 @@ contract SupplyChain is RBAC {
         // For each precedent with a different item id which is part of this item, add 1 to the counter.
         uint256 count = 0;
         uint256 nextStepId = lastSteps[_item];
-        while (nextStepId != NO_STEP){
+        while (nextStepId != NO_STEP) {
             Step memory step = steps[nextStepId];
             nextStepId = NO_STEP;
-            for(uint256 i = 0; i < step.precedents.length; i += 1){
+            for (uint256 i = 0; i < step.precedents.length; i += 1) {
                 uint256 precedentStepId = step.precedents[i];
                 if (steps[precedentStepId].item != _item &&
-                    getPartOf(steps[precedentStepId].item) == _item){
+                    getPartOf(steps[precedentStepId].item) == _item) {
                     count += 1;
-                }
-                else{ // Only one of this can exist, store it to continue at the end of precedents.
+                } else { // Only one of this can exist, store it to continue at the end of precedents.
                     nextStepId = precedentStepId;
                 }
             }
@@ -247,17 +246,16 @@ contract SupplyChain is RBAC {
         uint256[] memory parts = new uint256[](countParts(_item));
         uint256 count = 0;
         uint256 nextStepId = lastSteps[_item];
-        while (nextStepId != NO_STEP){
+        while (nextStepId != NO_STEP) {
             Step memory step = steps[nextStepId];
             nextStepId = NO_STEP;
-            for(uint256 i = 0; i < step.precedents.length; i += 1){
+            for (uint256 i = 0; i < step.precedents.length; i += 1) {
                 uint256 precedentStepId = step.precedents[i];
                 if (steps[precedentStepId].item != _item &&
-                    getPartOf(steps[precedentStepId].item) == _item){
+                    getPartOf(steps[precedentStepId].item) == _item) {
                     parts[count] = steps[precedentStepId].item;
                     count += 1;
-                }
-                else{ // Only one of this can exist, store it to continue at the end of precedents.
+                } else { // Only one of this can exist, store it to continue at the end of precedents.
                     nextStepId = precedentStepId;
                 }
             }
@@ -405,7 +403,7 @@ contract SupplyChain is RBAC {
         public
     {
         // Check all precedents exist.
-        for (uint i = 0; i < _precedentItems.length; i++){
+        for (uint i = 0; i < _precedentItems.length; i++) {
             require(isItem(_precedentItems[i]), "Precedent item does not exist.");
         }
 
@@ -413,7 +411,7 @@ contract SupplyChain is RBAC {
 
         // Check the item id is not in precedents
         bool repeatItem = false;
-        for (uint i = 0; i < _precedentItems.length; i++){
+        for (uint i = 0; i < _precedentItems.length; i++) {
             if (_precedentItems[i] == _item) {
                 repeatItem = true;
                 break;
@@ -423,14 +421,14 @@ contract SupplyChain is RBAC {
 
         // Check user belongs to the operatorRole of item and all precedents.
         require(isOperator(msg.sender, _item), "Not an operator of precedents.");
-        for (uint i = 0; i < _precedentItems.length; i++){
+        for (uint i = 0; i < _precedentItems.length; i++) {
             require(isOperator(msg.sender, _precedentItems[i]), "Not an operator of precedents.");
         }
 
         // Build precedents array out of steps from lastSteps[_precedents[i]]
         uint256[] memory precedents = new uint256[](_precedentItems.length + 1);
         precedents[0] = lastSteps[_item];
-        for (uint i = 0; i < _precedentItems.length; i++){
+        for (uint i = 0; i < _precedentItems.length; i++) {
             precedents[i + 1] = lastSteps[_precedentItems[i]];
         }
 
@@ -503,8 +501,8 @@ contract SupplyChain is RBAC {
         // TODO: Check for precedent items, not precedent steps
         bool isPrecedent = false;
         uint256[] memory partOfprecedents = steps[lastSteps[_partOf]].precedents;
-        for (uint256 i = 0; i < partOfprecedents.length; i += 1){
-            if (steps[partOfprecedents[i]].item == _item){
+        for (uint256 i = 0; i < partOfprecedents.length; i += 1) {
+            if (steps[partOfprecedents[i]].item == _item) {
                 isPrecedent = true;
                 break;
             }
