@@ -465,10 +465,13 @@ contract SupplyChain is RBAC {
 
         require(isOwner(msg.sender, _item), "Needs owner for handover.");
 
+        uint256[] memory precedents = new uint256[](1);
+        precedents[0] = lastSteps[_item];
+
         pushStep(
             _action,
             _item,
-            new uint256[](lastSteps[_item]),
+            precedents,
             NO_PARTOF,
             _operatorRole,
             _ownerRole
@@ -499,19 +502,22 @@ contract SupplyChain is RBAC {
         // Require that a step for _item is in of steps[lastSteps[_partOf]].precedents
         // TODO: Check for precedent items, not precedent steps
         bool isPrecedent = false;
-        uint256[] memory precedents = steps[lastSteps[_partOf]].precedents;
-        for (uint256 i = 0; i < precedents.length; i += 1){
-            if (steps[precedents[i]].item == _item){
+        uint256[] memory partOfprecedents = steps[lastSteps[_partOf]].precedents;
+        for (uint256 i = 0; i < partOfprecedents.length; i += 1){
+            if (steps[partOfprecedents[i]].item == _item){
                 isPrecedent = true;
                 break;
             }
         }
         require(isPrecedent, "Item not precedent of partOf.");
 
+        uint256[] memory precedents = new uint256[](1);
+        precedents[0] = lastSteps[_item];
+
         pushStep(
             _action,
             _item,
-            new uint256[](lastSteps[_item]),
+            precedents,
             _partOf,
             NO_ROLE,
             NO_ROLE

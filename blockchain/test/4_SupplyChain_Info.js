@@ -141,36 +141,104 @@ contract('SupplyChain', (accounts) => {
             'Not an operator of precedents.',
         );
 
-        // TODO: Test precedents point to last steps of items passed as parameters
-        // TODO: Test operatorRole inherited from item
-        // TODO: Test ownerRole inherited from item
-
         it('sanity check addInfoStep', async () => {
             await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
             await supplyChain.addBearer(operator1, ownerRole2, { from: root });
 
-            const itemOne = (
+            let transaction = (
                 await supplyChain.addRootStep(
                     itemCreationAction, 
                     operatorRole1, 
                     ownerRole1, 
                     { from: owner1 }
                 )
-            ).logs[0].args.item;
-            const itemTwo = (
+            );
+            const itemOne = transaction.logs[0].args.item;
+            const stepOne = transaction.logs[1].args.step;
+
+            transaction = (
                 await supplyChain.addRootStep(
                     itemCreationAction, 
                     operatorRole2, 
                     ownerRole2, 
                     { from: owner2 }
                 )
-            ).logs[0].args.item;
+            );
+            const itemTwo = transaction.logs[0].args.item;
+            const stepTwo = transaction.logs[1].args.step;
             
-            await supplyChain.addInfoStep(
-                itemCreationAction, 
-                itemOne, 
-                [itemTwo], 
-                {from: operator1}
+            const stepThree = (
+                await supplyChain.addInfoStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    [itemTwo], 
+                    {from: operator1}
+                )
+            ).logs[0].args.step;
+
+            const stepFour = (
+                await supplyChain.addInfoStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    [], 
+                    {from: operator1}
+                )
+            ).logs[0].args.step;
+
+            assert.equal(itemOne.toNumber(), 1);
+            assert.equal(itemTwo.toNumber(), 2);
+
+            assert.equal(stepOne.toNumber(), 1);
+            assert.equal(stepTwo.toNumber(), 2);
+            assert.equal(stepThree.toNumber(), 3);
+            assert.equal(stepFour.toNumber(), 4);
+
+            assert.equal(
+                (await supplyChain.getPrecedents(stepThree)).length,
+                2,
+            );
+            assert.equal(
+                (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
+                stepOne,
+            );
+            assert.equal(
+                (await supplyChain.getPrecedents(stepThree))[1].toNumber(),
+                stepTwo,
+            );
+
+            assert.equal(
+                (await supplyChain.getPrecedents(stepFour)).length,
+                1,
+            );
+            assert.equal(
+                (await supplyChain.getPrecedents(stepFour))[0].toNumber(),
+                stepThree,
+            );
+
+            assert.equal(
+                (await supplyChain.getPartOf(itemOne)).toNumber(),
+                0,
+            );
+            assert.equal(
+                (await supplyChain.getPartOf(itemTwo)).toNumber(),
+                0,
+            );
+
+            assert.equal(
+                (await supplyChain.getOperatorRole(itemOne)).toNumber(),
+                operatorRole1,
+            );
+            assert.equal(
+                (await supplyChain.getOperatorRole(itemTwo)).toNumber(),
+                operatorRole2,
+            );
+            assert.equal(
+                (await supplyChain.getOwnerRole(itemOne)).toNumber(),
+                ownerRole1,
+            );
+            assert.equal(
+                (await supplyChain.getOwnerRole(itemTwo)).toNumber(),
+                ownerRole2,
             );
         });
     });

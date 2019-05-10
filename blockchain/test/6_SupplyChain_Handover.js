@@ -65,7 +65,19 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addBearer(operator2, operatorRole2, { from: owner2 });
         });
 
-        // TODO: Test fails if item doesn't exist
+        itShouldThrow(
+            'addHandoverStep - item must exist.',
+            async () => {
+                await supplyChain.addHandoverStep(
+                    itemCreationAction,
+                    1,
+                    operatorRole2, 
+                    ownerRole2, 
+                    {from: operator1}
+                );
+            },
+            'Item does not exist.',
+        );
 
         // If permissions are different to a precedent with the same instance id check user belongs to its ownerRole.
         itShouldThrow(
@@ -93,18 +105,28 @@ contract('SupplyChain', (accounts) => {
             'Needs owner for handover.',
         );
 
-        // TODO: Test precedent is previous last step for item
-
         it('sanity check addHandoverStep', async () => {
-            const itemOne = (
+            const transaction = (
                 await supplyChain.addRootStep(
                     itemCreationAction, 
                     operatorRole1, 
                     ownerRole1, 
                     { from: owner1 }
                 )
-            ).logs[0].args.item;
-            const itemTwo = (
+            );
+            const itemOne = transaction.logs[0].args.item;
+            const stepOne = transaction.logs[1].args.step;
+
+            const stepTwo = (
+                await supplyChain.addInfoStep(
+                    itemCreationAction, 
+                    itemOne, 
+                    [], 
+                    {from: operator1}
+                )
+            ).logs[0].args.step;
+
+            const stepThree = (
                 await supplyChain.addHandoverStep(
                     itemCreationAction, 
                     itemOne, 
@@ -112,7 +134,16 @@ contract('SupplyChain', (accounts) => {
                     ownerRole2, 
                     {from: owner1}
                 )
-            ).logs[0].args.item;  
+            ).logs[0].args.step;
+
+            assert.equal(
+                (await supplyChain.getPrecedents(stepThree)).length,
+                1,
+            );
+            assert.equal(
+                (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
+                stepTwo,
+            )
         });
     });
 })

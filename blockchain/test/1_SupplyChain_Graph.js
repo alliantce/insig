@@ -121,6 +121,11 @@ contract('SupplyChain', (accounts) => {
             assert.equal(stepTwo, 2);
 
             assert.equal(
+                (await supplyChain.totalSteps()).toNumber(),
+                2
+            );
+
+            assert.equal(
                 ((await supplyChain.steps.call(stepOne)).action).toNumber(),
                 productCreationAction.toNumber(),
             );

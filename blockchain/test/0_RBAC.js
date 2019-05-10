@@ -30,8 +30,12 @@ contract('RBAC', (accounts) => {
             assert.equal((await rbac.totalRoles()).toNumber(), 1);
         });
 
-        it('hasRole returns false for non existing roles', async () => {
+        it('hasRole returns false for NO_ROLE', async () => {
             assert.isFalse(await rbac.hasRole(user1, 0));
+        });
+
+        it('hasRole returns false for non existing roles', async () => {
+            assert.isFalse(await rbac.hasRole(user1, 1));
         });
 
         it('hasRole returns false for non existing bearerships', async () => {

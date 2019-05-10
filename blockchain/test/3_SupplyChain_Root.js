@@ -65,15 +65,42 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addBearer(operator2, operatorRole2, { from: owner2 });
         });
 
-        // TODO: Test fails with _operatorRole == NO_ROLE
-        // TODO: Test fails with _ownerRole == NO_ROLE
-        // TODO: Test fails with _item that already exists
+        itShouldThrow(
+            'addRootStep - operator role must be provided.',
+            async () => {    
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    0, 
+                    ownerRole1, 
+                    { from: owner1 }
+                );
+            },
+            'An operator role is required.',
+        );
+
+        itShouldThrow(
+            'addRootStep - owner role must be provided.',
+            async () => {    
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    operator1, 
+                    0, 
+                    { from: owner1 }
+                );
+            },
+            'An owner role is required.',
+        );
 
         // If there are no precedents check operator1 belongs to operators of the current step.
         itShouldThrow(
             'addRootStep - operator must be owner for created step.',
             async () => {    
-                await supplyChain.addRootStep(itemCreationAction, operator1, owner1, { from: owner1 });
+                await supplyChain.addRootStep(
+                    itemCreationAction, 
+                    operatorRole1, 
+                    ownerRole1, 
+                    { from: operator1 }
+                );
             },
             'Creator not in ownerRole.',
         );
@@ -82,27 +109,68 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
             await supplyChain.addBearer(operator1, ownerRole2, { from: root });
 
-            const itemOne = (
+            let transaction = (
                 await supplyChain.addRootStep(
                     itemCreationAction, 
                     operatorRole1, 
                     ownerRole1, 
                     { from: owner1 }
                 )
-            ).logs[0].args.item;
+            );
+            itemOne = transaction.logs[0].args.item;
+            stepOne = transaction.logs[1].args.step;
 
-            const itemTwo = (
+            transaction = (
                 await supplyChain.addRootStep(
                     itemCreationAction, 
                     operatorRole2, 
                     ownerRole2, 
                     { from: owner2 }
                 )
-            ).logs[0].args.item;
+            );
+            itemTwo = transaction.logs[0].args.item;
+            stepTwo = transaction.logs[1].args.step;
             
             assert.equal(itemOne.toNumber(), 1);
             assert.equal(itemTwo.toNumber(), 2);
-            // TODO: Test step has no precedents
+
+            assert.equal(stepOne.toNumber(), 1);
+            assert.equal(stepTwo.toNumber(), 2);
+
+            assert.equal(
+                (await supplyChain.getPrecedents(stepOne)).length,
+                0,
+            );
+            assert.equal(
+                (await supplyChain.getPrecedents(stepOne)).length,
+                0,
+            );
+
+            assert.equal(
+                (await supplyChain.getPartOf(itemOne)).toNumber(),
+                0,
+            );
+            assert.equal(
+                (await supplyChain.getPartOf(itemTwo)).toNumber(),
+                0,
+            );
+
+            assert.equal(
+                (await supplyChain.getOperatorRole(itemOne)).toNumber(),
+                operatorRole1,
+            );
+            assert.equal(
+                (await supplyChain.getOperatorRole(itemTwo)).toNumber(),
+                operatorRole2,
+            );
+            assert.equal(
+                (await supplyChain.getOwnerRole(itemOne)).toNumber(),
+                ownerRole1,
+            );
+            assert.equal(
+                (await supplyChain.getOwnerRole(itemTwo)).toNumber(),
+                ownerRole2,
+            );
         });
     });
 })
