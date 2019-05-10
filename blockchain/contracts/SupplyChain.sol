@@ -144,12 +144,12 @@ contract SupplyChain is RBAC {
      * @param _item The id for the item.
      * @return Whether an item exists.
      */
-    function exists(uint256 _item) // TODO: Replace by existsItem;
+    function isItem(uint256 _item)
         public
         view
         returns(bool)
     {
-        return lastSteps[_item] != 0; // TODO: Replace by _item > totalItems;
+        return _item > totalItems;
     }
 
     /**
@@ -406,7 +406,7 @@ contract SupplyChain is RBAC {
     {
         // Check all precedents exist.
         for (uint i = 0; i < _precedentItems.length; i++){
-            require(exists(_precedentItems[i]), "Precedent item does not exist.");
+            require(isItem(_precedentItems[i]), "Precedent item does not exist.");
         }
 
         // TODO: Check for repeated precedents in the array.
@@ -461,7 +461,7 @@ contract SupplyChain is RBAC {
     )
         public
     {
-        require(exists(_item), "Item does not exist.");
+        require(isItem(_item), "Item does not exist.");
 
         require(isOwner(msg.sender, _item), "Needs owner for handover.");
 
@@ -493,11 +493,11 @@ contract SupplyChain is RBAC {
     )
         public
     {
-        require(exists(_item), "Item does not exist.");
+        require(isItem(_item), "Item does not exist.");
 
         require(isOwner(msg.sender, _item), "Needs owner for partOf.");
 
-        require(exists(_partOf), "Composite item does not exist.");
+        require(isItem(_partOf), "Composite item does not exist.");
 
         // Require that a step for _item is in of steps[lastSteps[_partOf]].precedents
         // TODO: Check for precedent items, not precedent steps
