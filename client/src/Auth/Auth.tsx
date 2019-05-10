@@ -3,7 +3,10 @@ import { Connect } from 'uport-connect';
 
 import { createLogger, format, transports } from 'winston';
 import '../main.scss';
+import Fiat500 from './fiat-500.png';
 import './auth.scss';
+
+import Navbar from '../Components/Navbar/Navbar';
 
 /**
  * Connect to uport
@@ -84,17 +87,21 @@ class Auth extends Component<{}, IAuthState> {
      */
     public render() {
         return (
-            <main>
-                <button onClick={this.handleLogin}>
-                    Login
-                </button>
-                <button onClick={this.handleLogout}>
-                    Logout
-                </button>
-                <button onClick={this.handleVerify}>
-                    Verify
-                </button>
-            </main>
+            <div>
+                <Navbar />
+                <main>
+                    <img src={Fiat500} />
+                    <button onClick={this.handleLogin}>
+                        Login
+                    </button>
+                    <button onClick={this.handleLogout}>
+                        Logout
+                    </button>
+                    <button onClick={this.handleVerify}>
+                        Verify
+                    </button>
+                </main>
+            </div>
         );
     }
 }
