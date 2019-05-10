@@ -1,7 +1,7 @@
 const SupplyChain = artifacts.require('./SupplyChain.sol');
 
 const chai = require('chai');
-const { itShouldThrow } = require('./utils');
+// const { itShouldThrow } = require('./utils');
 // use default BigNumber
 chai.use(require('chai-bignumber')()).should();
 
@@ -14,12 +14,10 @@ contract('SupplyChain', (accounts) => {
     let certificationCreationAction;
     let certificationCreationDescription;
     let itemCertificationAction;
+    let itemCertificationDescription;
+    let roleId;
     let transaction;
     const root = accounts[0];
-    const operator1 = accounts[1];
-    const operator2 = accounts[2];
-    const owner1 = accounts[3];
-    const owner2 = accounts[4];
 
     before(async () => {
         supplyChain = await SupplyChain.deployed();
@@ -88,7 +86,7 @@ contract('SupplyChain', (accounts) => {
             transaction = await supplyChain.addAction(itemCertificationDescription);
             itemCertificationAction = transaction.logs[0].args.action;
 
-            transaction = await supplyChain.addRootRole("OnlyRole");
+            transaction = await supplyChain.addRootRole('OnlyRole');
             roleId = transaction.logs[0].args.role;
         });
 
@@ -122,7 +120,7 @@ contract('SupplyChain', (accounts) => {
 
             assert.equal(
                 (await supplyChain.totalSteps()).toNumber(),
-                2
+                2,
             );
 
             assert.equal(
@@ -290,4 +288,4 @@ contract('SupplyChain', (accounts) => {
             );
         });
     });
-})
+});

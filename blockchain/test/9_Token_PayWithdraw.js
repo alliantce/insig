@@ -9,16 +9,25 @@ chai.use(require('chai-bignumber')()).should();
 contract('Token', (accounts) => {
     let supplyChain;
     let token;
+    let productCreationAction;
     let productCreationDescription;
     let itemCreationAction;
     let itemCreationDescription;
+    let certificationCreationAction;
     let certificationCreationDescription;
+    let itemCertificationAction;
+    let itemCertificationDescription;
     let transaction;
     const root = accounts[0];
     const operator1 = accounts[1];
     const operator2 = accounts[2];
     const owner1 = accounts[3];
     const owner2 = accounts[4];
+    let rootRole;
+    let ownerRole1;
+    let operatorRole1;
+    let ownerRole2;
+    let operatorRole2;
 
     before(async () => {
         supplyChain = await SupplyChain.deployed();
@@ -46,29 +55,29 @@ contract('Token', (accounts) => {
             transaction = await supplyChain.addAction(itemCertificationDescription);
             itemCertificationAction = transaction.logs[0].args.action;
 
-            transaction = await supplyChain.addRootRole("Root", { from: root });
+            transaction = await supplyChain.addRootRole('Root', { from: root });
             rootRole = transaction.logs[0].args.role;
 
-            transaction = await supplyChain.addRole("owner1", rootRole);
+            transaction = await supplyChain.addRole('owner1', rootRole);
             ownerRole1 = transaction.logs[0].args.role;
             await supplyChain.addBearer(owner1, ownerRole1, { from: root });
 
-            transaction = await supplyChain.addRole("operator1", ownerRole1);
+            transaction = await supplyChain.addRole('operator1', ownerRole1);
             operatorRole1 = transaction.logs[0].args.role;
             await supplyChain.addBearer(operator1, operatorRole1, { from: owner1 });
 
-            transaction = await supplyChain.addRole("owner2", rootRole);
+            transaction = await supplyChain.addRole('owner2', rootRole);
             ownerRole2 = transaction.logs[0].args.role;
             await supplyChain.addBearer(owner2, ownerRole2, { from: root });
 
-            transaction = await supplyChain.addRole("operator2", ownerRole2);
+            transaction = await supplyChain.addRole('operator2', ownerRole2);
             operatorRole2 = transaction.logs[0].args.role;
             await supplyChain.addBearer(operator2, operatorRole2, { from: owner2 });
         });
 
         itShouldThrow(
             'Fails with no tokens.',
-            async () => {    
+            async () => {
                 await token.pay(
                     1,
                     100,
@@ -82,10 +91,10 @@ contract('Token', (accounts) => {
             // RootStep(1)
             const itemOne = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
 
@@ -96,13 +105,13 @@ contract('Token', (accounts) => {
                 { from: owner1 },
             );
 
-            const amount = (
+            const { amount } = (
                 await token.pay(
                     itemOne,
                     200,
                     { from: root },
                 )
-            ).logs[0].args.amount;
+            ).logs[0].args;
 
             assert.equal(
                 (await token.ownerOf(itemOne)),
@@ -122,34 +131,34 @@ contract('Token', (accounts) => {
             // RootStep(1)
             const itemOne = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
             // RootStep(2)
             const itemTwo = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
             // (1,2) <- (2)
             await supplyChain.addInfoStep(
-                itemCreationAction, 
+                itemCreationAction,
                 itemTwo,
-                [itemOne], 
-                { from: operator1 }
+                [itemOne],
+                { from: operator1 },
             );
             // RootStep(1) <- PartOf(2) X
             await supplyChain.addPartOfStep(
-                itemCreationAction, 
+                itemCreationAction,
                 itemOne,
-                itemTwo, 
-                {from: owner1}
+                itemTwo,
+                { from: owner1 },
             );
 
             await token.mint(
@@ -169,7 +178,7 @@ contract('Token', (accounts) => {
                 400,
                 { from: root },
             );
-            
+
             assert.equal(
                 (await token.revenues.call(itemOne)).toNumber(),
                 200,
@@ -184,43 +193,43 @@ contract('Token', (accounts) => {
             // RootStep(1)
             const itemOne = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
             // RootStep(2)
             const itemTwo = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
             // RootStep(3)
             const itemThree = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
             // (1,2,3) <- (3)
             await supplyChain.addInfoStep(
-                itemCreationAction, 
+                itemCreationAction,
                 itemThree,
-                [itemOne, itemTwo], 
-                { from: operator1 }
+                [itemOne, itemTwo],
+                { from: operator1 },
             );
             // (1) <- PartOf(3)
             await supplyChain.addPartOfStep(
-                itemCreationAction, 
+                itemCreationAction,
                 itemOne,
-                itemThree, 
-                {from: owner1}
+                itemThree,
+                { from: owner1 },
             );
 
             await token.mint(
@@ -240,7 +249,7 @@ contract('Token', (accounts) => {
                 400,
                 { from: root },
             );
-            
+
             assert.equal(
                 (await token.revenues.call(itemOne)).toNumber(),
                 200,
@@ -255,50 +264,50 @@ contract('Token', (accounts) => {
             // RootStep(1)
             const itemOne = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
             // RootStep(2)
             const itemTwo = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
             // RootStep(2)
             const itemThree = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
             // (1,2,3) <- (3)
             await supplyChain.addInfoStep(
-                itemCreationAction, 
+                itemCreationAction,
                 itemThree,
-                [itemOne, itemTwo], 
-                { from: operator1 }
+                [itemOne, itemTwo],
+                { from: operator1 },
             );
             // RootStep(1) <- PartOf(3) X
             await supplyChain.addPartOfStep(
-                itemCreationAction, 
+                itemCreationAction,
                 itemOne,
-                itemThree, 
-                {from: owner1}
+                itemThree,
+                { from: owner1 },
             );
             // RootStep(2) <- PartOf(3) X
             await supplyChain.addPartOfStep(
-                itemCreationAction, 
+                itemCreationAction,
                 itemTwo,
-                itemThree, 
-                {from: owner1}
+                itemThree,
+                { from: owner1 },
             );
 
             await token.mint(
@@ -324,7 +333,7 @@ contract('Token', (accounts) => {
                 400,
                 { from: root },
             );
-            
+
             assert.equal(
                 (await token.revenues.call(itemThree)).toNumber(),
                 200,
@@ -343,58 +352,58 @@ contract('Token', (accounts) => {
             // (1)
             const itemOne = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
             // (2)
             const itemTwo = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
             // (3)
             const itemThree = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             ).logs[0].args.item;
             // (1,2) <- (2)
             await supplyChain.addInfoStep(
-                itemCreationAction, 
+                itemCreationAction,
                 itemTwo,
-                [itemOne], 
-                { from: operator1 }
+                [itemOne],
+                { from: operator1 },
             );
             // (1) <- PartOf(2)
             await supplyChain.addPartOfStep(
-                itemCreationAction, 
+                itemCreationAction,
                 itemOne,
-                itemTwo, 
-                {from: owner1}
+                itemTwo,
+                { from: owner1 },
             );
 
             // (2,3) <- (3)
             await supplyChain.addInfoStep(
-                itemCreationAction, 
+                itemCreationAction,
                 itemThree,
-                [itemTwo], 
-                { from: operator1 }
+                [itemTwo],
+                { from: operator1 },
             );
             // (2) <- PartOf(3)
             await supplyChain.addPartOfStep(
-                itemCreationAction, 
+                itemCreationAction,
                 itemTwo,
-                itemThree, 
-                {from: owner1}
+                itemThree,
+                { from: owner1 },
             );
 
             await token.mint(
@@ -437,4 +446,4 @@ contract('Token', (accounts) => {
             );
         });
     });
-})
+});

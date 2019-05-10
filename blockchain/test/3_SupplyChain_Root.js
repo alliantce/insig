@@ -11,15 +11,21 @@ contract('SupplyChain', (accounts) => {
     let productCreationDescription;
     let itemCreationAction;
     let itemCreationDescription;
+    let itemCertificationAction;
+    let itemCertificationDescription;
     let certificationCreationAction;
     let certificationCreationDescription;
-    let itemCertificationAction;
     let transaction;
     const root = accounts[0];
     const operator1 = accounts[1];
     const operator2 = accounts[2];
     const owner1 = accounts[3];
     const owner2 = accounts[4];
+    let rootRole;
+    let operatorRole1;
+    let ownerRole1;
+    let operatorRole2;
+    let ownerRole2;
 
     before(async () => {
         supplyChain = await SupplyChain.deployed();
@@ -45,34 +51,34 @@ contract('SupplyChain', (accounts) => {
             transaction = await supplyChain.addAction(itemCertificationDescription);
             itemCertificationAction = transaction.logs[0].args.action;
 
-            transaction = await supplyChain.addRootRole("Root", { from: root });
+            transaction = await supplyChain.addRootRole('Root', { from: root });
             rootRole = transaction.logs[0].args.role;
 
-            transaction = await supplyChain.addRole("owner1", rootRole);
+            transaction = await supplyChain.addRole('owner1', rootRole);
             ownerRole1 = transaction.logs[0].args.role;
             await supplyChain.addBearer(owner1, ownerRole1, { from: root });
 
-            transaction = await supplyChain.addRole("operator1", ownerRole1);
+            transaction = await supplyChain.addRole('operator1', ownerRole1);
             operatorRole1 = transaction.logs[0].args.role;
             await supplyChain.addBearer(operator1, operatorRole1, { from: owner1 });
 
-            transaction = await supplyChain.addRole("owner2", rootRole);
+            transaction = await supplyChain.addRole('owner2', rootRole);
             ownerRole2 = transaction.logs[0].args.role;
             await supplyChain.addBearer(owner2, ownerRole2, { from: root });
 
-            transaction = await supplyChain.addRole("operator2", ownerRole2);
+            transaction = await supplyChain.addRole('operator2', ownerRole2);
             operatorRole2 = transaction.logs[0].args.role;
             await supplyChain.addBearer(operator2, operatorRole2, { from: owner2 });
         });
 
         itShouldThrow(
             'addRootStep - operator role must be provided.',
-            async () => {    
+            async () => {
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    0, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    0,
+                    ownerRole1,
+                    { from: owner1 },
                 );
             },
             'An operator role is required.',
@@ -80,12 +86,12 @@ contract('SupplyChain', (accounts) => {
 
         itShouldThrow(
             'addRootStep - owner role must be provided.',
-            async () => {    
+            async () => {
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operator1, 
-                    0, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operator1,
+                    0,
+                    { from: owner1 },
                 );
             },
             'An owner role is required.',
@@ -94,12 +100,12 @@ contract('SupplyChain', (accounts) => {
         // If there are no precedents check operator1 belongs to operators of the current step.
         itShouldThrow(
             'addRootStep - operator must be owner for created step.',
-            async () => {    
+            async () => {
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: operator1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: operator1 },
                 );
             },
             'Creator not in ownerRole.',
@@ -109,28 +115,28 @@ contract('SupplyChain', (accounts) => {
             await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
             await supplyChain.addBearer(operator1, ownerRole2, { from: root });
 
-            let transaction = (
+            transaction = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole1, 
-                    ownerRole1, 
-                    { from: owner1 }
+                    itemCreationAction,
+                    operatorRole1,
+                    ownerRole1,
+                    { from: owner1 },
                 )
             );
-            itemOne = transaction.logs[0].args.item;
-            stepOne = transaction.logs[1].args.step;
+            const itemOne = transaction.logs[0].args.item;
+            const stepOne = transaction.logs[1].args.step;
 
             transaction = (
                 await supplyChain.addRootStep(
-                    itemCreationAction, 
-                    operatorRole2, 
-                    ownerRole2, 
-                    { from: owner2 }
+                    itemCreationAction,
+                    operatorRole2,
+                    ownerRole2,
+                    { from: owner2 },
                 )
             );
-            itemTwo = transaction.logs[0].args.item;
-            stepTwo = transaction.logs[1].args.step;
-            
+            const itemTwo = transaction.logs[0].args.item;
+            const stepTwo = transaction.logs[1].args.step;
+
             assert.equal(itemOne.toNumber(), 1);
             assert.equal(itemTwo.toNumber(), 2);
 
@@ -173,4 +179,4 @@ contract('SupplyChain', (accounts) => {
             );
         });
     });
-})
+});
