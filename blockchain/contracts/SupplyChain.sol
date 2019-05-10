@@ -149,7 +149,7 @@ contract SupplyChain is RBAC {
         view
         returns(bool)
     {
-        return _item > totalItems;
+        return lastSteps[_item] != 0;
     }
 
     /**

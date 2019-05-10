@@ -360,7 +360,79 @@ contract('Token', (accounts) => {
             'Face value exceeds available.',
         );
 
-        // TODO: Test for face value below that of composite but above composite + parts
+        itShouldThrow(
+            'Fails if face value higher than composite + parts',
+            async () => {    
+                // (1)
+                const itemOne = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.item;
+                // (2)
+                const itemTwo = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.item;
+                // (3)
+                const itemThree = (
+                    await supplyChain.addRootStep(
+                        itemCreationAction, 
+                        operatorRole1, 
+                        ownerRole1, 
+                        { from: owner1 }
+                    )
+                ).logs[0].args.item;
+                // (1,2,3) <- (3)
+                await supplyChain.addInfoStep(
+                    itemCreationAction, 
+                    itemThree,
+                    [itemOne, itemTwo], 
+                    { from: operator1 }
+                );
+                // (1) <- PartOf(3)
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    itemOne,
+                    itemThree, 
+                    {from: owner1}
+                );
+                // (2) <- PartOf(3)
+                await supplyChain.addPartOfStep(
+                    itemCreationAction, 
+                    itemTwo,
+                    itemThree, 
+                    {from: owner1}
+                );
+    
+                await token.mint(
+                    owner1,
+                    itemThree,
+                    100,
+                    { from: owner1 },
+                );
+                await token.mint(
+                    owner1,
+                    itemOne,
+                    50,
+                    { from: owner1 },
+                );
+                await token.mint(
+                    owner1,
+                    itemTwo,
+                    51,
+                    { from: owner1 },
+                );
+            },
+            'Face value exceeds available.',
+        );
     });
 
     describe('Burn', () => {
