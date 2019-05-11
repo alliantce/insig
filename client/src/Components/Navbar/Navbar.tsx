@@ -4,6 +4,7 @@ import { Connect } from 'uport-connect';
 import '../../main.scss';
 import Fiat500 from './fiat-500.png';
 import './navbar.scss';
+import PortugueseFlag from './portugal.png';
 
 /**
  * Connect to uport
@@ -29,7 +30,7 @@ class Navbar extends Component<{}, {}> {
      */
     public render() {
         return (
-            <nav className="navbar" role="navigation" aria-label="main navigation">
+            <nav className="navbar is-light" role="navigation" aria-label="main navigation">
                 {/* add a loggo on the left side */}
                 <div className="navbar-brand">
                     <a className="navbar-item" href="/">
@@ -44,6 +45,11 @@ class Navbar extends Component<{}, {}> {
                     </div>
                     {/* add welcome or login on right side */}
                     <div className="navbar-end">
+                    <div className="navbar-item">
+                            <div className="buttons">
+                                <img src={PortugueseFlag} />
+                            </div>
+                        </div>
                         <div className="navbar-item">
                             <div className="buttons">
                                 {this.printUser()}
