@@ -3,8 +3,8 @@ import { Connect } from 'uport-connect';
 
 import { createLogger, format, transports } from 'winston';
 import '../main.scss';
-import Fiat500 from './fiat-500.png';
 import './auth.scss';
+import Fiat500 from './fiat-500.png';
 
 import Navbar from '../Components/Navbar/Navbar';
 
@@ -34,6 +34,7 @@ const logger = createLogger({
  * Define class interface
  */
 interface IAuthState {
+    logged: boolean;
 }
 /**
  * Action class
@@ -44,13 +45,17 @@ class Auth extends Component<{}, IAuthState> {
      */
     constructor(props: any) {
         super(props);
+        this.state = {
+            logged: undefined as any,
+        };
     }
 
     /**
      * @ignore
      */
     public componentDidMount() {
-        //
+        uport.loadState();
+        this.setState({ logged: (uport.state.name !== undefined) });
     }
 
     public handleLogout = () => {
@@ -64,42 +69,38 @@ class Auth extends Component<{}, IAuthState> {
             requested: ['name', 'country'],
         };
         uport.requestDisclosure(req);
-        uport.onResponse('disclosureReq').then((response: any) => {
-            console.log(response);
-            const json = JSON.stringify(response.payload);
-            console.log(json);
-
+        uport.onResponse('disclosureReq').then(() => {
             uport.sendVerification({
-                claim: { Example: { 'Last Seen': 'now' } },
-                exp: Math.floor(new Date().getTime() / 1000) + 1 * 60,
+                claim: { User: { Signed: new Date() } },
             });
         });
-
-    }
-
-    public handleVerify = () => {
-        uport.loadState();
-        console.log(uport.state);
     }
 
     /**
      * @ignore
      */
     public render() {
+        const { logged } = this.state;
+        const centerStyle: any = {
+            'text-align': 'center',
+        };
+        let button;
+        if (logged) {
+            button = (<button className="button is-primary is-large" onClick={this.handleLogout} hidden={!logged}>
+                Logout
+            </button>);
+        } else {
+            button = (<button className="button is-primary is-large" onClick={this.handleLogin} hidden={logged}>
+                Login
+            </button>);
+        }
         return (
             <div>
                 <Navbar />
-                <main>
+                <main style={centerStyle}>
                     <img src={Fiat500} />
-                    <button onClick={this.handleLogin}>
-                        Login
-                    </button>
-                    <button onClick={this.handleLogout}>
-                        Logout
-                    </button>
-                    <button onClick={this.handleVerify}>
-                        Verify
-                    </button>
+                    <br />
+                    {button}
                 </main>
             </div>
         );
