@@ -6,6 +6,8 @@ import { IBlockchainState, ISupplyChain } from '../Common/CommonInterfaces';
 import '../main.scss';
 import './action.scss';
 
+import Navbar from '../Components/Navbar/Navbar';
+
 /**
  * Setting up a logger.
  */
@@ -79,21 +81,25 @@ class Action extends Component<{}, IActionState> {
     public render() {
         const { action, listActions } = this.state;
         return (
-            <main>
-                <form onSubmit={this.handleSubmit}>
-                    <input
-                        type="text"
-                        name="action"
-                        value={action}
-                        onChange={this.handleChange}
-                        placeholder="Action message"
-                    />
-                    <input type="submit" />
-                </form>
-                <ul>
-                    {listActions.map((e) => <li key={e}>{e}</li>)}
-                </ul>
-            </main>
+            <div>
+                <Navbar />
+                <main>
+                    <form onSubmit={this.handleSubmit}>
+                        <input
+                            className="input"
+                            type="text"
+                            name="action"
+                            value={action}
+                            onChange={this.handleChange}
+                            placeholder="Action message"
+                        />
+                        <input className="button is-primary" type="submit" />
+                    </form>
+                    <ol className="is-lower-roman">
+                        {listActions.map((e) => <li key={e}>{e}</li>)}
+                    </ol>
+                </main>
+            </div>
         );
     }
 
