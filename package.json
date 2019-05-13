@@ -4,7 +4,8 @@
     "description": "_When consumers purchase a Toyota, they are not simply purchasing a car, truck or van. They are placing their trust in our company. - Akio Toyoda_",
     "scripts": {
         "test": "lerna run test:ci",
-        "coverage": "lerna run coverage:ci"
+        "coverage": "lerna run coverage:ci",
+        "lint": "lerna run lint"
     },
     "repository": {
         "type": "git",

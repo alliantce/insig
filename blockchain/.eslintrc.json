@@ -5,7 +5,19 @@
             "error",
             4
         ],
-        "max-len": [2, 126, 4]
+        "max-len": [
+            2,
+            126,
+            4
+        ],
+        "import/no-extraneous-dependencies": [
+            "error",
+            {
+                "devDependencies": [
+                    "**/test/*.js"
+                ]
+            }
+        ]
     },
     "env": {
         "mocha": true,

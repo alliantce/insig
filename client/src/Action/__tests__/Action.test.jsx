@@ -9,8 +9,8 @@ import Action from '../Action.tsx';
 // setup the adapter
 configure({ adapter: new Adapter() });
 // some basic tests
-describe('Basic tests to StartMixing Component', () => {
-    test('Should mount StartMixing with success', () => {
+describe('Basic tests to Action Component', () => {
+    test('Should mount Action with success', () => {
         // instantiate component
         shallow((<Action />));
     });

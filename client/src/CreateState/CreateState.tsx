@@ -8,6 +8,8 @@ import { IBlockchainState, ISupplyChain } from '../Common/CommonInterfaces';
 import '../main.scss';
 import './createstate.scss';
 
+import Navbar from '../Components/Navbar/Navbar';
+
 /**
  * Setting up a logger.
  */
@@ -134,22 +136,25 @@ class CreateState extends Component<{}, ICreateState> {
     public render() {
         const { action, precedents, item, listActions } = this.state;
         return (
-            <main>
-                <form onSubmit={this.handleSubmit}>
-                    <select name={DOMNames.action} value={action} onChange={this.handleChange}>
-                        <option value="default" disabled={true}>Action</option>
-                        {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
-                    </select>
-                    <select name={DOMNames.precedents} value={precedents} onChange={this.handleChange}>
-                        <option value="default" disabled={true}>Precedents</option>
-                    </select>
-                    <select name={DOMNames.item} value={item} onChange={this.handleChange}>
-                        <option value="default" disabled={true}>Item</option>
-                    </select>
-                    <input type="submit" />
-                </form>
-                {this.drawGraph()}
-            </main>
+            <div>
+                <Navbar />
+                <main>
+                    <form onSubmit={this.handleSubmit}>
+                        <select name={DOMNames.action} value={action} onChange={this.handleChange}>
+                            <option value="default" disabled={true}>Action</option>
+                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                        <select name={DOMNames.precedents} value={precedents} onChange={this.handleChange}>
+                            <option value="default" disabled={true}>Precedents</option>
+                        </select>
+                        <select name={DOMNames.item} value={item} onChange={this.handleChange}>
+                            <option value="default" disabled={true}>Item</option>
+                        </select>
+                        <input type="submit" />
+                    </form>
+                    {this.drawGraph()}
+                </main>
+            </div>
         );
     }
 
