@@ -88,9 +88,9 @@ contract('Token', (accounts) => {
         );
 
         it('Pays for a simple token.', async () => {
-            // RootStep(1)
+            // RootState(1)
             const itemOne = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -128,18 +128,18 @@ contract('Token', (accounts) => {
         });
 
         it('Pays a token for a composite item', async () => {
-            // RootStep(1)
+            // RootState(1)
             const itemOne = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
             ).logs[0].args.item;
-            // RootStep(2)
+            // RootState(2)
             const itemTwo = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -147,14 +147,14 @@ contract('Token', (accounts) => {
                 )
             ).logs[0].args.item;
             // (1,2) <- (2)
-            await supplyChain.addInfoStep(
+            await supplyChain.addInfoState(
                 itemCreationAction,
                 itemTwo,
                 [itemOne],
                 { from: operator1 },
             );
-            // RootStep(1) <- PartOf(2) X
-            await supplyChain.addPartOfStep(
+            // RootState(1) <- PartOf(2) X
+            await supplyChain.addPartOfState(
                 itemCreationAction,
                 itemOne,
                 itemTwo,
@@ -190,27 +190,27 @@ contract('Token', (accounts) => {
         });
 
         it('Ignores non-parts when paying.', async () => {
-            // RootStep(1)
+            // RootState(1)
             const itemOne = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
             ).logs[0].args.item;
-            // RootStep(2)
+            // RootState(2)
             const itemTwo = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
             ).logs[0].args.item;
-            // RootStep(3)
+            // RootState(3)
             const itemThree = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -218,14 +218,14 @@ contract('Token', (accounts) => {
                 )
             ).logs[0].args.item;
             // (1,2,3) <- (3)
-            await supplyChain.addInfoStep(
+            await supplyChain.addInfoState(
                 itemCreationAction,
                 itemThree,
                 [itemOne, itemTwo],
                 { from: operator1 },
             );
             // (1) <- PartOf(3)
-            await supplyChain.addPartOfStep(
+            await supplyChain.addPartOfState(
                 itemCreationAction,
                 itemOne,
                 itemThree,
@@ -261,27 +261,27 @@ contract('Token', (accounts) => {
         });
 
         it('Pays to multiple parts.', async () => {
-            // RootStep(1)
+            // RootState(1)
             const itemOne = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
             ).logs[0].args.item;
-            // RootStep(2)
+            // RootState(2)
             const itemTwo = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
             ).logs[0].args.item;
-            // RootStep(2)
+            // RootState(2)
             const itemThree = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -289,21 +289,21 @@ contract('Token', (accounts) => {
                 )
             ).logs[0].args.item;
             // (1,2,3) <- (3)
-            await supplyChain.addInfoStep(
+            await supplyChain.addInfoState(
                 itemCreationAction,
                 itemThree,
                 [itemOne, itemTwo],
                 { from: operator1 },
             );
-            // RootStep(1) <- PartOf(3) X
-            await supplyChain.addPartOfStep(
+            // RootState(1) <- PartOf(3) X
+            await supplyChain.addPartOfState(
                 itemCreationAction,
                 itemOne,
                 itemThree,
                 { from: owner1 },
             );
-            // RootStep(2) <- PartOf(3) X
-            await supplyChain.addPartOfStep(
+            // RootState(2) <- PartOf(3) X
+            await supplyChain.addPartOfState(
                 itemCreationAction,
                 itemTwo,
                 itemThree,
@@ -351,7 +351,7 @@ contract('Token', (accounts) => {
         it('Pays in multiple part levels.', async () => {
             // (1)
             const itemOne = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -360,7 +360,7 @@ contract('Token', (accounts) => {
             ).logs[0].args.item;
             // (2)
             const itemTwo = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -369,7 +369,7 @@ contract('Token', (accounts) => {
             ).logs[0].args.item;
             // (3)
             const itemThree = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -377,14 +377,14 @@ contract('Token', (accounts) => {
                 )
             ).logs[0].args.item;
             // (1,2) <- (2)
-            await supplyChain.addInfoStep(
+            await supplyChain.addInfoState(
                 itemCreationAction,
                 itemTwo,
                 [itemOne],
                 { from: operator1 },
             );
             // (1) <- PartOf(2)
-            await supplyChain.addPartOfStep(
+            await supplyChain.addPartOfState(
                 itemCreationAction,
                 itemOne,
                 itemTwo,
@@ -392,14 +392,14 @@ contract('Token', (accounts) => {
             );
 
             // (2,3) <- (3)
-            await supplyChain.addInfoStep(
+            await supplyChain.addInfoState(
                 itemCreationAction,
                 itemThree,
                 [itemTwo],
                 { from: operator1 },
             );
             // (2) <- PartOf(3)
-            await supplyChain.addPartOfStep(
+            await supplyChain.addPartOfState(
                 itemCreationAction,
                 itemTwo,
                 itemThree,

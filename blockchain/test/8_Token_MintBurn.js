@@ -78,18 +78,18 @@ contract('Token', (accounts) => {
         itShouldThrow(
             'Fails if minter not in ownerRole.',
             async () => {
-                // RootStep(1)
+                // RootState(1)
                 const itemOne = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
                 ).logs[0].args.item;
-                // RootStep(2)
+                // RootState(2)
                 const itemTwo = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
@@ -97,14 +97,14 @@ contract('Token', (accounts) => {
                     )
                 ).logs[0].args.item;
                 // (1,2) <- (2)
-                await supplyChain.addInfoStep(
+                await supplyChain.addInfoState(
                     itemCreationAction,
                     itemTwo,
                     [itemOne],
                     { from: operator1 },
                 );
                 // (1) <- PartOf(2) X
-                await supplyChain.addPartOfStep(
+                await supplyChain.addPartOfState(
                     itemCreationAction,
                     itemOne,
                     itemTwo,
@@ -124,18 +124,18 @@ contract('Token', (accounts) => {
         itShouldThrow(
             'Fails if token for composite not instantiated.',
             async () => {
-                // RootStep(1)
+                // RootState(1)
                 const itemOne = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
                 ).logs[0].args.item;
-                // RootStep(2)
+                // RootState(2)
                 const itemTwo = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
@@ -143,14 +143,14 @@ contract('Token', (accounts) => {
                     )
                 ).logs[0].args.item;
                 // (1,2) <- (2)
-                await supplyChain.addInfoStep(
+                await supplyChain.addInfoState(
                     itemCreationAction,
                     itemTwo,
                     [itemOne],
                     { from: operator1 },
                 );
                 // (1) <- PartOf(2) X
-                await supplyChain.addPartOfStep(
+                await supplyChain.addPartOfState(
                     itemCreationAction,
                     itemOne,
                     itemTwo,
@@ -168,9 +168,9 @@ contract('Token', (accounts) => {
         );
 
         it('Instantiates a token for a simple item', async () => {
-            // RootStep(1)
+            // RootState(1)
             const itemOne = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -195,18 +195,18 @@ contract('Token', (accounts) => {
         });
 
         it('Instantiates a token for a composite item', async () => {
-            // RootStep(1)
+            // RootState(1)
             const itemOne = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
             ).logs[0].args.item;
-            // RootStep(2)
+            // RootState(2)
             const itemTwo = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -214,14 +214,14 @@ contract('Token', (accounts) => {
                 )
             ).logs[0].args.item;
             // (1,2) <- (2)
-            await supplyChain.addInfoStep(
+            await supplyChain.addInfoState(
                 itemCreationAction,
                 itemTwo,
                 [itemOne],
                 { from: operator1 },
             );
-            // RootStep(1) <- PartOf(2) X
-            await supplyChain.addPartOfStep(
+            // RootState(1) <- PartOf(2) X
+            await supplyChain.addPartOfState(
                 itemCreationAction,
                 itemOne,
                 itemTwo,
@@ -262,18 +262,18 @@ contract('Token', (accounts) => {
         itShouldThrow(
             'Fails token for composite is instantiated but doesn\'t belong to owner',
             async () => {
-                // RootStep(1)
+                // RootState(1)
                 const itemOne = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
                 ).logs[0].args.item;
-                // RootStep(2)
+                // RootState(2)
                 const itemTwo = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
@@ -281,14 +281,14 @@ contract('Token', (accounts) => {
                     )
                 ).logs[0].args.item;
                 // (1,2) <- (2)
-                await supplyChain.addInfoStep(
+                await supplyChain.addInfoState(
                     itemCreationAction,
                     itemTwo,
                     [itemOne],
                     { from: operator1 },
                 );
-                // RootStep(1) <- PartOf(2) X
-                await supplyChain.addPartOfStep(
+                // RootState(1) <- PartOf(2) X
+                await supplyChain.addPartOfState(
                     itemCreationAction,
                     itemOne,
                     itemTwo,
@@ -320,18 +320,18 @@ contract('Token', (accounts) => {
         itShouldThrow(
             'Fails if face value higher than composite\'s',
             async () => {
-                // RootStep(1)
+                // RootState(1)
                 const itemOne = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
                 ).logs[0].args.item;
-                // RootStep(2)
+                // RootState(2)
                 const itemTwo = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
@@ -339,14 +339,14 @@ contract('Token', (accounts) => {
                     )
                 ).logs[0].args.item;
                 // (1,2) <- (2)
-                await supplyChain.addInfoStep(
+                await supplyChain.addInfoState(
                     itemCreationAction,
                     itemTwo,
                     [itemOne],
                     { from: operator1 },
                 );
                 // (1) <- PartOf(2) X
-                await supplyChain.addPartOfStep(
+                await supplyChain.addPartOfState(
                     itemCreationAction,
                     itemOne,
                     itemTwo,
@@ -374,7 +374,7 @@ contract('Token', (accounts) => {
             async () => {
                 // (1)
                 const itemOne = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
@@ -383,7 +383,7 @@ contract('Token', (accounts) => {
                 ).logs[0].args.item;
                 // (2)
                 const itemTwo = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
@@ -392,7 +392,7 @@ contract('Token', (accounts) => {
                 ).logs[0].args.item;
                 // (3)
                 const itemThree = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
@@ -400,21 +400,21 @@ contract('Token', (accounts) => {
                     )
                 ).logs[0].args.item;
                 // (1,2,3) <- (3)
-                await supplyChain.addInfoStep(
+                await supplyChain.addInfoState(
                     itemCreationAction,
                     itemThree,
                     [itemOne, itemTwo],
                     { from: operator1 },
                 );
                 // (1) <- PartOf(3)
-                await supplyChain.addPartOfStep(
+                await supplyChain.addPartOfState(
                     itemCreationAction,
                     itemOne,
                     itemThree,
                     { from: owner1 },
                 );
                 // (2) <- PartOf(3)
-                await supplyChain.addPartOfStep(
+                await supplyChain.addPartOfState(
                     itemCreationAction,
                     itemTwo,
                     itemThree,
@@ -488,9 +488,9 @@ contract('Token', (accounts) => {
         itShouldThrow(
             'Fails if burner not in ownerRole.',
             async () => {
-                // RootStep(1)
+                // RootState(1)
                 const itemOne = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
@@ -515,18 +515,18 @@ contract('Token', (accounts) => {
         itShouldThrow(
             'Fails if item has parts with instantiated tokens.',
             async () => {
-                // RootStep(1)
+                // RootState(1)
                 const itemOne = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
                 ).logs[0].args.item;
-                // RootStep(2)
+                // RootState(2)
                 const itemTwo = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
@@ -534,14 +534,14 @@ contract('Token', (accounts) => {
                     )
                 ).logs[0].args.item;
                 // (1,2) <- (2)
-                await supplyChain.addInfoStep(
+                await supplyChain.addInfoState(
                     itemCreationAction,
                     itemTwo,
                     [itemOne],
                     { from: operator1 },
                 );
                 // (1) <- PartOf(2) X
-                await supplyChain.addPartOfStep(
+                await supplyChain.addPartOfState(
                     itemCreationAction,
                     itemOne,
                     itemTwo,
@@ -569,9 +569,9 @@ contract('Token', (accounts) => {
         );
 
         it('Burns a token for a simple item', async () => {
-            // RootStep(1)
+            // RootState(1)
             const itemOne = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,

@@ -3,7 +3,7 @@ import { Sankey } from 'react-vis';
 import Energy from './energy.json';
 
 import '../main.scss';
-import './createstep.scss';
+import './createstate.scss';
 
 
 const BLURRED_LINK_OPACITY = 0.3;
@@ -13,13 +13,13 @@ enum DOMNames {
     precedents = 'precedents',
     item = 'item',
 }
-interface ICreateStep {
+interface ICreateState {
     action: string;
     precedents: string;
     item: string;
     activeLink: object;
 }
-class CreateStep extends Component<{}, ICreateStep> {
+class CreateState extends Component<{}, ICreateState> {
     constructor(props: any) {
         super(props);
         this.state = {
@@ -112,4 +112,4 @@ class CreateStep extends Component<{}, ICreateStep> {
     }
 }
 
-export default CreateStep;
+export default CreateState;

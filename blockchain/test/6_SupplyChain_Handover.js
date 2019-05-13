@@ -31,7 +31,7 @@ contract('SupplyChain', (accounts) => {
         supplyChain = await SupplyChain.deployed();
     });
 
-    describe('addHandoverStep', () => {
+    describe('addHandoverState', () => {
         beforeEach(async () => {
             supplyChain = await SupplyChain.new();
 
@@ -72,9 +72,9 @@ contract('SupplyChain', (accounts) => {
         });
 
         itShouldThrow(
-            'addHandoverStep - item must exist.',
+            'addHandoverState - item must exist.',
             async () => {
-                await supplyChain.addHandoverStep(
+                await supplyChain.addHandoverState(
                     itemCreationAction,
                     1,
                     operatorRole2,
@@ -87,20 +87,20 @@ contract('SupplyChain', (accounts) => {
 
         // If permissions are different to a precedent with the same instance id check user belongs to its ownerRole.
         itShouldThrow(
-            'addHandoverStep - only ownerRole can change permissions.',
+            'addHandoverState - only ownerRole can change permissions.',
             async () => {
                 const partZero = 200;
                 await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
 
                 const itemOne = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
                 ).logs[0].args.item;
-                await supplyChain.addHandoverStep(
+                await supplyChain.addHandoverState(
                     itemCreationAction,
                     itemOne,
                     operatorRole2,
@@ -111,9 +111,9 @@ contract('SupplyChain', (accounts) => {
             'Needs owner for handover.',
         );
 
-        it('sanity check addHandoverStep', async () => {
+        it('sanity check addHandoverState', async () => {
             transaction = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -121,34 +121,34 @@ contract('SupplyChain', (accounts) => {
                 )
             );
             const itemOne = transaction.logs[0].args.item;
-            const stepOne = transaction.logs[1].args.step;
+            const stateOne = transaction.logs[1].args.state;
 
-            const stepTwo = (
-                await supplyChain.addInfoStep(
+            const stateTwo = (
+                await supplyChain.addInfoState(
                     itemCreationAction,
                     itemOne,
                     [],
                     { from: operator1 },
                 )
-            ).logs[0].args.step;
+            ).logs[0].args.state;
 
-            const stepThree = (
-                await supplyChain.addHandoverStep(
+            const stateThree = (
+                await supplyChain.addHandoverState(
                     itemCreationAction,
                     itemOne,
                     operatorRole2,
                     ownerRole2,
                     { from: owner1 },
                 )
-            ).logs[0].args.step;
+            ).logs[0].args.state;
 
             assert.equal(
-                (await supplyChain.getPrecedents(stepThree)).length,
+                (await supplyChain.getPrecedents(stateThree)).length,
                 1,
             );
             assert.equal(
-                (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
-                stepTwo,
+                (await supplyChain.getPrecedents(stateThree))[0].toNumber(),
+                stateTwo,
             );
         });
     });

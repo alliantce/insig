@@ -31,7 +31,7 @@ contract('SupplyChain', (accounts) => {
         supplyChain = await SupplyChain.deployed();
     });
 
-    describe('addRootStep', () => {
+    describe('addRootState', () => {
         beforeEach(async () => {
             supplyChain = await SupplyChain.new();
 
@@ -72,9 +72,9 @@ contract('SupplyChain', (accounts) => {
         });
 
         itShouldThrow(
-            'addRootStep - operator role must be provided.',
+            'addRootState - operator role must be provided.',
             async () => {
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     0,
                     ownerRole1,
@@ -85,9 +85,9 @@ contract('SupplyChain', (accounts) => {
         );
 
         itShouldThrow(
-            'addRootStep - owner role must be provided.',
+            'addRootState - owner role must be provided.',
             async () => {
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operator1,
                     0,
@@ -97,11 +97,11 @@ contract('SupplyChain', (accounts) => {
             'An owner role is required.',
         );
 
-        // If there are no precedents check operator1 belongs to operators of the current step.
+        // If there are no precedents check operator1 belongs to operators of the current state.
         itShouldThrow(
-            'addRootStep - operator must be owner for created step.',
+            'addRootState - operator must be owner for created state.',
             async () => {
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -111,12 +111,12 @@ contract('SupplyChain', (accounts) => {
             'Creator not in ownerRole.',
         );
 
-        it('sanity check addRootStep', async () => {
+        it('sanity check addRootState', async () => {
             await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
             await supplyChain.addBearer(operator1, ownerRole2, { from: root });
 
             transaction = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -124,10 +124,10 @@ contract('SupplyChain', (accounts) => {
                 )
             );
             const itemOne = transaction.logs[0].args.item;
-            const stepOne = transaction.logs[1].args.step;
+            const stateOne = transaction.logs[1].args.state;
 
             transaction = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole2,
                     ownerRole2,
@@ -135,20 +135,20 @@ contract('SupplyChain', (accounts) => {
                 )
             );
             const itemTwo = transaction.logs[0].args.item;
-            const stepTwo = transaction.logs[1].args.step;
+            const stateTwo = transaction.logs[1].args.state;
 
             assert.equal(itemOne.toNumber(), 1);
             assert.equal(itemTwo.toNumber(), 2);
 
-            assert.equal(stepOne.toNumber(), 1);
-            assert.equal(stepTwo.toNumber(), 2);
+            assert.equal(stateOne.toNumber(), 1);
+            assert.equal(stateTwo.toNumber(), 2);
 
             assert.equal(
-                (await supplyChain.getPrecedents(stepOne)).length,
+                (await supplyChain.getPrecedents(stateOne)).length,
                 0,
             );
             assert.equal(
-                (await supplyChain.getPrecedents(stepOne)).length,
+                (await supplyChain.getPrecedents(stateOne)).length,
                 0,
             );
 

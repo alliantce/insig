@@ -31,7 +31,7 @@ contract('SupplyChain', (accounts) => {
         supplyChain = await SupplyChain.deployed();
     });
 
-    describe('addInfoStep', () => {
+    describe('addInfoState', () => {
         beforeEach(async () => {
             supplyChain = await SupplyChain.new();
 
@@ -75,14 +75,14 @@ contract('SupplyChain', (accounts) => {
             'Precedent items must exist.',
             async () => {
                 const itemOne = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
                 ).logs[0].args.item;
-                await supplyChain.addInfoStep(
+                await supplyChain.addInfoState(
                     itemCertificationAction,
                     itemOne,
                     [2],
@@ -95,14 +95,14 @@ contract('SupplyChain', (accounts) => {
             'item must not be the same as a direct precedent.',
             async () => {
                 const itemOne = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
                 ).logs[0].args.item;
-                await supplyChain.addInfoStep(
+                await supplyChain.addInfoState(
                     itemCertificationAction,
                     itemOne,
                     [itemOne],
@@ -115,7 +115,7 @@ contract('SupplyChain', (accounts) => {
             'msg.sender not in operator role for one of the precedents.',
             async () => {
                 const itemOne = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
@@ -123,7 +123,7 @@ contract('SupplyChain', (accounts) => {
                     )
                 ).logs[0].args.item;
                 const itemTwo = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole1,
                         ownerRole1,
@@ -131,14 +131,14 @@ contract('SupplyChain', (accounts) => {
                     )
                 ).logs[0].args.item;
                 const itemThree = (
-                    await supplyChain.addRootStep(
+                    await supplyChain.addRootState(
                         itemCreationAction,
                         operatorRole2,
                         ownerRole2,
                         { from: owner2 },
                     )
                 ).logs[0].args.item;
-                await supplyChain.addInfoStep(
+                await supplyChain.addInfoState(
                     itemCertificationAction,
                     itemOne,
                     [itemTwo, itemThree],
@@ -147,12 +147,12 @@ contract('SupplyChain', (accounts) => {
             'Not an operator of precedents.',
         );
 
-        it('sanity check addInfoStep', async () => {
+        it('sanity check addInfoState', async () => {
             await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
             await supplyChain.addBearer(operator1, ownerRole2, { from: root });
 
             transaction = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole1,
                     ownerRole1,
@@ -160,10 +160,10 @@ contract('SupplyChain', (accounts) => {
                 )
             );
             const itemOne = transaction.logs[0].args.item;
-            const stepOne = transaction.logs[1].args.step;
+            const stateOne = transaction.logs[1].args.state;
 
             transaction = (
-                await supplyChain.addRootStep(
+                await supplyChain.addRootState(
                     itemCreationAction,
                     operatorRole2,
                     ownerRole2,
@@ -171,54 +171,54 @@ contract('SupplyChain', (accounts) => {
                 )
             );
             const itemTwo = transaction.logs[0].args.item;
-            const stepTwo = transaction.logs[1].args.step;
+            const stateTwo = transaction.logs[1].args.state;
 
-            const stepThree = (
-                await supplyChain.addInfoStep(
+            const stateThree = (
+                await supplyChain.addInfoState(
                     itemCreationAction,
                     itemOne,
                     [itemTwo],
                     { from: operator1 },
                 )
-            ).logs[0].args.step;
+            ).logs[0].args.state;
 
-            const stepFour = (
-                await supplyChain.addInfoStep(
+            const stateFour = (
+                await supplyChain.addInfoState(
                     itemCreationAction,
                     itemOne,
                     [],
                     { from: operator1 },
                 )
-            ).logs[0].args.step;
+            ).logs[0].args.state;
 
             assert.equal(itemOne.toNumber(), 1);
             assert.equal(itemTwo.toNumber(), 2);
 
-            assert.equal(stepOne.toNumber(), 1);
-            assert.equal(stepTwo.toNumber(), 2);
-            assert.equal(stepThree.toNumber(), 3);
-            assert.equal(stepFour.toNumber(), 4);
+            assert.equal(stateOne.toNumber(), 1);
+            assert.equal(stateTwo.toNumber(), 2);
+            assert.equal(stateThree.toNumber(), 3);
+            assert.equal(stateFour.toNumber(), 4);
 
             assert.equal(
-                (await supplyChain.getPrecedents(stepThree)).length,
+                (await supplyChain.getPrecedents(stateThree)).length,
                 2,
             );
             assert.equal(
-                (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
-                stepOne,
+                (await supplyChain.getPrecedents(stateThree))[0].toNumber(),
+                stateOne,
             );
             assert.equal(
-                (await supplyChain.getPrecedents(stepThree))[1].toNumber(),
-                stepTwo,
+                (await supplyChain.getPrecedents(stateThree))[1].toNumber(),
+                stateTwo,
             );
 
             assert.equal(
-                (await supplyChain.getPrecedents(stepFour)).length,
+                (await supplyChain.getPrecedents(stateFour)).length,
                 1,
             );
             assert.equal(
-                (await supplyChain.getPrecedents(stepFour))[0].toNumber(),
-                stepThree,
+                (await supplyChain.getPrecedents(stateFour))[0].toNumber(),
+                stateThree,
             );
 
             assert.equal(

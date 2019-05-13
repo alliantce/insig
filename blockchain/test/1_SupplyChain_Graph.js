@@ -66,7 +66,7 @@ contract('SupplyChain', (accounts) => {
         });
     });
 
-    describe('Steps as a graph', () => {
+    describe('States as a graph', () => {
         beforeEach(async () => {
             supplyChain = await SupplyChain.new();
 
@@ -90,12 +90,12 @@ contract('SupplyChain', (accounts) => {
             roleId = transaction.logs[0].args.role;
         });
 
-        it('Creates steps.', async () => {
+        it('Creates states.', async () => {
             const productZero = 100;
             const productOne = 101;
 
-            const stepOne = (
-                await supplyChain.pushStep(
+            const stateOne = (
+                await supplyChain.pushState(
                     productCreationAction,
                     productZero,
                     [],
@@ -103,9 +103,9 @@ contract('SupplyChain', (accounts) => {
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.pushStep(
+            ).logs[0].args.state;
+            const stateTwo = (
+                await supplyChain.pushState(
                     itemCreationAction,
                     productOne,
                     [],
@@ -113,42 +113,42 @@ contract('SupplyChain', (accounts) => {
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
+            ).logs[0].args.state;
 
-            assert.equal(stepOne, 1);
-            assert.equal(stepTwo, 2);
+            assert.equal(stateOne, 1);
+            assert.equal(stateTwo, 2);
 
             assert.equal(
-                (await supplyChain.totalSteps()).toNumber(),
+                (await supplyChain.totalStates()).toNumber(),
                 2,
             );
 
             assert.equal(
-                ((await supplyChain.steps.call(stepOne)).action).toNumber(),
+                ((await supplyChain.states.call(stateOne)).action).toNumber(),
                 productCreationAction.toNumber(),
             );
             assert.equal(
-                ((await supplyChain.steps.call(stepTwo)).action).toNumber(),
+                ((await supplyChain.states.call(stateTwo)).action).toNumber(),
                 itemCreationAction.toNumber(),
             );
 
             assert.equal(
-                ((await supplyChain.steps.call(stepOne)).item).toNumber(),
+                ((await supplyChain.states.call(stateOne)).item).toNumber(),
                 productZero,
             );
             assert.equal(
-                ((await supplyChain.steps.call(stepTwo)).item).toNumber(),
+                ((await supplyChain.states.call(stateTwo)).item).toNumber(),
                 productOne,
             );
 
-            assert.equal((await supplyChain.steps.call(stepTwo)).creator, root);
+            assert.equal((await supplyChain.states.call(stateTwo)).creator, root);
         });
 
         it('Creates chains.', async () => {
             const itemZero = 100;
 
-            const stepOne = (
-                await supplyChain.pushStep(
+            const stateOne = (
+                await supplyChain.pushState(
                     productCreationAction,
                     itemZero,
                     [],
@@ -156,35 +156,35 @@ contract('SupplyChain', (accounts) => {
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.pushStep(
+            ).logs[0].args.state;
+            const stateTwo = (
+                await supplyChain.pushState(
                     itemCreationAction,
                     itemZero,
-                    [stepOne],
+                    [stateOne],
                     0,
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
-            const stepThree = (
-                await supplyChain.pushStep(
+            ).logs[0].args.state;
+            const stateThree = (
+                await supplyChain.pushState(
                     itemCertificationAction,
                     itemZero,
-                    [stepTwo],
+                    [stateTwo],
                     0,
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
+            ).logs[0].args.state;
 
             assert.equal(
-                (await supplyChain.getPrecedents(stepTwo))[0].toNumber(),
-                stepOne,
+                (await supplyChain.getPrecedents(stateTwo))[0].toNumber(),
+                stateOne,
             );
             assert.equal(
-                (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
-                stepTwo,
+                (await supplyChain.getPrecedents(stateThree))[0].toNumber(),
+                stateTwo,
             );
         });
 
@@ -192,8 +192,8 @@ contract('SupplyChain', (accounts) => {
             const itemZero = 200;
             const itemOne = 201;
 
-            const stepOne = (
-                await supplyChain.pushStep(
+            const stateOne = (
+                await supplyChain.pushState(
                     itemCreationAction,
                     itemZero,
                     [],
@@ -201,9 +201,9 @@ contract('SupplyChain', (accounts) => {
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.pushStep(
+            ).logs[0].args.state;
+            const stateTwo = (
+                await supplyChain.pushState(
                     itemCreationAction,
                     itemOne,
                     [],
@@ -211,34 +211,34 @@ contract('SupplyChain', (accounts) => {
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
-            const stepThree = (
-                await supplyChain.pushStep(
+            ).logs[0].args.state;
+            const stateThree = (
+                await supplyChain.pushState(
                     itemCreationAction,
                     itemZero,
-                    [stepOne, stepTwo],
+                    [stateOne, stateTwo],
                     0,
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
+            ).logs[0].args.state;
 
             assert.equal(
-                (await supplyChain.getPrecedents(stepThree))[0].toNumber(),
-                stepOne,
+                (await supplyChain.getPrecedents(stateThree))[0].toNumber(),
+                stateOne,
             );
             assert.equal(
-                (await supplyChain.getPrecedents(stepThree))[1].toNumber(),
-                stepTwo,
+                (await supplyChain.getPrecedents(stateThree))[1].toNumber(),
+                stateTwo,
             );
         });
 
-        it('pushSteps maintains lastSteps.', async () => {
+        it('pushStates maintains lastStates.', async () => {
             const itemZero = 200;
             const certificationZero = 300;
 
-            const stepOne = (
-                await supplyChain.pushStep(
+            const stateOne = (
+                await supplyChain.pushState(
                     productCreationAction,
                     itemZero,
                     [],
@@ -246,19 +246,19 @@ contract('SupplyChain', (accounts) => {
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
-            const stepTwo = (
-                await supplyChain.pushStep(
+            ).logs[0].args.state;
+            const stateTwo = (
+                await supplyChain.pushState(
                     itemCreationAction,
                     itemZero,
-                    [stepOne],
+                    [stateOne],
                     0,
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
-            const stepThree = (
-                await supplyChain.pushStep(
+            ).logs[0].args.state;
+            const stateThree = (
+                await supplyChain.pushState(
                     certificationCreationAction,
                     certificationZero,
                     [],
@@ -266,25 +266,25 @@ contract('SupplyChain', (accounts) => {
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
-            const stepFour = (
-                await supplyChain.pushStep(
+            ).logs[0].args.state;
+            const stateFour = (
+                await supplyChain.pushState(
                     itemCertificationAction,
                     itemZero,
-                    [stepTwo, stepThree],
+                    [stateTwo, stateThree],
                     0,
                     roleId,
                     roleId,
                 )
-            ).logs[0].args.step;
+            ).logs[0].args.state;
 
             assert.equal(
-                ((await supplyChain.lastSteps.call(itemZero))).toNumber(),
-                stepFour,
+                ((await supplyChain.lastStates.call(itemZero))).toNumber(),
+                stateFour,
             );
             assert.equal(
-                ((await supplyChain.lastSteps.call(certificationZero))).toNumber(),
-                stepThree,
+                ((await supplyChain.lastStates.call(certificationZero))).toNumber(),
+                stateThree,
             );
         });
     });
