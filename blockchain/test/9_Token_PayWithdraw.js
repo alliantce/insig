@@ -9,13 +9,13 @@ chai.use(require('chai-bignumber')()).should();
 contract('Token', (accounts) => {
     let supplyChain;
     let token;
-    let productCreationAction;
+    // let productCreationAction;
     let productCreationDescription;
     let itemCreationAction;
     let itemCreationDescription;
-    let certificationCreationAction;
+    // let certificationCreationAction;
     let certificationCreationDescription;
-    let itemCertificationAction;
+    // let itemCertificationAction;
     let itemCertificationDescription;
     let transaction;
     const root = accounts[0];
@@ -41,7 +41,7 @@ contract('Token', (accounts) => {
 
             productCreationDescription = 'Product line created.';
             transaction = await supplyChain.addAction(productCreationDescription);
-            productCreationAction = transaction.logs[0].args.action;
+            // productCreationAction = transaction.logs[0].args.action;
 
             itemCreationDescription = 'Instance created.';
             transaction = await supplyChain.addAction(itemCreationDescription);
@@ -49,11 +49,11 @@ contract('Token', (accounts) => {
 
             certificationCreationDescription = 'Certification created';
             transaction = await supplyChain.addAction(certificationCreationDescription);
-            certificationCreationAction = transaction.logs[0].args.action;
+            // certificationCreationAction = transaction.logs[0].args.action;
 
             itemCertificationDescription = 'Instance certified';
             transaction = await supplyChain.addAction(itemCertificationDescription);
-            itemCertificationAction = transaction.logs[0].args.action;
+            // itemCertificationAction = transaction.logs[0].args.action;
 
             transaction = await supplyChain.addRootRole('Root', { from: root });
             rootRole = transaction.logs[0].args.role;

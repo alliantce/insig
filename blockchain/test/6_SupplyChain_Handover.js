@@ -7,13 +7,13 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('SupplyChain', (accounts) => {
     let supplyChain;
-    let productCreationAction;
+    // let productCreationAction;
     let productCreationDescription;
     let itemCreationAction;
     let itemCreationDescription;
-    let itemCertificationAction;
+    // let itemCertificationAction;
     let itemCertificationDescription;
-    let certificationCreationAction;
+    // let certificationCreationAction;
     let certificationCreationDescription;
     let transaction;
     const root = accounts[0];
@@ -37,7 +37,7 @@ contract('SupplyChain', (accounts) => {
 
             productCreationDescription = 'Product line created.';
             transaction = await supplyChain.addAction(productCreationDescription);
-            productCreationAction = transaction.logs[0].args.action;
+            // productCreationAction = transaction.logs[0].args.action;
 
             itemCreationDescription = 'Instance created.';
             transaction = await supplyChain.addAction(itemCreationDescription);
@@ -45,11 +45,11 @@ contract('SupplyChain', (accounts) => {
 
             certificationCreationDescription = 'Certification created';
             transaction = await supplyChain.addAction(certificationCreationDescription);
-            certificationCreationAction = transaction.logs[0].args.action;
+            // certificationCreationAction = transaction.logs[0].args.action;
 
             itemCertificationDescription = 'Instance certified';
             transaction = await supplyChain.addAction(itemCertificationDescription);
-            itemCertificationAction = transaction.logs[0].args.action;
+            // itemCertificationAction = transaction.logs[0].args.action;
 
             transaction = await supplyChain.addRootRole('Root', { from: root });
             rootRole = transaction.logs[0].args.role;
@@ -89,7 +89,7 @@ contract('SupplyChain', (accounts) => {
         itShouldThrow(
             'addHandoverState - only ownerRole can change permissions.',
             async () => {
-                const partZero = 200;
+                // const partZero = 200;
                 await supplyChain.addBearer(operator1, operatorRole2, { from: owner2 });
 
                 const itemOne = (
@@ -121,7 +121,7 @@ contract('SupplyChain', (accounts) => {
                 )
             );
             const itemOne = transaction.logs[0].args.item;
-            const stateOne = transaction.logs[1].args.state;
+            // const stateOne = transaction.logs[1].args.state;
 
             const stateTwo = (
                 await supplyChain.addInfoState(
