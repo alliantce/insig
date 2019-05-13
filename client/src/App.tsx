@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
 import Action from './Ation/Action';
-import CreateStep from './CreateStep/CreateStep';
+import CreateState from './CreateState/CreateState';
 
 class App extends Component {
     public render() {
@@ -12,7 +12,7 @@ class App extends Component {
                     <div>
                         <Route path="/" exact={true} component={Action} />
                         <Route path="/action/" component={Action} />
-                        <Route path="/createstep/" component={CreateStep} />
+                        <Route path="/createstate/" component={CreateState} />
                     </div>
                 </Router>
             </div>

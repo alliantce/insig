@@ -7,13 +7,11 @@ module.exports = (deployer) => {
     deployer.deploy(
         RBAC,
     );
-    
+
     deployer.link(RBAC, SupplyChain);
     deployer.deploy(
         SupplyChain,
     );
 
-    deployer.deploy(SupplyChain).then(function() {
-        return deployer.deploy(Token, SupplyChain.address);
-    });
+    deployer.deploy(SupplyChain).then(() => deployer.deploy(Token, SupplyChain.address));
 };

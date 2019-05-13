@@ -6,7 +6,7 @@ import { createLogger, format, transports } from 'winston';
 import BlockchainGeneric from '../Common/BlockchainGeneric';
 import { IBlockchainState, ISupplyChain } from '../Common/CommonInterfaces';
 import '../main.scss';
-import './createstep.scss';
+import './createstate.scss';
 
 /**
  * Setting up a logger.
@@ -30,10 +30,7 @@ enum DOMNames {
     precedents = 'precedents',
     item = 'item',
 }
-/**
- * Class status
- */
-interface ICreateStepStatus extends IBlockchainState {
+interface ICreateState extends IBlockchainState {
     action: string;
     precedents: string;
     item: string;
@@ -41,7 +38,7 @@ interface ICreateStepStatus extends IBlockchainState {
     listActions: string [];
     supplyChain: ISupplyChain;
 }
-class CreateStep extends Component<{}, ICreateStepStatus> {
+class CreateState extends Component<{}, ICreateState> {
     constructor(props: any) {
         super(props);
         this.state = {
@@ -167,4 +164,4 @@ class CreateStep extends Component<{}, ICreateStepStatus> {
     }
 }
 
-export default CreateStep;
+export default CreateState;
