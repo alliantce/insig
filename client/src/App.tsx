@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-import Action from './Ation/Action';
+import Action from './Action/Action';
 import Auth from './Auth/Auth';
 import CreateStep from './CreateStep/CreateStep';
 

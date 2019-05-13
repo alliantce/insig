@@ -4,7 +4,7 @@ import { Connect } from 'uport-connect';
 import { createLogger, format, transports } from 'winston';
 import '../main.scss';
 import './auth.scss';
-import Fiat500 from './fiat-500.png';
+import insigLogo from './insigv1trans.png';
 
 import Navbar from '../Components/Navbar/Navbar';
 
@@ -98,7 +98,7 @@ class Auth extends Component<{}, IAuthState> {
             <div>
                 <Navbar />
                 <main style={centerStyle}>
-                    <img src={Fiat500} />
+                    <img src={insigLogo} />
                     <br />
                     {button}
                 </main>

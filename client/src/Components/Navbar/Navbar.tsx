@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Connect } from 'uport-connect';
 
 import '../../main.scss';
-import Fiat500 from './fiat-500.png';
+import insigLogo from './insigv1trans.png';
 import './navbar.scss';
 import PortugueseFlag from './portugal.png';
 
@@ -34,18 +34,20 @@ class Navbar extends Component<{}, {}> {
                 {/* add a loggo on the left side */}
                 <div className="navbar-brand">
                     <a className="navbar-item" href="/">
-                        <img src={Fiat500} height="35" />
+                        <img src={insigLogo} height="35" />
                     </a>
                 </div>
 
                 <div id="navbarBasicExample" className="navbar-menu">
                     {/* add some menu on left side after the logo */}
                     <div className="navbar-start">
-                        <a className="navbar-item">Home</a>
+                        <a className="navbar-item" href="/">Home</a>
+                        <a className="navbar-item" href="/action">Action</a>
+                        <a className="navbar-item" href="/createstate">Create State</a>
                     </div>
                     {/* add welcome or login on right side */}
                     <div className="navbar-end">
-                    <div className="navbar-item">
+                        <div className="navbar-item">
                             <div className="buttons">
                                 <img src={PortugueseFlag} />
                             </div>
