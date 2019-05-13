@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route } from 'react-router-dom';
 
 import Action from './Action/Action';
 import Auth from './Auth/Auth';
-import CreateStep from './CreateStep/CreateStep';
+import CreateState from './CreateState/CreateState';
 
 class App extends Component {
     public render() {
@@ -14,7 +14,7 @@ class App extends Component {
                         <Route path="/" exact={true} component={Action} />
                         <Route path="/action/" component={Action} />
                         <Route path="/auth/" component={Auth} />
-                        <Route path="/createstep/" component={CreateStep} />
+                        <Route path="/createstate/" component={CreateState} />
                     </div>
                 </Router>
             </div>

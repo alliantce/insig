@@ -16,24 +16,24 @@ contract SupplyChain is RBAC {
     uint256 constant public NO_STEP = 0;
 
     event ActionCreated(uint256 action);
-    event StepCreated(uint256 step);
+    event StateCreated(uint256 state);
     event ItemCreated(uint256 item);
 
     /**
-     * @notice Supply chain step data. By chaining these and not allowing them to be modified
+     * @notice Supply chain state data. By chaining these and not allowing them to be modified
      * afterwards we create an Acyclic Directed Graph.
-     * @dev The step id is not stored in the Step itself because it is always previously available
-     * to whoever looks for the step. The types of the struct members have been chosen for optimal
+     * @dev The state id is not stored in the State itself because it is always previously available
+     * to whoever looks for the state. The types of the struct members have been chosen for optimal
      * struct packing.
-     * @param creator The creator of this step.
-     * @param action The action of this step.
-     * @param item The id of the object that this step refers to.
-     * @param precedents The ids of the steps that precede this one in the supply chain.
+     * @param creator The creator of this state.
+     * @param action The action of this state.
+     * @param item The id of the object that this state refers to.
+     * @param precedents The ids of the states that precede this one in the supply chain.
      * @param partOf The id of some other item that this is part of and inherits permissions from.
-     * @param operatorRole The roles allowed to append steps to this one.
-     * @param ownerRole The roles allowed to append steps with different permissions.
+     * @param operatorRole The roles allowed to append states to this one.
+     * @param ownerRole The roles allowed to append states with different permissions.
      */
-    struct Step {
+    struct State {
         address creator;
         uint256 action;
         uint256 item;
@@ -44,13 +44,13 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice All steps are directly accessible through a mapping keyed by the step ids. Recursive
+     * @notice All states are directly accessible through a mapping keyed by the state ids. Recursive
      * structs are not supported in solidity yet.
      */
-    Step[] public steps;
+    State[] public states;
 
     /**
-     * @notice The step actions, defined by their index in an array of their descriptions. Examples
+     * @notice The state actions, defined by their index in an array of their descriptions. Examples
      * could be Creation, Certification, Handover, Split, Merge, Destruction
      */
     string[] internal actions;
@@ -61,9 +61,9 @@ contract SupplyChain is RBAC {
     uint256 public totalItems;
 
     /**
-     * @notice Mapping from item id to the last step in the lifecycle of that item.
+     * @notice Mapping from item id to the last state in the lifecycle of that item.
      */
-    mapping(uint256 => uint256) public lastSteps;
+    mapping(uint256 => uint256) public lastStates;
 
     /**
      * @notice The contract constructor, empty as of now.
@@ -71,21 +71,21 @@ contract SupplyChain is RBAC {
     constructor() public {
         addAction("NO ACTION");
         uint256[] memory emptyArray;
-        steps.push(
+        states.push(
             // solium-disable-next-line arg-overflow
-            Step(address(0), 0, 0, emptyArray, 0, 0, 0)
+            State(address(0), 0, 0, emptyArray, 0, 0, 0)
         );
         totalItems = 0;
     }
 
     /**
-     * @notice Create a new step action.
+     * @notice Create a new state action.
      * @param _actionDescription The description of the action being created.
-     * @dev Product lines can be implemented with a step action that indicates the creation of a
+     * @dev Product lines can be implemented with a state action that indicates the creation of a
      * product line that is a parent to all items of that product. The creation of an item
-     * would also be its own step action, which would usually have as precedents a product line step
-     * and other item steps for parts and materials. If implementing product lines as a step
-     * action the item id could be thought of as the product id and retrieved from lastSteps
+     * would also be its own state action, which would usually have as precedents a product line state
+     * and other item states for parts and materials. If implementing product lines as a state
+     * action the item id could be thought of as the product id and retrieved from lastStates
      * @return The action id.
      */
     function addAction(string memory _actionDescription)
@@ -126,17 +126,17 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Return the number of steps created.
-     * @dev The zero position of the actions array is not used for valid steps and doesn't count
+     * @notice Return the number of states created.
+     * @dev The zero position of the actions array is not used for valid states and doesn't count
      * towards their total.
-     * @return The number of steps created.
+     * @return The number of states created.
      */
-    function totalSteps()
+    function totalStates()
         public
         view
         returns(uint256)
     {
-        return steps.length - 1;
+        return states.length - 1;
     }
 
     /**
@@ -144,25 +144,25 @@ contract SupplyChain is RBAC {
      * @param _item The id for the item.
      * @return Whether an item exists.
      */
-    function exists(uint256 _item) // TODO: Replace by existsItem;
+    function isItem(uint256 _item)
         public
         view
         returns(bool)
     {
-        return lastSteps[_item] != 0; // TODO: Replace by _item > totalItems;
+        return lastStates[_item] != 0;
     }
 
     /**
-     * @notice Retrieve the immediate precedents of a step.
-     * @param _step The step id of the step to retrieve precedents for.
-     * @return An array with the step ids of the immediate precedents of the step given as a parameter.
+     * @notice Retrieve the immediate precedents of a state.
+     * @param _state The state id of the state to retrieve precedents for.
+     * @return An array with the state ids of the immediate precedents of the state given as a parameter.
      */
-    function getPrecedents(uint256 _step)
+    function getPrecedents(uint256 _state)
         public
         view
         returns(uint256[] memory)
     {
-        return steps[_step].precedents;
+        return states[_state].precedents;
     }
 
     /**
@@ -175,7 +175,7 @@ contract SupplyChain is RBAC {
         view
         returns(uint256)
     {
-        return steps[lastSteps[_item]].partOf;
+        return states[lastStates[_item]].partOf;
     }
 
     /**
@@ -189,16 +189,16 @@ contract SupplyChain is RBAC {
         returns(uint256)
     {
         uint256 item = _item;
-        Step memory step = steps[lastSteps[item]];
-        while (step.partOf != NO_ITEM) {
-            item = step.partOf;
-            step = steps[lastSteps[item]];
+        State memory state = states[lastStates[item]];
+        while (state.partOf != NO_ITEM) {
+            item = state.partOf;
+            state = states[lastStates[item]];
         }
         return item;
     }
 
     /**
-     * @notice Explore the step tree backwards, to a depth of one item transformation in each
+     * @notice Explore the state tree backwards, to a depth of one item transformation in each
      * branch, to count all the items that contributed directly to this one.
      * @dev The whole purpose of this function is to allow getParts to instantiate an array of the
      * required length to return the item ids, since dynamic arrays are not supported in memory.
@@ -211,21 +211,20 @@ contract SupplyChain is RBAC {
         returns(uint256)
     {
         // For all precedents to an item, only one of them can share the same item id
-        // If a precedent shares the same item id, store the step id and continue with it after exploring precedents with different ids
+        // If a precedent shares the same item id, store the state id and continue with it after exploring precedents with different ids
         // For each precedent with a different item id which is part of this item, add 1 to the counter.
         uint256 count = 0;
-        uint256 nextStepId = lastSteps[_item];
-        while (nextStepId != NO_STEP){
-            Step memory step = steps[nextStepId];
-            nextStepId = NO_STEP;
-            for(uint256 i = 0; i < step.precedents.length; i += 1){
-                uint256 precedentStepId = step.precedents[i];
-                if (steps[precedentStepId].item != _item &&
-                    getPartOf(steps[precedentStepId].item) == _item){
+        uint256 nextStateId = lastStates[_item];
+        while (nextStateId != NO_STEP) {
+            State memory state = states[nextStateId];
+            nextStateId = NO_STEP;
+            for (uint256 i = 0; i < state.precedents.length; i += 1) {
+                uint256 precedentStateId = state.precedents[i];
+                if (states[precedentStateId].item != _item &&
+                    getPartOf(states[precedentStateId].item) == _item) {
                     count += 1;
-                }
-                else{ // Only one of this can exist, store it to continue at the end of precedents.
-                    nextStepId = precedentStepId;
+                } else { // Only one of this can exist, store it to continue at the end of precedents.
+                    nextStateId = precedentStateId;
                 }
             }
         }
@@ -234,7 +233,7 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Explore the step tree backwards, to a depth of one item transformation in each
+     * @notice Explore the state tree backwards, to a depth of one item transformation in each
      * branch, to find all the items that contributed directly to this one.
      * @param _item The item id to find parts for.
      * @return The direct composite item.
@@ -246,19 +245,18 @@ contract SupplyChain is RBAC {
     {
         uint256[] memory parts = new uint256[](countParts(_item));
         uint256 count = 0;
-        uint256 nextStepId = lastSteps[_item];
-        while (nextStepId != NO_STEP){
-            Step memory step = steps[nextStepId];
-            nextStepId = NO_STEP;
-            for(uint256 i = 0; i < step.precedents.length; i += 1){
-                uint256 precedentStepId = step.precedents[i];
-                if (steps[precedentStepId].item != _item &&
-                    getPartOf(steps[precedentStepId].item) == _item){
-                    parts[count] = steps[precedentStepId].item;
+        uint256 nextStateId = lastStates[_item];
+        while (nextStateId != NO_STEP) {
+            State memory state = states[nextStateId];
+            nextStateId = NO_STEP;
+            for (uint256 i = 0; i < state.precedents.length; i += 1) {
+                uint256 precedentStateId = state.precedents[i];
+                if (states[precedentStateId].item != _item &&
+                    getPartOf(states[precedentStateId].item) == _item) {
+                    parts[count] = states[precedentStateId].item;
                     count += 1;
-                }
-                else{ // Only one of this can exist, store it to continue at the end of precedents.
-                    nextStepId = precedentStepId;
+                } else { // Only one of this can exist, store it to continue at the end of precedents.
+                    nextStateId = precedentStateId;
                 }
             }
         }
@@ -268,27 +266,27 @@ contract SupplyChain is RBAC {
     /**
      * @notice Retrieve the authorized operator role for an item, taking into account composition.
      * @param _item The item id of the item to retrieve operatorRole for.
-     * @return The authorized operatorRole for this step.
+     * @return The authorized operatorRole for this state.
      */
     function getOperatorRole(uint256 _item)
         public
         view
         returns(uint256)
     {
-        return steps[lastSteps[getComposite(_item)]].operatorRole;
+        return states[lastStates[getComposite(_item)]].operatorRole;
     }
 
     /**
      * @notice Retrieve the authorized owner role for an item, taking into account composition.
      * @param _item The item id of the item to retrieve ownerRole for.
-     * @return The authorized ownerRole for this step.
+     * @return The authorized ownerRole for this state.
      */
     function getOwnerRole(uint256 _item)
         public
         view
         returns(uint256)
     {
-        return steps[lastSteps[getComposite(_item)]].ownerRole;
+        return states[lastStates[getComposite(_item)]].ownerRole;
     }
 
     /**
@@ -318,15 +316,15 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Create a new step.
-     * @param _action The action of this step.
-     * @param _item The id of the object that this step refers to.
-     * @param _precedents The ids of the steps that precede this one in the supply chain.
+     * @notice Create a new state.
+     * @param _action The action of this state.
+     * @param _item The id of the object that this state refers to.
+     * @param _precedents The ids of the states that precede this one in the supply chain.
      * @param _partOf The id of some other item that this is part of and inherits permissions from.
-     * @param _operatorRole The roles allowed to append steps to this one.
-     * @param _ownerRole The roles allowed to append steps with different permissions.
+     * @param _operatorRole The roles allowed to append states to this one.
+     * @param _ownerRole The roles allowed to append states with different permissions.
      */
-    function pushStep
+    function pushState
     (
         uint256 _action,
         uint256 _item,
@@ -339,8 +337,8 @@ contract SupplyChain is RBAC {
     {
         require(_action < actions.length, "Event action not recognized.");
 
-        uint256 stepId = steps.push(
-            Step(
+        uint256 stateId = states.push(
+            State(
                 msg.sender,
                 _action,
                 _item,
@@ -350,17 +348,17 @@ contract SupplyChain is RBAC {
                 _ownerRole
             )
         ) - 1;
-        lastSteps[_item] = stepId;
-        emit StepCreated(stepId);
+        lastStates[_item] = stateId;
+        emit StateCreated(stateId);
     }
 
     /**
-     * @notice Create a new supply chain step without precedents.
-     * @param _action The index for the step action as defined in the actions array.
-     * @param _operatorRole The roles allowed to append steps to this one.
-     * @param _ownerRole The roles allowed to append steps with different permissions.
+     * @notice Create a new supply chain state without precedents.
+     * @param _action The index for the state action as defined in the actions array.
+     * @param _operatorRole The roles allowed to append states to this one.
+     * @param _ownerRole The roles allowed to append states with different permissions.
      */
-    function addRootStep
+    function addRootState
     (
         uint256 _action,
         uint256 _operatorRole,
@@ -378,7 +376,7 @@ contract SupplyChain is RBAC {
         emit ItemCreated(totalItems);
 
         uint256[] memory emptyArray;
-        pushStep(
+        pushState(
             _action,
             totalItems,
             emptyArray,
@@ -389,14 +387,14 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Create a new supply chain step with no changes on ownership or item.
-     * @param _action The index for the step action as defined in the actions array.
-     * @param _item The item id that this step is for. This must be either the item
-     * of one of the steps in _precedents, or an item that has never been used before.
+     * @notice Create a new supply chain state with no changes on ownership or item.
+     * @param _action The index for the state action as defined in the actions array.
+     * @param _item The item id that this state is for. The operatorRole and ownerRole are inherited
+     * from its last state.
      * @param _precedentItems An array of the item ids for items considered to be predecessors to
-     * this one. The operatorRole and ownerRole are inherited from the first item in this array.
+     * this one. The item passed in the previous parameter is added on to these.
      */
-    function addInfoStep
+    function addInfoState
     (
         uint256 _action,
         uint256 _item,
@@ -404,53 +402,55 @@ contract SupplyChain is RBAC {
     )
         public
     {
-        require(_precedentItems.length > 0, "No precedents, use addRootStep.");
-
         // Check all precedents exist.
-        for (uint i = 0; i < _precedentItems.length; i++){
-            require(exists(_precedentItems[i]), "Precedent item does not exist.");
+        for (uint i = 0; i < _precedentItems.length; i++) {
+            require(isItem(_precedentItems[i]), "Precedent item does not exist.");
         }
 
-        // Check the item id is in precedents
+        // TODO: Check for repeated precedents in the array.
+
+        // Check the item id is not in precedents
         bool repeatItem = false;
-        for (uint i = 0; i < _precedentItems.length; i++){
+        for (uint i = 0; i < _precedentItems.length; i++) {
             if (_precedentItems[i] == _item) {
                 repeatItem = true;
                 break;
             }
         }
-        require (repeatItem, "Item not in precedents."); // TODO: Extract to a function and use in addPartOfStep
+        require (!repeatItem, "Item in precedents."); // TODO: Extract to a function and use in addPartOfState
 
-        // Check user belongs to the operatorRole of all precedents.
-        for (uint i = 0; i < _precedentItems.length; i++){
+        // Check user belongs to the operatorRole of item and all precedents.
+        require(isOperator(msg.sender, _item), "Not an operator of precedents.");
+        for (uint i = 0; i < _precedentItems.length; i++) {
             require(isOperator(msg.sender, _precedentItems[i]), "Not an operator of precedents.");
         }
 
-        // Build precedents array out of steps from lastSteps[_precedents[i]]
-        uint256[] memory precedents = new uint256[](_precedentItems.length);
-        for (uint i = 0; i < _precedentItems.length; i++){
-            precedents[i] = lastSteps[_precedentItems[i]];
+        // Build precedents array out of states from lastStates[_precedents[i]]
+        uint256[] memory precedents = new uint256[](_precedentItems.length + 1);
+        precedents[0] = lastStates[_item];
+        for (uint i = 0; i < _precedentItems.length; i++) {
+            precedents[i + 1] = lastStates[_precedentItems[i]];
         }
 
-        pushStep(
+        pushState(
             _action,
             _item,
             precedents,
             NO_PARTOF,
-            getOperatorRole(_precedentItems[0]),
-            getOwnerRole(_precedentItems[0])
+            getOperatorRole(_item),
+            getOwnerRole(_item)
         );
     }
 
     /**
-     * @notice Create a new supply chain step representing the handover of an item.
+     * @notice Create a new supply chain state representing the handover of an item.
      * In practical terms it is a change in the permissions.
-     * @param _action The index for the step action as defined in the actions array.
+     * @param _action The index for the state action as defined in the actions array.
      * @param _item The item being handed over.
-     * @param _operatorRole The roles allowed to append steps to this one.
-     * @param _ownerRole The roles allowed to append steps with different permissions.
+     * @param _operatorRole The roles allowed to append states to this one.
+     * @param _ownerRole The roles allowed to append states with different permissions.
      */
-    function addHandoverStep
+    function addHandoverState
     (
         uint256 _action,
         uint256 _item,
@@ -459,14 +459,17 @@ contract SupplyChain is RBAC {
     )
         public
     {
-        require(exists(_item), "Item does not exist.");
+        require(isItem(_item), "Item does not exist.");
 
         require(isOwner(msg.sender, _item), "Needs owner for handover.");
 
-        pushStep(
+        uint256[] memory precedents = new uint256[](1);
+        precedents[0] = lastStates[_item];
+
+        pushState(
             _action,
             _item,
-            new uint256[](lastSteps[_item]),
+            precedents,
             NO_PARTOF,
             _operatorRole,
             _ownerRole
@@ -474,15 +477,13 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Create a new supply chain step representing that an item has become a part of
+     * @notice Create a new supply chain state representing that an item has become a part of
      * another item.
-     * @param _action The index for the step action as defined in the actions array.
+     * @param _action The index for the state action as defined in the actions array.
      * @param _item The item being made a part of another.
      * @param _partOf The item id for the item that this one is being made a part of.
-     * TODO: Make this method internal. If called directly there is no guarantee that
-     * steps[_precedent] is in the same chain as _partOf.
      */
-    function addPartOfStep
+    function addPartOfState
     (
         uint256 _action,
         uint256 _item,
@@ -490,34 +491,38 @@ contract SupplyChain is RBAC {
     )
         public
     {
-        require(exists(_item), "Item does not exist.");
+        require(isItem(_item), "Item does not exist.");
 
         require(isOwner(msg.sender, _item), "Needs owner for partOf.");
 
-        require(exists(_partOf), "Composite item does not exist.");
+        require(isItem(_partOf), "Composite item does not exist.");
 
-        // TODO: Require that a step for _item is in of steps[lastSteps[_partOf]].precedents
+        // Require that a state for _item is in of states[lastStates[_partOf]].precedents
+        // TODO: Check for precedent items, not precedent states
         bool isPrecedent = false;
-        uint256[] memory precedents = steps[lastSteps[_partOf]].precedents;
-        for (uint256 i = 0; i < precedents.length; i += 1){
-            if (steps[precedents[i]].item == _item){
+        uint256[] memory partOfprecedents = states[lastStates[_partOf]].precedents;
+        for (uint256 i = 0; i < partOfprecedents.length; i += 1) {
+            if (states[partOfprecedents[i]].item == _item) {
                 isPrecedent = true;
                 break;
             }
         }
         require(isPrecedent, "Item not precedent of partOf.");
 
-        pushStep(
+        uint256[] memory precedents = new uint256[](1);
+        precedents[0] = lastStates[_item];
+
+        pushState(
             _action,
             _item,
-            new uint256[](lastSteps[_item]),
+            precedents,
             _partOf,
             NO_ROLE,
             NO_ROLE
         );
     }
 
-    // TODO: Consider a new supply chain step implying a composition of a new item from others,
-    // creating an Info and a PartOf steps so that the composition is transactional.
+    // TODO: Consider a new supply chain state implying a composition of a new item from others,
+    // creating an Info and a PartOf states so that the composition is transactional.
 
 }
