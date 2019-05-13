@@ -6,23 +6,27 @@ import insigLogo from './insigv1trans.png';
 import './navbar.scss';
 import PortugueseFlag from './portugal.png';
 
-/**
- * Connect to uport
- */
-const uport = new Connect('Soup', {
-    bannerImage: { '/': '/ipfs/QmSu1BvnPGy5gEEe2eHunyNN6vb2Zd4pvaqABbvVHUKP3T' },
-    description: 'Some potatos are better than others.',
-    network: 'ropsten',
-});
+interface INavbarState {
+    uport: any;
+}
 /**
  * Action class
  */
-class Navbar extends Component<{}, {}> {
+class Navbar extends Component<{}, INavbarState> {
     /**
      * @ignore
      */
     constructor(props: any) {
         super(props);
+        // Connect to uport
+        const uport = new Connect('Soup', {
+            bannerImage: { '/': '/ipfs/QmSu1BvnPGy5gEEe2eHunyNN6vb2Zd4pvaqABbvVHUKP3T' },
+            description: 'Some potatos are better than others.',
+            network: 'ropsten',
+        });
+        this.state = {
+            uport,
+        };
     }
 
     /**
@@ -67,6 +71,7 @@ class Navbar extends Component<{}, {}> {
      * Render either a wecome message or a login button
      */
     private printUser() {
+        const { uport } = this.state;
         // load uport status from browser
         uport.loadState();
         const username = uport.state.name;
