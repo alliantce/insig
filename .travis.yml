@@ -19,3 +19,4 @@ install: ./install-dependencies.sh
 
 script:
     - npm run coverage
+    - npm run lint
