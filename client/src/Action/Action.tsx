@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import React, { Component } from 'react';
 
 import { createLogger, format, transports } from 'winston';
@@ -106,9 +107,9 @@ class Action extends Component<{}, IActionState> {
     private async loadActions() {
         const { supplyChain } = this.state;
         const actionsName: string[] = [];
-        const totalActions = await supplyChain.totalActions();
+        const totalActions = (await supplyChain.totalActions()).toNumber();
         for (let a = 1; a <= totalActions; a += 1) {
-            actionsName.push(await supplyChain.actionDescription(a));
+            actionsName.push(await supplyChain.actionDescription(new BigNumber(a)));
         }
         return actionsName;
     }

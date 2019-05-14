@@ -48,6 +48,7 @@ class Navbar extends Component<{}, INavbarState> {
                         <a className="navbar-item" href="/">Home</a>
                         <a className="navbar-item" href="/action">Action</a>
                         <a className="navbar-item" href="/createstate">Create State</a>
+                        <a className="navbar-item" href="/roles">Roles</a>
                     </div>
                     {/* add welcome or login on right side */}
                     <div className="navbar-end">

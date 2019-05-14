@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
+import { UPortButton } from 'rimble-ui';
 import { Connect } from 'uport-connect';
 
-import { createLogger, format, transports } from 'winston';
 import '../main.scss';
 import './auth.scss';
 import insigLogo from './insigv1trans.png';
@@ -17,19 +17,6 @@ const uport = new Connect('Soup', {
     network: 'ropsten',
 });
 
-/**
- * Setting up a logger.
- */
-const logger = createLogger({
-    format: format.combine(
-        format.timestamp(),
-        format.json(),
-    ),
-    level: 'debug',
-    transports: [
-        new transports.Console(),
-    ],
-});
 /**
  * Define class interface
  */
@@ -82,7 +69,7 @@ class Auth extends Component<{}, IAuthState> {
     public render() {
         const { logged } = this.state;
         const centerStyle: any = {
-            'text-align': 'center',
+            textAlign: 'center',
         };
         let button;
         if (logged) {
@@ -90,9 +77,7 @@ class Auth extends Component<{}, IAuthState> {
                 Logout
             </button>);
         } else {
-            button = (<button className="button is-primary is-large" onClick={this.handleLogin} hidden={logged}>
-                Login
-            </button>);
+            button = (<UPortButton.Solid onClick={this.handleLogin}>Connect with uPort</UPortButton.Solid>);
         }
         return (
             <div>
