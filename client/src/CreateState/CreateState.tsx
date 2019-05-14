@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import React, { Component } from 'react';
 import { Sankey } from 'react-vis';
 import Energy from './energy.json';
@@ -37,7 +38,7 @@ interface ICreateState extends IBlockchainState {
     precedents: string;
     item: string;
     activeLink: object;
-    listActions: string [];
+    listActions: string[];
     supplyChain: ISupplyChain;
 }
 class CreateState extends Component<{}, ICreateState> {
@@ -67,7 +68,7 @@ class CreateState extends Component<{}, ICreateState> {
                     userAccount: generic.userAccount,
                     web3: generic.web3,
                 });
-                this.loadActions().then((actionsName) => this.setState({listActions: actionsName}));
+                this.loadActions().then((actionsName) => this.setState({ listActions: actionsName }));
             });
         });
         logger.info('[END] componentDidMount');
@@ -139,7 +140,22 @@ class CreateState extends Component<{}, ICreateState> {
             <div>
                 <Navbar />
                 <main>
-                    <form onSubmit={this.handleSubmit}>
+                <form name="rootState" onSubmit={this.handleSubmit}>
+                        <legend>Add root state</legend>
+                        <select name={DOMNames.action} value={action} onChange={this.handleChange}>
+                            <option value="default" disabled={true}>Action</option>
+                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                        <select name={DOMNames.precedents} value={precedents} onChange={this.handleChange}>
+                            <option value="default" disabled={true}>Precedents</option>
+                        </select>
+                        <select name={DOMNames.item} value={item} onChange={this.handleChange}>
+                            <option value="default" disabled={true}>Item</option>
+                        </select>
+                        <input type="submit" />
+                    </form>
+                    <form name="state" onSubmit={this.handleSubmit}>
+                        <legend>Add state</legend>
                         <select name={DOMNames.action} value={action} onChange={this.handleChange}>
                             <option value="default" disabled={true}>Action</option>
                             {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
@@ -161,9 +177,9 @@ class CreateState extends Component<{}, ICreateState> {
     private async loadActions() {
         const { supplyChain } = this.state;
         const actionsName: string[] = [];
-        const totalActions = await supplyChain.totalActions();
+        const totalActions = (await supplyChain.totalActions()).toNumber();
         for (let a = 1; a <= totalActions; a += 1) {
-            actionsName.push(await supplyChain.actionDescription(a));
+            actionsName.push(await supplyChain.actionDescription(new BigNumber(a)));
         }
         return actionsName;
     }
