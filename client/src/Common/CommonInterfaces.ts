@@ -37,7 +37,7 @@ export interface ISupplyChain extends ITruffleContract {
         partOf: BigNumber,
         operatorRole: BigNumber,
         ownerRole: BigNumber,
-    ) => void;
+    ) => Promise<void>;
 }
 
 /**
@@ -49,6 +49,6 @@ export interface IRBAC extends ITruffleContract {
     addRole: (roleDescription: string, admin: BigNumber) => Promise<BigNumber>;
     totalRoles: () => Promise<BigNumber>;
     hasRole: (account: string, role: BigNumber) => Promise<boolean>;
-    addBearer: (account: string, role: BigNumber) => void;
-    removeBearer: (account: string, role: BigNumber) => void;
+    addBearer: (account: string, role: BigNumber) => Promise<void>;
+    removeBearer: (account: string, role: BigNumber) => Promise<void>;
 }
