@@ -39,13 +39,38 @@ export interface ISupplyChain extends ITruffleContract {
         ownerRole: BigNumber,
         options: object,
     ) => Promise<void>;
+    addRootState: (
+        action: BigNumber,
+        operatorRole: BigNumber,
+        ownerRole: BigNumber,
+        options: object,
+    ) => Promise<void>;
+    addInfoState: (
+        action: BigNumber,
+        item: BigNumber,
+        precedentItems: BigNumber[],
+        options: object,
+    ) => Promise<void>;
+    addHandoverState: (
+        action: BigNumber,
+        item: BigNumber,
+        operatorRole: BigNumber,
+        ownerRole: BigNumber,
+        options: object,
+    ) => Promise<void>;
+    addPartOfState: (
+        action: BigNumber,
+        item: BigNumber,
+        partOf: BigNumber,
+        options: object,
+    ) => Promise<void>;
 }
 
 /**
  * RBAC contract interface definition
  */
 export interface IRBAC extends ITruffleContract {
-    roles: (roleId: BigNumber) => Promise<{description: string, admin: BigNumber, bearers: string[]}>;
+    roles: (roleId: BigNumber) => Promise<{ description: string, admin: BigNumber, bearers: string[] }>;
     addRootRole: (roleDescription: string, options: object) => Promise<BigNumber>;
     addRole: (roleDescription: string, admin: BigNumber, options: object) => Promise<BigNumber>;
     totalRoles: () => Promise<BigNumber>;
