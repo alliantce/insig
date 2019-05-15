@@ -43,8 +43,8 @@ class Roles extends Component<{}, IRolesState> {
         super(props);
         this.state = {
             addBearerAddress: '',
-            currentTab: '',
             bearerRole: 'default',
+            currentTab: '',
             rbac: undefined as any,
             removeBearerAddress: '',
             roleAdmin: '',

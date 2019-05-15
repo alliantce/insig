@@ -3,7 +3,6 @@ import React, { Component } from 'react';
 import { Sankey } from 'react-vis';
 import Energy from './energy.json';
 
-import { createLogger, format, transports } from 'winston';
 import BlockchainGeneric from '../Common/BlockchainGeneric';
 import { IBlockchainState, ISupplyChain } from '../Common/CommonInterfaces';
 import '../main.scss';
@@ -11,45 +10,45 @@ import './addstate.scss';
 
 import Navbar from '../Components/Navbar/Navbar';
 
-/**
- * Setting up a logger.
- */
-const logger = createLogger({
-    format: format.combine(
-        format.timestamp(),
-        format.json(),
-    ),
-    level: 'debug',
-    transports: [
-        new transports.Console(),
-    ],
-});
 // graphic variables
 const BLURRED_LINK_OPACITY = 0.3;
 const FOCUSED_LINK_OPACITY = 1;
 // dom controller names
 enum DOMNames {
-    action = 'action',
-    precedents = 'precedents',
-    item = 'item',
+    infoStateForm = 'infoStateForm',
+    infoStateAction = 'infoStateAction',
+    infoStatePrecedents = 'infoStatePrecedents',
+    infoStateItem = 'infoStateItem',
+    rootStateForm = 'rootStateForm',
+    rootStateAction = 'rootStateAction',
+    rootStateOperatorRole = 'rootStateOperatorRole',
+    rootStateOwnerRole = 'rootStateOwnerRole',
 }
 interface IAddState extends IBlockchainState {
-    action: string;
-    precedents: string;
-    item: string;
+    infoStateAction: string;
+    infoStatePrecedents: string;
+    infoStateItem: string;
     activeLink: object;
     listActions: string[];
     supplyChain: ISupplyChain;
+    currentTab: string;
+    rootStateAction: string;
+    rootStateOperatorRole: string;
+    rootStateOwnerRole: string;
 }
 class AddState extends Component<{}, IAddState> {
     constructor(props: any) {
         super(props);
         this.state = {
-            action: 'default',
             activeLink: null as any,
-            item: 'default',
+            currentTab: '',
+            infoStateAction: 'default',
+            infoStateItem: 'default',
+            infoStatePrecedents: 'default',
             listActions: [],
-            precedents: 'default',
+            rootStateAction: 'default',
+            rootStateOperatorRole: 'default',
+            rootStateOwnerRole: 'default',
             supplyChain: undefined as any,
             userAccount: undefined as any,
             web3: undefined as any,
@@ -60,7 +59,6 @@ class AddState extends Component<{}, IAddState> {
      * @ignore
      */
     public componentDidMount() {
-        logger.info('[START] componentDidMount');
         BlockchainGeneric.onLoad().then((generic) => {
             BlockchainGeneric.loadSupplyChain(generic.web3).then((contracts) => {
                 this.setState({
@@ -71,26 +69,113 @@ class AddState extends Component<{}, IAddState> {
                 this.loadActions().then((actionsName) => this.setState({ listActions: actionsName }));
             });
         });
-        logger.info('[END] componentDidMount');
     }
 
     public handleChange = (event: any) => {
-        if (event.target.name === DOMNames.action) {
-            this.setState({ action: event.target.value });
-        } else if (event.target.name === DOMNames.precedents) {
-            this.setState({ precedents: event.target.value });
-        } else if (event.target.name === DOMNames.item) {
-            this.setState({ item: event.target.value });
+        if (event.target.name === DOMNames.infoStateAction) {
+            this.setState({ infoStateAction: event.target.value });
+        } else if (event.target.name === DOMNames.infoStatePrecedents) {
+            this.setState({ infoStatePrecedents: event.target.value });
+        } else if (event.target.name === DOMNames.infoStateItem) {
+            this.setState({ infoStateItem: event.target.value });
         }
     }
 
     public handleSubmit = (event: any) => {
-        const { precedents } = this.state;
-        alert('A name was submitted: ' + precedents);
+        const { infoStatePrecedents } = this.state;
+        alert('A name was submitted: ' + infoStatePrecedents);
         event.preventDefault();
     }
 
-    public drawGraph() {
+    public handleChangeTab = (event: any) => {
+        this.setState({ currentTab: event.currentTarget.dataset.id });
+        event.preventDefault();
+    }
+
+    public render() {
+        return (
+            <div>
+                <Navbar />
+                <aside className="menu">
+                    <p className="menu-label">
+                        General
+                    </p>
+                    <ul className="menu-list">
+                        <li data-id={DOMNames.rootStateForm} onClick={this.handleChangeTab}><a>Add root state</a></li>
+                        <li data-id={DOMNames.infoStateForm} onClick={this.handleChangeTab}><a>Add state</a></li>
+                    </ul>
+                </aside>
+                <main>
+                    {this.renderTabContent()}
+                </main>
+            </div>
+        );
+    }
+
+    private renderTabContent = () => {
+        const {
+            infoStateAction,
+            infoStatePrecedents,
+            infoStateItem,
+            listActions,
+            currentTab,
+            rootStateAction,
+            rootStateOperatorRole,
+            rootStateOwnerRole,
+        } = this.state;
+
+        return (
+            <div>
+                <div hidden={currentTab !== DOMNames.rootStateForm}>
+                    <form name={DOMNames.rootStateForm} onSubmit={this.handleSubmit}>
+                        <legend>Add root state</legend>
+                        <select name={DOMNames.rootStateAction} value={rootStateAction} onChange={this.handleChange}>
+                            <option value="default" disabled={true}>Action</option>
+                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                        <select
+                            name={DOMNames.rootStateOperatorRole}
+                            value={rootStateOperatorRole}
+                            onChange={this.handleChange}
+                        >
+                            <option value="default" disabled={true}>Operator Role</option>
+                        </select>
+                        <select
+                            name={DOMNames.rootStateOwnerRole}
+                            value={rootStateOwnerRole}
+                            onChange={this.handleChange}
+                        >
+                            <option value="default" disabled={true}>Owner Role</option>
+                        </select>
+                        <input type="submit" />
+                    </form>
+                </div>
+                <div hidden={currentTab !== DOMNames.infoStateForm}>
+                    <form name={DOMNames.infoStateForm} onSubmit={this.handleSubmit}>
+                        <legend>Add state</legend>
+                        <select name={DOMNames.infoStateAction} value={infoStateAction} onChange={this.handleChange}>
+                            <option value="default" disabled={true}>Action</option>
+                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                        <select
+                            name={DOMNames.infoStatePrecedents}
+                            value={infoStatePrecedents}
+                            onChange={this.handleChange}
+                        >
+                            <option value="default" disabled={true}>Precedents</option>
+                        </select>
+                        <select name={DOMNames.infoStateItem} value={infoStateItem} onChange={this.handleChange}>
+                            <option value="default" disabled={true}>Item</option>
+                        </select>
+                        <input type="submit" />
+                    </form>
+                </div>
+                {this.drawGraph()}
+            </div>
+        );
+    }
+
+    private drawGraph() {
         const nodes = Energy.nodes;
         const links = Energy.links;
         const { activeLink } = this.state;
@@ -131,46 +216,6 @@ class AddState extends Component<{}, IAddState> {
                 // tslint:disable-next-line:jsx-no-lambda
                 onLinkMouseOut={() => this.setState({ activeLink: null as any })}
             />
-        );
-    }
-
-    public render() {
-        const { action, precedents, item, listActions } = this.state;
-        return (
-            <div>
-                <Navbar />
-                <main>
-                <form name="rootState" onSubmit={this.handleSubmit}>
-                        <legend>Add root state</legend>
-                        <select name={DOMNames.action} value={action} onChange={this.handleChange}>
-                            <option value="default" disabled={true}>Action</option>
-                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
-                        </select>
-                        <select name={DOMNames.precedents} value={precedents} onChange={this.handleChange}>
-                            <option value="default" disabled={true}>Precedents</option>
-                        </select>
-                        <select name={DOMNames.item} value={item} onChange={this.handleChange}>
-                            <option value="default" disabled={true}>Item</option>
-                        </select>
-                        <input type="submit" />
-                    </form>
-                    <form name="state" onSubmit={this.handleSubmit}>
-                        <legend>Add state</legend>
-                        <select name={DOMNames.action} value={action} onChange={this.handleChange}>
-                            <option value="default" disabled={true}>Action</option>
-                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
-                        </select>
-                        <select name={DOMNames.precedents} value={precedents} onChange={this.handleChange}>
-                            <option value="default" disabled={true}>Precedents</option>
-                        </select>
-                        <select name={DOMNames.item} value={item} onChange={this.handleChange}>
-                            <option value="default" disabled={true}>Item</option>
-                        </select>
-                        <input type="submit" />
-                    </form>
-                    {this.drawGraph()}
-                </main>
-            </div>
         );
     }
 
