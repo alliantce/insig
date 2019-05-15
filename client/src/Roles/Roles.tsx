@@ -16,9 +16,9 @@ enum DOMNames {
     newRootRoleForm = 'newRootRoleForm',
     newRootRoleTile = 'newRootRoleTile',
     addBearerForm = 'addBearerForm',
-    addBearerName = 'addBearerName',
+    addBearerAddress = 'addBearerAddress',
     removeBearerForm = 'removeBearerForm',
-    removeBearerName = 'removeBearerName',
+    removeBearerAddress = 'removeBearerAddress',
     bearerRole = 'bearerRole',
 }
 /**
@@ -30,8 +30,8 @@ interface IRolesState extends IBlockchainState {
     roleTitle: string;
     roleAdmin: string;
     rolesList: Array<{ description: string, index: number }>;
-    addBearerName: string;
-    removeBearerName: string;
+    addBearerAddress: string;
+    removeBearerAddress: string;
     bearerRole: string;
     currentTab: string;
 }
@@ -42,11 +42,11 @@ class Roles extends Component<{}, IRolesState> {
     constructor(props: any) {
         super(props);
         this.state = {
-            addBearerName: '',
+            addBearerAddress: '',
             currentTab: '',
             bearerRole: 'default',
             rbac: undefined as any,
-            removeBearerName: '',
+            removeBearerAddress: '',
             roleAdmin: '',
             roleTitle: '',
             rolesList: [],
@@ -76,34 +76,36 @@ class Roles extends Component<{}, IRolesState> {
             this.setState({ roleTitle: event.target.value });
         } else if (event.target.name === DOMNames.newRootRoleTile) {
             this.setState({ rootRoleTile: event.target.value });
-        } else if (event.target.name === DOMNames.addBearerName) {
-            this.setState({ addBearerName: event.target.value });
-        } else if (event.target.name === DOMNames.removeBearerName) {
-            this.setState({ removeBearerName: event.target.value });
+        } else if (event.target.name === DOMNames.addBearerAddress) {
+            this.setState({ addBearerAddress: event.target.value });
+        } else if (event.target.name === DOMNames.removeBearerAddress) {
+            this.setState({ removeBearerAddress: event.target.value });
         } else if (event.target.name === DOMNames.bearerRole) {
             this.setState({ bearerRole: event.target.value });
+        } else if (event.target.name === DOMNames.newRoleAdmin) {
+            this.setState({ roleAdmin: event.target.value });
         }
     }
 
     public handleSubmit = (event: any) => {
-        const { rbac } = this.state;
+        const { rbac, userAccount } = this.state;
         const formName = event.target.name;
         if (formName === DOMNames.newRoleForm) {
             const { roleAdmin, roleTitle } = this.state;
-            rbac.addRole(roleTitle, new BigNumber(roleAdmin)).then(() => {
+            rbac.addRole(roleTitle, new BigNumber(roleAdmin), { from: userAccount }).then(() => {
                 // refresh page
             });
         } else if (formName === DOMNames.newRootRoleForm) {
             const { rootRoleTile } = this.state;
-            rbac.addRootRole(rootRoleTile).then(() => {
+            rbac.addRootRole(rootRoleTile, { from: userAccount }).then(() => {
                 // refresh page
             });
         } else if (formName === DOMNames.addBearerForm) {
-            const { addBearerName, bearerRole } = this.state;
-            rbac.addBearer(addBearerName, new BigNumber(bearerRole));
+            const { addBearerAddress, bearerRole } = this.state;
+            rbac.addBearer(addBearerAddress, new BigNumber(bearerRole), { from: userAccount });
         } else if (formName === DOMNames.removeBearerForm) {
-            const { removeBearerName, bearerRole } = this.state;
-            rbac.removeBearer(removeBearerName, new BigNumber(bearerRole));
+            const { removeBearerAddress, bearerRole } = this.state;
+            rbac.removeBearer(removeBearerAddress, new BigNumber(bearerRole), { from: userAccount });
         }
         event.preventDefault();
     }
@@ -138,7 +140,14 @@ class Roles extends Component<{}, IRolesState> {
 
     private renderTabContent() {
         const {
-            currentTab, rootRoleTile, roleAdmin, roleTitle, addBearerName, rolesList, bearerRole, removeBearerName,
+            currentTab,
+            rootRoleTile,
+            roleAdmin,
+            roleTitle,
+            addBearerAddress,
+            rolesList,
+            bearerRole,
+            removeBearerAddress,
         } = this.state;
         return (<div>
             <div hidden={currentTab !== DOMNames.newRootRoleForm}>
@@ -187,8 +196,8 @@ class Roles extends Component<{}, IRolesState> {
                         className="input"
                         type="text"
                         placeholder="Bearer name"
-                        name={DOMNames.addBearerName}
-                        value={addBearerName}
+                        name={DOMNames.addBearerAddress}
+                        value={addBearerAddress}
                         onChange={this.handleChange}
                     />
                     <br />
@@ -207,8 +216,8 @@ class Roles extends Component<{}, IRolesState> {
                         className="input"
                         type="text"
                         placeholder="Bearer name"
-                        name={DOMNames.removeBearerName}
-                        value={removeBearerName}
+                        name={DOMNames.removeBearerAddress}
+                        value={removeBearerAddress}
                         onChange={this.handleChange}
                     />
                     <br />
@@ -234,7 +243,7 @@ class Roles extends Component<{}, IRolesState> {
         }
         const totalRoles = await rbac.totalRoles();
         const roles: Array<{ description: string, index: number }> = [];
-        for (let r = 0; r < totalRoles.toNumber(); r += 1) {
+        for (let r = 1; r <= totalRoles.toNumber(); r += 1) {
             roles.push({ description: (await rbac.roles(new BigNumber(r))).description, index: r });
         }
         this.setState({ rolesList: roles });
