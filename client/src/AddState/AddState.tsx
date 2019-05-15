@@ -7,7 +7,7 @@ import { createLogger, format, transports } from 'winston';
 import BlockchainGeneric from '../Common/BlockchainGeneric';
 import { IBlockchainState, ISupplyChain } from '../Common/CommonInterfaces';
 import '../main.scss';
-import './createstate.scss';
+import './addstate.scss';
 
 import Navbar from '../Components/Navbar/Navbar';
 
@@ -33,7 +33,7 @@ enum DOMNames {
     precedents = 'precedents',
     item = 'item',
 }
-interface ICreateState extends IBlockchainState {
+interface IAddState extends IBlockchainState {
     action: string;
     precedents: string;
     item: string;
@@ -41,7 +41,7 @@ interface ICreateState extends IBlockchainState {
     listActions: string[];
     supplyChain: ISupplyChain;
 }
-class CreateState extends Component<{}, ICreateState> {
+class AddState extends Component<{}, IAddState> {
     constructor(props: any) {
         super(props);
         this.state = {
@@ -185,4 +185,4 @@ class CreateState extends Component<{}, ICreateState> {
     }
 }
 
-export default CreateState;
+export default AddState;
