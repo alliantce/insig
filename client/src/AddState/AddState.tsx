@@ -15,19 +15,29 @@ const BLURRED_LINK_OPACITY = 0.3;
 const FOCUSED_LINK_OPACITY = 1;
 // dom controller names
 enum DOMNames {
-    infoStateForm = 'infoStateForm',
-    infoStateAction = 'infoStateAction',
-    infoStatePrecedents = 'infoStatePrecedents',
-    infoStateItem = 'infoStateItem',
+    // root
     rootStateForm = 'rootStateForm',
     rootStateAction = 'rootStateAction',
     rootStateOperatorRole = 'rootStateOperatorRole',
     rootStateOwnerRole = 'rootStateOwnerRole',
+    // info
+    infoStateForm = 'infoStateForm',
+    infoStateAction = 'infoStateAction',
+    infoStatePrecedents = 'infoStatePrecedents',
+    infoStateItem = 'infoStateItem',
+    // handover
+    handoverStateForm = 'handoverStateForm',
+    handoverStateAction = 'handoverStateAction',
+    handoverStateItem = 'handoverStateItem',
+    handoverStateOperatorRole = 'handoverStateOperatorRole',
+    handoverStateOwnerRole = 'handoverStateOwnerRole',
+    // partof
+    parteOfStateForm = 'parteOfStateForm',
+    parteOfStateAction = 'parteOfStateAction',
+    parteOfStateItem = 'parteOfStateItem',
+    parteOfStateParteOf = 'parteOfStateParteOf',
 }
 interface IAddState extends IBlockchainState {
-    infoStateAction: string;
-    infoStatePrecedents: string;
-    infoStateItem: string;
     activeLink: object;
     listActions: string[];
     supplyChain: ISupplyChain;
@@ -35,6 +45,16 @@ interface IAddState extends IBlockchainState {
     rootStateAction: string;
     rootStateOperatorRole: string;
     rootStateOwnerRole: string;
+    infoStateAction: string;
+    infoStatePrecedents: string;
+    infoStateItem: string;
+    handoverStateAction: string;
+    handoverStateItem: string;
+    handoverStateOperatorRole: string;
+    handoverStateOwnerRole: string;
+    parteOfStateAction: string;
+    parteOfStateItem: string;
+    parteOfStateParteOf: string;
 }
 class AddState extends Component<{}, IAddState> {
     constructor(props: any) {
@@ -42,10 +62,17 @@ class AddState extends Component<{}, IAddState> {
         this.state = {
             activeLink: null as any,
             currentTab: '',
+            handoverStateAction: 'default',
+            handoverStateItem: 'default',
+            handoverStateOperatorRole: 'default',
+            handoverStateOwnerRole: 'default',
             infoStateAction: 'default',
             infoStateItem: 'default',
             infoStatePrecedents: 'default',
             listActions: [],
+            parteOfStateAction: 'default',
+            parteOfStateItem: 'default',
+            parteOfStateParteOf: 'default',
             rootStateAction: 'default',
             rootStateOperatorRole: 'default',
             rootStateOwnerRole: 'default',
@@ -72,12 +99,41 @@ class AddState extends Component<{}, IAddState> {
     }
 
     public handleChange = (event: any) => {
-        if (event.target.name === DOMNames.infoStateAction) {
-            this.setState({ infoStateAction: event.target.value });
-        } else if (event.target.name === DOMNames.infoStatePrecedents) {
-            this.setState({ infoStatePrecedents: event.target.value });
-        } else if (event.target.name === DOMNames.infoStateItem) {
-            this.setState({ infoStateItem: event.target.value });
+        const { currentTab } = this.state;
+        if (currentTab === DOMNames.rootStateForm) {
+            if (event.target.name === DOMNames.rootStateAction) {
+                this.setState({ rootStateAction: event.target.value });
+            } else if (event.target.name === DOMNames.rootStateOperatorRole) {
+                this.setState({ rootStateOperatorRole: event.target.value });
+            } else if (event.target.name === DOMNames.rootStateOwnerRole) {
+                this.setState({ rootStateOwnerRole: event.target.value });
+            }
+        } else if (currentTab === DOMNames.infoStateForm) {
+            if (event.target.name === DOMNames.infoStateAction) {
+                this.setState({ infoStateAction: event.target.value });
+            } else if (event.target.name === DOMNames.infoStatePrecedents) {
+                this.setState({ infoStatePrecedents: event.target.value });
+            } else if (event.target.name === DOMNames.infoStateItem) {
+                this.setState({ infoStateItem: event.target.value });
+            }
+        } else if (currentTab === DOMNames.handoverStateForm) {
+            if (event.target.name === DOMNames.handoverStateAction) {
+                this.setState({ handoverStateAction: event.target.value });
+            } else if (event.target.name === DOMNames.handoverStateItem) {
+                this.setState({ handoverStateItem: event.target.value });
+            } else if (event.target.name === DOMNames.handoverStateOperatorRole) {
+                this.setState({ handoverStateOperatorRole: event.target.value });
+            } else if (event.target.name === DOMNames.handoverStateOwnerRole) {
+                this.setState({ handoverStateOwnerRole: event.target.value });
+            }
+        } else if (currentTab === DOMNames.parteOfStateForm) {
+            if (event.target.name === DOMNames.parteOfStateAction) {
+                this.setState({ parteOfStateAction: event.target.value });
+            } else if (event.target.name === DOMNames.parteOfStateItem) {
+                this.setState({ parteOfStateItem: event.target.value });
+            } else if (event.target.name === DOMNames.parteOfStateParteOf) {
+                this.setState({ parteOfStateParteOf: event.target.value });
+            }
         }
     }
 
@@ -101,8 +157,18 @@ class AddState extends Component<{}, IAddState> {
                         General
                     </p>
                     <ul className="menu-list">
-                        <li data-id={DOMNames.rootStateForm} onClick={this.handleChangeTab}><a>Add root state</a></li>
-                        <li data-id={DOMNames.infoStateForm} onClick={this.handleChangeTab}><a>Add state</a></li>
+                        <li data-id={DOMNames.rootStateForm} onClick={this.handleChangeTab}>
+                            <a>Add root state</a>
+                        </li>
+                        <li data-id={DOMNames.infoStateForm} onClick={this.handleChangeTab}>
+                            <a>Add state</a>
+                        </li>
+                        <li data-id={DOMNames.handoverStateForm} onClick={this.handleChangeTab}>
+                            <a>Handover state</a>
+                        </li>
+                        <li data-id={DOMNames.parteOfStateForm} onClick={this.handleChangeTab}>
+                            <a>Handover state</a>
+                        </li>
                     </ul>
                 </aside>
                 <main>
@@ -114,14 +180,21 @@ class AddState extends Component<{}, IAddState> {
 
     private renderTabContent = () => {
         const {
-            infoStateAction,
-            infoStatePrecedents,
-            infoStateItem,
             listActions,
             currentTab,
             rootStateAction,
             rootStateOperatorRole,
             rootStateOwnerRole,
+            infoStateAction,
+            infoStatePrecedents,
+            infoStateItem,
+            handoverStateAction,
+            handoverStateItem,
+            handoverStateOperatorRole,
+            handoverStateOwnerRole,
+            parteOfStateAction,
+            parteOfStateItem,
+            parteOfStateParteOf,
         } = this.state;
 
         return (
@@ -167,6 +240,72 @@ class AddState extends Component<{}, IAddState> {
                         <select name={DOMNames.infoStateItem} value={infoStateItem} onChange={this.handleChange}>
                             <option value="default" disabled={true}>Item</option>
                         </select>
+                        <input type="submit" />
+                    </form>
+                </div>
+                <div hidden={currentTab !== DOMNames.handoverStateForm}>
+                    <form name={DOMNames.handoverStateForm} onSubmit={this.handleSubmit}>
+                        <legend>Handover state</legend>
+                        <select
+                            name={DOMNames.handoverStateAction}
+                            value={handoverStateAction}
+                            onChange={this.handleChange}
+                        >
+                            <option value="default" disabled={true}>Action</option>
+                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                        <select
+                            name={DOMNames.handoverStateItem}
+                            value={handoverStateItem}
+                            onChange={this.handleChange}
+                        >
+                            <option value="default" disabled={true}>Item</option>
+                        </select>
+                        <input
+                            className="input"
+                            type="text"
+                            placeholder="operator role"
+                            name={DOMNames.handoverStateOperatorRole}
+                            value={handoverStateOperatorRole}
+                            onChange={this.handleChange}
+                        />
+                        <input
+                            className="input"
+                            type="text"
+                            placeholder="owner role"
+                            name={DOMNames.handoverStateOwnerRole}
+                            value={handoverStateOwnerRole}
+                            onChange={this.handleChange}
+                        />
+                        <input type="submit" />
+                    </form>
+                </div>
+                <div hidden={currentTab !== DOMNames.parteOfStateForm}>
+                    <form name={DOMNames.parteOfStateForm} onSubmit={this.handleSubmit}>
+                        <legend>ParteOf state</legend>
+                        <select
+                            name={DOMNames.parteOfStateAction}
+                            value={parteOfStateAction}
+                            onChange={this.handleChange}
+                        >
+                            <option value="default" disabled={true}>Action</option>
+                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                        <select
+                            name={DOMNames.parteOfStateItem}
+                            value={parteOfStateItem}
+                            onChange={this.handleChange}
+                        >
+                            <option value="default" disabled={true}>Item</option>
+                        </select>
+                        <input
+                            className="input"
+                            type="text"
+                            placeholder="parte of"
+                            name={DOMNames.parteOfStateParteOf}
+                            value={parteOfStateParteOf}
+                            onChange={this.handleChange}
+                        />
                         <input type="submit" />
                     </form>
                 </div>
