@@ -4,7 +4,7 @@ import { Sankey } from 'react-vis';
 import Energy from './energy.json';
 
 import BlockchainGeneric from '../Common/BlockchainGeneric';
-import { IBlockchainState, ISupplyChain } from '../Common/CommonInterfaces';
+import { IBlockchainState, IRBAC, ISupplyChain } from '../Common/CommonInterfaces';
 import '../main.scss';
 import './addstate.scss';
 
@@ -55,6 +55,8 @@ interface IAddState extends IBlockchainState {
     parteOfStateAction: string;
     parteOfStateItem: string;
     parteOfStateParteOf: string;
+    rolesList: Array<{ description: string, index: number }>;
+    rbac: IRBAC;
 }
 class AddState extends Component<{}, IAddState> {
     constructor(props: any) {
@@ -63,16 +65,18 @@ class AddState extends Component<{}, IAddState> {
             activeLink: null as any,
             currentTab: '',
             handoverStateAction: 'default',
-            handoverStateItem: 'default',
+            handoverStateItem: '',
             handoverStateOperatorRole: 'default',
             handoverStateOwnerRole: 'default',
             infoStateAction: 'default',
-            infoStateItem: 'default',
-            infoStatePrecedents: 'default',
+            infoStateItem: '',
+            infoStatePrecedents: '',
             listActions: [],
             parteOfStateAction: 'default',
-            parteOfStateItem: 'default',
-            parteOfStateParteOf: 'default',
+            parteOfStateItem: '',
+            parteOfStateParteOf: '',
+            rbac: undefined as any,
+            rolesList: [],
             rootStateAction: 'default',
             rootStateOperatorRole: 'default',
             rootStateOwnerRole: 'default',
@@ -94,6 +98,11 @@ class AddState extends Component<{}, IAddState> {
                     web3: generic.web3,
                 });
                 this.loadActions().then((actionsName) => this.setState({ listActions: actionsName }));
+            });
+            BlockchainGeneric.loadRBAC(generic.web3).then(async (contracts) => {
+                this.setState({
+                    rbac: contracts.rbac,
+                }, this.loadRoles);
             });
         });
     }
@@ -167,7 +176,7 @@ class AddState extends Component<{}, IAddState> {
                             <a>Handover state</a>
                         </li>
                         <li data-id={DOMNames.parteOfStateForm} onClick={this.handleChangeTab}>
-                            <a>Handover state</a>
+                            <a>Parte Of state</a>
                         </li>
                     </ul>
                 </aside>
@@ -195,118 +204,166 @@ class AddState extends Component<{}, IAddState> {
             parteOfStateAction,
             parteOfStateItem,
             parteOfStateParteOf,
+            rolesList,
         } = this.state;
 
         return (
             <div>
-                <div hidden={currentTab !== DOMNames.rootStateForm}>
+                <div className="tabContent" hidden={currentTab !== DOMNames.rootStateForm}>
                     <form name={DOMNames.rootStateForm} onSubmit={this.handleSubmit}>
                         <legend>Add root state</legend>
-                        <select name={DOMNames.rootStateAction} value={rootStateAction} onChange={this.handleChange}>
-                            <option value="default" disabled={true}>Action</option>
-                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
-                        </select>
-                        <select
-                            name={DOMNames.rootStateOperatorRole}
-                            value={rootStateOperatorRole}
-                            onChange={this.handleChange}
-                        >
-                            <option value="default" disabled={true}>Operator Role</option>
-                        </select>
-                        <select
-                            name={DOMNames.rootStateOwnerRole}
-                            value={rootStateOwnerRole}
-                            onChange={this.handleChange}
-                        >
-                            <option value="default" disabled={true}>Owner Role</option>
-                        </select>
-                        <input type="submit" />
+                        <div className="select">
+                            <select
+                                name={DOMNames.rootStateAction}
+                                value={rootStateAction}
+                                onChange={this.handleChange}
+                            >
+                                <option value="default" disabled={true}>Action</option>
+                                {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                            </select>
+                        </div>
+                        <br />
+                        <div className="select">
+                            <select
+                                name={DOMNames.rootStateOperatorRole}
+                                value={rootStateOperatorRole}
+                                onChange={this.handleChange}
+                            >
+                                <option value="default" disabled={true}>Operator Role</option>
+                                {rolesList.map((r) => <option key={r.index} value={r.index}>{r.description}</option>)}
+                            </select>
+                        </div>
+                        <br />
+                        <div className="select">
+                            <select
+                                name={DOMNames.rootStateOwnerRole}
+                                value={rootStateOwnerRole}
+                                onChange={this.handleChange}
+                            >
+                                <option value="default" disabled={true}>Owner Role</option>
+                                {rolesList.map((r) => <option key={r.index} value={r.index}>{r.description}</option>)}
+                            </select>
+                        </div>
+                        <br />
+                        <input className="button is-primary" type="submit" />
                     </form>
                 </div>
-                <div hidden={currentTab !== DOMNames.infoStateForm}>
+                <div className="tabContent" hidden={currentTab !== DOMNames.infoStateForm}>
                     <form name={DOMNames.infoStateForm} onSubmit={this.handleSubmit}>
                         <legend>Add state</legend>
-                        <select name={DOMNames.infoStateAction} value={infoStateAction} onChange={this.handleChange}>
-                            <option value="default" disabled={true}>Action</option>
-                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
-                        </select>
-                        <select
+                        <div className="select">
+                            <select
+                                name={DOMNames.infoStateAction}
+                                value={infoStateAction}
+                                onChange={this.handleChange}
+                            >
+                                <option value="default" disabled={true}>Action</option>
+                                {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                            </select>
+                        </div>
+                        <br />
+                        <input
+                            className="input"
+                            type="text"
+                            placeholder="Precedents"
                             name={DOMNames.infoStatePrecedents}
                             value={infoStatePrecedents}
                             onChange={this.handleChange}
-                        >
-                            <option value="default" disabled={true}>Precedents</option>
-                        </select>
-                        <select name={DOMNames.infoStateItem} value={infoStateItem} onChange={this.handleChange}>
-                            <option value="default" disabled={true}>Item</option>
-                        </select>
-                        <input type="submit" />
+                        />
+                        <br />
+                        <input
+                            className="input"
+                            type="text"
+                            placeholder="Item"
+                            name={DOMNames.infoStateItem}
+                            value={infoStateItem}
+                            onChange={this.handleChange}
+                        />
+                        <br />
+                        <input className="button is-primary" type="submit" />
                     </form>
                 </div>
-                <div hidden={currentTab !== DOMNames.handoverStateForm}>
+                <div className="tabContent" hidden={currentTab !== DOMNames.handoverStateForm}>
                     <form name={DOMNames.handoverStateForm} onSubmit={this.handleSubmit}>
                         <legend>Handover state</legend>
-                        <select
-                            name={DOMNames.handoverStateAction}
-                            value={handoverStateAction}
-                            onChange={this.handleChange}
-                        >
-                            <option value="default" disabled={true}>Action</option>
-                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
-                        </select>
-                        <select
+                        <div className="select">
+                            <select
+                                name={DOMNames.handoverStateAction}
+                                value={handoverStateAction}
+                                onChange={this.handleChange}
+                            >
+                                <option value="default" disabled={true}>Action</option>
+                                {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                            </select>
+                        </div>
+                        <br />
+                        <input
+                            className="input"
+                            type="text"
+                            placeholder="Item"
                             name={DOMNames.handoverStateItem}
                             value={handoverStateItem}
                             onChange={this.handleChange}
-                        >
-                            <option value="default" disabled={true}>Item</option>
-                        </select>
-                        <input
-                            className="input"
-                            type="text"
-                            placeholder="operator role"
-                            name={DOMNames.handoverStateOperatorRole}
-                            value={handoverStateOperatorRole}
-                            onChange={this.handleChange}
                         />
-                        <input
-                            className="input"
-                            type="text"
-                            placeholder="owner role"
-                            name={DOMNames.handoverStateOwnerRole}
-                            value={handoverStateOwnerRole}
-                            onChange={this.handleChange}
-                        />
-                        <input type="submit" />
+                        <br />
+                        <div className="select">
+                            <select
+                                name={DOMNames.handoverStateOperatorRole}
+                                value={handoverStateOperatorRole}
+                                onChange={this.handleChange}
+                            >
+                                <option value="default" disabled={true}>Operator Role</option>
+                                {rolesList.map((r) => <option key={r.index} value={r.index}>{r.description}</option>)}
+                            </select>
+                        </div>
+                        <br />
+                        <div className="select">
+                            <select
+                                name={DOMNames.handoverStateOwnerRole}
+                                value={handoverStateOwnerRole}
+                                onChange={this.handleChange}
+                            >
+                                <option value="default" disabled={true}>Owner Role</option>
+                                {rolesList.map((r) => <option key={r.index} value={r.index}>{r.description}</option>)}
+                            </select>
+                        </div>
+                        <br />
+                        <input className="button is-primary" type="submit" />
                     </form>
                 </div>
-                <div hidden={currentTab !== DOMNames.parteOfStateForm}>
+                <div className="tabContent" hidden={currentTab !== DOMNames.parteOfStateForm}>
                     <form name={DOMNames.parteOfStateForm} onSubmit={this.handleSubmit}>
                         <legend>ParteOf state</legend>
-                        <select
-                            name={DOMNames.parteOfStateAction}
-                            value={parteOfStateAction}
-                            onChange={this.handleChange}
-                        >
-                            <option value="default" disabled={true}>Action</option>
-                            {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
-                        </select>
-                        <select
+                        <div className="select">
+                            <select
+                                name={DOMNames.parteOfStateAction}
+                                value={parteOfStateAction}
+                                onChange={this.handleChange}
+                            >
+                                <option value="default" disabled={true}>Action</option>
+                                {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                            </select>
+                        </div>
+                        <br />
+                        <input
+                            className="input"
+                            type="text"
+                            placeholder="Item"
                             name={DOMNames.parteOfStateItem}
                             value={parteOfStateItem}
                             onChange={this.handleChange}
-                        >
-                            <option value="default" disabled={true}>Item</option>
-                        </select>
+                        />
+                        <br />
                         <input
                             className="input"
                             type="text"
-                            placeholder="parte of"
+                            placeholder="Parte of"
                             name={DOMNames.parteOfStateParteOf}
                             value={parteOfStateParteOf}
                             onChange={this.handleChange}
                         />
-                        <input type="submit" />
+                        <br />
+                        <input className="button is-primary" type="submit" />
                     </form>
                 </div>
                 {this.drawGraph()}
@@ -356,6 +413,22 @@ class AddState extends Component<{}, IAddState> {
                 onLinkMouseOut={() => this.setState({ activeLink: null as any })}
             />
         );
+    }
+
+    /**
+     * load all existing roles
+     */
+    private loadRoles = async () => {
+        const { rbac } = this.state;
+        if (rbac === undefined) {
+            return [];
+        }
+        const totalRoles = await rbac.totalRoles();
+        const roles: Array<{ description: string, index: number }> = [];
+        for (let r = 1; r <= totalRoles.toNumber(); r += 1) {
+            roles.push({ description: (await rbac.roles(new BigNumber(r))).description, index: r });
+        }
+        this.setState({ rolesList: roles });
     }
 
     private async loadActions() {
