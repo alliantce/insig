@@ -49,16 +49,10 @@ contract RBAC {
         public
         returns(uint256)
     {
-        uint256 role = roles.push(
-            Role({
-                description: _roleDescription,
-                admin: roles.length
-            })
-        ) - 1;
-        emit RoleCreated(role);
-
+        uint256 role = _addRole(_roleDescription, roles.length);
         roles[role].bearers[msg.sender] = true;
         emit BearerAdded(msg.sender, role);
+        return role;
     }
 
     /**
@@ -73,14 +67,7 @@ contract RBAC {
         returns(uint256)
     {
         require(_admin < roles.length, "Admin role doesn't exist.");
-        uint256 role = roles.push(
-            Role({
-                description: _roleDescription,
-                admin: _admin
-            })
-        ) - 1;
-        emit RoleCreated(role);
-        return role;
+        return _addRole(_roleDescription, _admin);
     }
 
     /**
@@ -158,5 +145,26 @@ contract RBAC {
 
         delete roles[_role].bearers[_account];
         emit BearerRemoved(_account, _role);
+    }
+
+    /**
+     * @notice A method to create a new role.
+     * @param _roleDescription The description of the role being created.
+     * @param _admin The role that is allowed to add and remove bearers from
+     * the role being created.
+     * @return The role id.
+     */
+    function _addRole(string memory _roleDescription, uint256 _admin)
+        internal
+        returns(uint256)
+    {
+        uint256 role = roles.push(
+            Role({
+                description: _roleDescription,
+                admin: _admin
+            })
+        ) - 1;
+        emit RoleCreated(role);
+        return role;
     }
 }
