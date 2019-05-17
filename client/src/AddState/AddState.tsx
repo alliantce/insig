@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import React, { Component } from 'react';
-import { Sankey } from 'react-vis';
+import { Hint, Sankey } from 'react-vis';
 import Energy from './energy.json';
 
 import BlockchainGeneric from '../Common/BlockchainGeneric';
@@ -38,7 +38,7 @@ enum DOMNames {
     parteOfStateParteOf = 'parteOfStateParteOf',
 }
 interface IAddState extends IBlockchainState {
-    activeLink: object;
+    activeLink: any;
     listActions: string[];
     supplyChain: ISupplyChain;
     currentTab: string;
@@ -371,6 +371,10 @@ class AddState extends Component<{}, IAddState> {
         );
     }
 
+    private openModal(e: any) {
+        //
+    }
+
     private drawGraph() {
         const nodes = Energy.nodes;
         const links = Energy.links;
@@ -396,22 +400,25 @@ class AddState extends Component<{}, IAddState> {
         };
 
         return (
-            <Sankey
-                nodes={nodes}
-                links={mapLinks}
-                width={960}
-                height={500}
-                layout={24}
-                nodeWidth={15}
-                nodePadding={10}
-                style={sankeyStyle}
-                // do not use voronoi in combination with link mouse over
-                hasVoronoi={false}
-                // tslint:disable-next-line:jsx-no-lambda
-                onLinkMouseOver={(node: any) => this.setState({ activeLink: node })}
-                // tslint:disable-next-line:jsx-no-lambda
-                onLinkMouseOut={() => this.setState({ activeLink: null as any })}
-            />
+            <div>
+                <Sankey
+                    nodes={nodes}
+                    links={mapLinks}
+                    width={960}
+                    height={500}
+                    layout={24}
+                    nodeWidth={15}
+                    nodePadding={10}
+                    style={sankeyStyle}
+                    // do not use voronoi in combination with link mouse over
+                    hasVoronoi={false}
+                    // tslint:disable-next-line:jsx-no-lambda
+                    onLinkMouseOver={(node: any) => this.setState({ activeLink: node })}
+                    // tslint:disable-next-line:jsx-no-lambda
+                    onLinkMouseOut={() => this.setState({ activeLink: null as any })}
+                />
+                {activeLink && this.renderHint()}
+            </div>
         );
     }
 
@@ -439,6 +446,23 @@ class AddState extends Component<{}, IAddState> {
             actionsName.push(await supplyChain.actionDescription(new BigNumber(a)));
         }
         return actionsName;
+    }
+
+    private renderHint() {
+        const { activeLink } = this.state;
+
+        // calculate center x,y position of link for positioning of hint
+        const x =
+            activeLink.source.x1 + (activeLink.target.x0 - activeLink.source.x1) / 2;
+        const y = activeLink.y0 - (activeLink.y0 - activeLink.y1) / 2;
+
+        const hintValue = {
+            [`${activeLink.source.name} ➞ ${
+                activeLink.target.name
+                }`]: activeLink.value,
+        };
+
+        return <Hint x={x} y={y} value={hintValue} />;
     }
 }
 
