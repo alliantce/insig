@@ -85,6 +85,3 @@ typings/
 
 # generated documentation
 docs/
-
-# ignore contracts link
-contracts
