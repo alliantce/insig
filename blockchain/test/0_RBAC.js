@@ -1,4 +1,5 @@
 const RBAC = artifacts.require('./RBAC.sol');
+const RBAC_GasTest = artifacts.require('./test/RBAC_GasTest.sol');
 
 const chai = require('chai');
 const { itShouldThrow } = require('./utils');
@@ -7,6 +8,7 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('RBAC', (accounts) => {
     let rbac;
+    let rbac_gastest;
     let transaction;
     const user1 = accounts[1];
     const user2 = accounts[2];
@@ -18,6 +20,7 @@ contract('RBAC', (accounts) => {
     describe('RBAC', () => {
         beforeEach(async () => {
             rbac = await RBAC.new();
+            rbac_gastest = await RBAC_GasTest.new();
         });
 
         it('addRootRole creates a role.', async () => {
@@ -43,6 +46,20 @@ contract('RBAC', (accounts) => {
             transaction = await rbac.addRootRole(roleDescription, { from: user1 });
 
             assert.isFalse(await rbac.hasRole(user2, transaction.logs[0].args.role));
+        });
+
+
+        it('hasRole gas test', async () => {
+            const roleDescription = 'Role 1.';
+            var roleId = (
+                await rbac.addRootRole(roleDescription, { from: user1 })
+            ).logs[0].args.role;
+            for (var i = 2; i < 6; i++){
+                await rbac.addBearer(accounts[i], roleId, { from: user1 });
+            }
+            for (var i = 0; i < 10; i++){
+                transaction = await rbac_gastest.gasHasRole(accounts[i], roleId);
+            }
         });
 
         it('addRootRole adds msg.sender as bearer', async () => {
