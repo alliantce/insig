@@ -1,14 +1,14 @@
 
 const RBAC = artifacts.require('./RBAC.sol');
-const RBAC_GasTest = artifacts.require('./test/RBAC_GasTest.sol');
+const RBACGasTest = artifacts.require('./test/RBACGasTest.sol');
 
 module.exports = (deployer) => {
     deployer.deploy(
         RBAC,
     );
 
-    deployer.link(RBAC, RBAC_GasTest);
+    deployer.link(RBAC, RBACGasTest);
     deployer.deploy(
-        RBAC_GasTest,
+        RBACGasTest,
     );
 };

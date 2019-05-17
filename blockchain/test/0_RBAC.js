@@ -1,5 +1,5 @@
 const RBAC = artifacts.require('./RBAC.sol');
-const RBAC_GasTest = artifacts.require('./test/RBAC_GasTest.sol');
+const RBACGasTest = artifacts.require('./test/RBACGasTest.sol');
 
 const chai = require('chai');
 const { itShouldThrow } = require('./utils');
@@ -8,7 +8,7 @@ chai.use(require('chai-bignumber')()).should();
 
 contract('RBAC', (accounts) => {
     let rbac;
-    let rbac_gastest;
+    let rbacGasTest;
     let transaction;
     const user1 = accounts[1];
     const user2 = accounts[2];
@@ -20,7 +20,7 @@ contract('RBAC', (accounts) => {
     describe('RBAC', () => {
         beforeEach(async () => {
             rbac = await RBAC.new();
-            rbac_gastest = await RBAC_GasTest.new();
+            rbacGasTest = await RBACGasTest.new();
         });
 
         it('addRootRole creates a role.', async () => {
@@ -51,14 +51,17 @@ contract('RBAC', (accounts) => {
 
         it('hasRole gas test', async () => {
             const roleDescription = 'Role 1.';
-            var roleId = (
+            const roleId = (
                 await rbac.addRootRole(roleDescription, { from: user1 })
             ).logs[0].args.role;
-            for (var i = 2; i < 6; i++){
+
+            for (let i = 2; i < 6; i += 1) {
+                // eslint-disable-next-line no-await-in-loop
                 await rbac.addBearer(accounts[i], roleId, { from: user1 });
             }
-            for (var i = 0; i < 10; i++){
-                transaction = await rbac_gastest.gasHasRole(accounts[i], roleId);
+            for (let i = 0; i < 10; i += 1) {
+                // eslint-disable-next-line no-await-in-loop
+                transaction = await rbacGasTest.gasHasRole(accounts[i], roleId);
             }
         });
 
