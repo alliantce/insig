@@ -72,6 +72,16 @@ contract('RBAC', (accounts) => {
             assert.isTrue(await rbac.hasRole(user1, transaction.logs[0].args.role));
         });
 
+        itShouldThrow(
+            'addRole requires an existing admin role.',
+            async () => {
+                const roleDescription = 'Role 1.';
+                const adminRole = (await rbac.totalRoles()).toNumber() + 1;
+                await rbac.addRole(roleDescription, adminRole, { from: user1 });
+            },
+            'Admin role doesn\'t exist.',
+        );
+
         it('addRole doesn\'t add msg.sender as bearer if another role is given.', async () => {
             const roleOne = (
                 await rbac.addRootRole('Role 1', { from: user1 })

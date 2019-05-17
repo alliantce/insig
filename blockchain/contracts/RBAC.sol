@@ -49,7 +49,14 @@ contract RBAC {
         public
         returns(uint256)
     {
-        uint256 role = addRole(_roleDescription, roles.length);
+        uint256 role = roles.push(
+            Role({
+                description: _roleDescription,
+                admin: roles.length
+            })
+        ) - 1;
+        emit RoleCreated(role);
+
         roles[role].bearers[msg.sender] = true;
         emit BearerAdded(msg.sender, role);
     }
@@ -65,7 +72,7 @@ contract RBAC {
         public
         returns(uint256)
     {
-        require(_admin <= roles.length, "Admin role doesn't exist.");
+        require(_admin < roles.length, "Admin role doesn't exist.");
         uint256 role = roles.push(
             Role({
                 description: _roleDescription,
