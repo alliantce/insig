@@ -24,7 +24,7 @@ contract RBAC {
     struct Role {
         string description;
         uint256 admin;
-        address[] bearers;
+        mapping (address => bool) bearers;
     }
 
     /**
@@ -50,7 +50,7 @@ contract RBAC {
         returns(uint256)
     {
         uint256 role = addRole(_roleDescription, roles.length);
-        roles[role].bearers.push(msg.sender);
+        roles[role].bearers[msg.sender] = true;
         emit BearerAdded(msg.sender, role);
     }
 
@@ -69,8 +69,7 @@ contract RBAC {
         uint256 role = roles.push(
             Role({
                 description: _roleDescription,
-                admin: _admin,
-                bearers: new address[](0)
+                admin: _admin
             })
         ) - 1;
         emit RoleCreated(role);
@@ -101,16 +100,7 @@ contract RBAC {
         view
         returns(bool)
     {
-        if (_role >= roles.length ) {
-            return false;
-        }
-        address[] memory _bearers = roles[_role].bearers;
-        for (uint256 i = 0; i < _bearers.length; i++) {
-            if (_bearers[i] == _account) {
-                return true;
-            }
-        }
-        return false;
+        return _role < roles.length && roles[_role].bearers[_account];
     }
 
     /**
@@ -127,12 +117,15 @@ contract RBAC {
         );
         require(
             hasRole(msg.sender, roles[_role].admin),
-            "User not authorized to add bearers."
+            "User can't add bearers."
         );
-        if (hasRole(_account, _role) == false) {
-            roles[_role].bearers.push(_account);
-            emit BearerAdded(_account, _role);
-        }
+        require(
+            !hasRole(_account, _role),
+            "Account is bearer of role."
+        );
+
+        roles[_role].bearers[_account] = true;
+        emit BearerAdded(_account, _role);
     }
 
     /**
@@ -149,15 +142,14 @@ contract RBAC {
         );
         require(
             hasRole(msg.sender, roles[_role].admin),
-            "User not authorized to remove bearers."
+            "User can't remove bearers."
         );
-        address[] memory _bearers = roles[_role].bearers;
-        for (uint256 i = 0; i < _bearers.length; i++) {
-            if (_bearers[i] == _account) {
-                _bearers[i] = _bearers[_bearers.length - 1];
-                roles[_role].bearers.pop();
-                emit BearerRemoved(_account, _role);
-            }
-        }
+        require(
+            hasRole(_account, _role),
+            "Account is not bearer of role."
+        );
+
+        delete roles[_role].bearers[_account];
+        emit BearerRemoved(_account, _role);
     }
 }

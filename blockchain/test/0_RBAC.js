@@ -83,18 +83,20 @@ contract('RBAC', (accounts) => {
                 ).logs[0].args.role;
                 await rbac.addBearer(user2, roleId, { from: user2 });
             },
-            'User not authorized to add bearers.',
+            'User can\'t add bearers.',
         );
 
-        it('addBearer does nothing if the bearer already belongs to the role.', async () => {
-            const roleDescription = 'Role 1.';
-            const roleId = (
-                await rbac.addRootRole(roleDescription, { from: user1 })
-            ).logs[0].args.role;
-            transaction = await rbac.addBearer(user1, roleId, { from: user1 });
-
-            assert.equal(transaction.logs.length, 0);
-        });
+        itShouldThrow(
+            'addBearer throws if the bearer already belongs to the role.',
+            async () => {
+                const roleDescription = 'Role 1.';
+                const roleId = (
+                    await rbac.addRootRole(roleDescription, { from: user1 })
+                ).logs[0].args.role;
+                await rbac.addBearer(user1, roleId, { from: user1 });
+            },
+            'Account is bearer of role.',
+        );
 
         it('addBearer adds a bearer to a role.', async () => {
             const roleDescription = 'Role 1.';
@@ -122,18 +124,20 @@ contract('RBAC', (accounts) => {
                 ).logs[0].args.role;
                 await rbac.removeBearer(user2, roleId, { from: user2 });
             },
-            'User not authorized to remove bearers.',
+            'User can\'t remove bearers.',
         );
 
-        it('removeBearer does nothing if the bearer doesn\'t belong to the role.', async () => {
-            const roleDescription = 'Role 1.';
-            const roleId = (
-                await rbac.addRootRole(roleDescription, { from: user1 })
-            ).logs[0].args.role;
-            transaction = await rbac.removeBearer(user2, roleId, { from: user1 });
-
-            assert.equal(transaction.logs.length, 0);
-        });
+        itShouldThrow(
+            'removeBearer throws if the bearer doesn\'t belong to the role.',
+            async () => {
+                const roleDescription = 'Role 1.';
+                const roleId = (
+                    await rbac.addRootRole(roleDescription, { from: user1 })
+                ).logs[0].args.role;
+                await rbac.removeBearer(user2, roleId, { from: user1 });
+            },
+            'Account is not bearer of role.',
+        );
 
         it('removeBearer removes a bearer from a role.', async () => {
             const roleDescription = 'Role 1.';
