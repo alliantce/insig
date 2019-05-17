@@ -39,7 +39,7 @@ enum DOMNames {
 }
 interface IAddState extends IBlockchainState {
     activeLink: any;
-    listActions: string[];
+    listActions: Array<{ description: string, index: number }>;
     supplyChain: ISupplyChain;
     currentTab: string;
     rootStateAction: string;
@@ -98,6 +98,7 @@ class AddState extends Component<{}, IAddState> {
                     web3: generic.web3,
                 });
                 this.loadActions().then((actionsName) => this.setState({ listActions: actionsName }));
+                this.loadGraphicData();
             });
             BlockchainGeneric.loadRBAC(generic.web3).then(async (contracts) => {
                 this.setState({
@@ -147,8 +148,66 @@ class AddState extends Component<{}, IAddState> {
     }
 
     public handleSubmit = (event: any) => {
-        const { infoStatePrecedents } = this.state;
-        alert('A name was submitted: ' + infoStatePrecedents);
+        const {
+            currentTab,
+            supplyChain,
+            rootStateAction,
+            rootStateOperatorRole,
+            rootStateOwnerRole,
+            infoStateAction,
+            infoStateItem,
+            infoStatePrecedents,
+            handoverStateAction,
+            handoverStateItem,
+            handoverStateOperatorRole,
+            handoverStateOwnerRole,
+            parteOfStateAction,
+            parteOfStateItem,
+            parteOfStateParteOf,
+            userAccount,
+        } = this.state;
+        if (currentTab === DOMNames.rootStateForm) {
+            console.log(rootStateAction, rootStateOperatorRole, rootStateOwnerRole);
+            supplyChain.addRootState(
+                new BigNumber(rootStateAction),
+                new BigNumber(rootStateOperatorRole),
+                new BigNumber(rootStateOwnerRole),
+                { from: userAccount },
+            ).then(() => {
+                alert('Success!');
+            });
+        } else if (currentTab === DOMNames.infoStateForm) {
+            const precedents = infoStatePrecedents.split(',');
+            const resultPrecedents: BigNumber[] = [];
+            precedents.forEach((p) => resultPrecedents.push(new BigNumber(p)));
+            supplyChain.addInfoState(
+                new BigNumber(infoStateAction),
+                new BigNumber(infoStateItem),
+                resultPrecedents,
+                { from: userAccount },
+            ).then(() => {
+                alert('Success!');
+            });
+        } else if (currentTab === DOMNames.handoverStateForm) {
+            supplyChain.addHandoverState(
+                new BigNumber(handoverStateAction),
+                new BigNumber(handoverStateItem),
+                new BigNumber(handoverStateOperatorRole),
+                new BigNumber(handoverStateOwnerRole),
+                { from: userAccount },
+            ).then(() => {
+                alert('Success!');
+            });
+        } else if (currentTab === DOMNames.parteOfStateForm) {
+            supplyChain.addPartOfState(
+                new BigNumber(parteOfStateAction),
+                new BigNumber(parteOfStateItem),
+                new BigNumber(parteOfStateParteOf),
+                { from: userAccount },
+            ).then(() => {
+                alert('Success!');
+            });
+        }
         event.preventDefault();
     }
 
@@ -219,7 +278,7 @@ class AddState extends Component<{}, IAddState> {
                                 onChange={this.handleChange}
                             >
                                 <option value="default" disabled={true}>Action</option>
-                                {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                                {listActions.map((a) => <option key={a.index} value={a.index}>{a.description}</option>)}
                             </select>
                         </div>
                         <br />
@@ -258,7 +317,7 @@ class AddState extends Component<{}, IAddState> {
                                 onChange={this.handleChange}
                             >
                                 <option value="default" disabled={true}>Action</option>
-                                {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                                {listActions.map((a) => <option key={a.index} value={a.index}>{a.description}</option>)}
                             </select>
                         </div>
                         <br />
@@ -293,7 +352,7 @@ class AddState extends Component<{}, IAddState> {
                                 onChange={this.handleChange}
                             >
                                 <option value="default" disabled={true}>Action</option>
-                                {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                                {listActions.map((a) => <option key={a.index} value={a.index}>{a.description}</option>)}
                             </select>
                         </div>
                         <br />
@@ -341,7 +400,7 @@ class AddState extends Component<{}, IAddState> {
                                 onChange={this.handleChange}
                             >
                                 <option value="default" disabled={true}>Action</option>
-                                {listActions.map((a) => <option key={a} value={a}>{a}</option>)}
+                                {listActions.map((a) => <option key={a.index} value={a.index}>{a.description}</option>)}
                             </select>
                         </div>
                         <br />
@@ -371,14 +430,17 @@ class AddState extends Component<{}, IAddState> {
         );
     }
 
-    private openModal(e: any) {
-        //
+    private loadGraphicData = () => {
+        const { supplyChain } = this.state;
+        supplyChain.totalItems().then((tItems) => {
+            console.log(tItems.toString());
+        });
     }
 
     private drawGraph() {
+        const { activeLink } = this.state;
         const nodes = Energy.nodes;
         const links = Energy.links;
-        const { activeLink } = this.state;
         const mapLinks = links.map((d, i) => ({
             ...d,
             opacity:
@@ -407,6 +469,7 @@ class AddState extends Component<{}, IAddState> {
                     width={960}
                     height={500}
                     layout={24}
+                    align={'right'}
                     nodeWidth={15}
                     nodePadding={10}
                     style={sankeyStyle}
@@ -438,12 +501,12 @@ class AddState extends Component<{}, IAddState> {
         this.setState({ rolesList: roles });
     }
 
-    private async loadActions() {
+    private loadActions = async () => {
         const { supplyChain } = this.state;
-        const actionsName: string[] = [];
+        const actionsName: Array<{ description: string, index: number }> = [];
         const totalActions = (await supplyChain.totalActions()).toNumber();
         for (let a = 1; a <= totalActions; a += 1) {
-            actionsName.push(await supplyChain.actionDescription(new BigNumber(a)));
+            actionsName.push({ index: a, description: await supplyChain.actionDescription(new BigNumber(a)) });
         }
         return actionsName;
     }
@@ -453,7 +516,7 @@ class AddState extends Component<{}, IAddState> {
 
         // calculate center x,y position of link for positioning of hint
         const x =
-            activeLink.source.x1 + (activeLink.target.x0 - activeLink.source.x1) / 2;
+            parseInt(activeLink.source.x1 + (activeLink.target.x0 - activeLink.source.x1) / 2, 10);
         const y = activeLink.y0 - (activeLink.y0 - activeLink.y1) / 2;
 
         const hintValue = {
