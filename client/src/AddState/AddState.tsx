@@ -436,27 +436,23 @@ class AddState extends Component<{}, IAddState> {
 
     private generateGraphic = async (lastState: BigNumber) => {
         const { supplyChain } = this.state;
-        const links: any[] = [];
-        let precedents;
-        do {
-            precedents = await supplyChain.getPrecedents(lastState);
-            precedents.forEach((p) => {
-                links.push({ source: p.toNumber() - 1, target: lastState.toNumber() - 1, value: 1 });
-                this.generateGraphic(p);
-            });
-        } while (precedents.length === 0);
-        return links;
+        const links: [{ source: number, target: number, value: number }] = [] as any;
+        const nodes: [{ name: string }] = [{ name: lastState.toString() }];
+        const precedents = await supplyChain.getPrecedents(lastState);
+        for (let p = 0; p < precedents.length; p += 1) {
+            links.push({ source: lastState.toNumber() - 1, target: precedents[p].toNumber() - 1, value: 1 });
+            const deep = await this.generateGraphic(precedents[p]);
+            deep.links.forEach((d) => links.push(d));
+            deep.nodes.forEach((d) => nodes.push(d));
+        }
+        return { links, nodes };
     }
 
     private loadGraphicData = () => {
         const { supplyChain } = this.state;
         supplyChain.totalItems().then((tItems) => {
-            const nodes: any[] = [];
-            for (let x = 0; x <= tItems; x += 1) {
-                nodes.push({ name: '' + (x + 1) });
-            }
             supplyChain.lastStates(new BigNumber(tItems)).then(async (lastStateN) => {
-                const links = await this.generateGraphic(lastStateN);
+                const { links, nodes } = await this.generateGraphic(lastStateN);
                 this.setState({
                     links,
                     nodes,
