@@ -17,6 +17,7 @@ interface ITruffleContract {
  */
 export interface ISupplyChain extends ITruffleContract {
     totalItems: () => Promise<number>;
+    lastStates: (state: BigNumber) => Promise<BigNumber>;
     addAction: (actionDescription: string, options: object) => Promise<BigNumber>;
     actionDescription: (action: BigNumber) => Promise<string>;
     totalActions: () => Promise<BigNumber>;

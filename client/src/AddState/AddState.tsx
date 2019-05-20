@@ -57,6 +57,8 @@ interface IAddState extends IBlockchainState {
     parteOfStateParteOf: string;
     rolesList: Array<{ description: string, index: number }>;
     rbac: IRBAC;
+    nodes: any[];
+    links: any[];
 }
 class AddState extends Component<{}, IAddState> {
     constructor(props: any) {
@@ -71,7 +73,9 @@ class AddState extends Component<{}, IAddState> {
             infoStateAction: 'default',
             infoStateItem: '',
             infoStatePrecedents: '',
+            links: [],
             listActions: [],
+            nodes: [],
             parteOfStateAction: 'default',
             parteOfStateItem: '',
             parteOfStateParteOf: '',
@@ -183,7 +187,7 @@ class AddState extends Component<{}, IAddState> {
             supplyChain.addInfoState(
                 new BigNumber(infoStateAction),
                 new BigNumber(infoStateItem),
-                resultPrecedents,
+                [],
                 { from: userAccount },
             ).then(() => {
                 alert('Success!');
@@ -430,17 +434,44 @@ class AddState extends Component<{}, IAddState> {
         );
     }
 
+    private generateGraphic = async (lastState: BigNumber) => {
+        const { supplyChain } = this.state;
+        const links: any[] = [];
+        let precedents;
+        do {
+            precedents = await supplyChain.getPrecedents(lastState);
+            precedents.forEach((p) => {
+                links.push({ source: p.toNumber() - 1, target: lastState.toNumber() - 1, value: 1 });
+                this.generateGraphic(p);
+            });
+        } while (precedents.length === 0);
+        return links;
+    }
+
     private loadGraphicData = () => {
         const { supplyChain } = this.state;
         supplyChain.totalItems().then((tItems) => {
-            console.log(tItems.toString());
+            const nodes: any[] = [];
+            for (let x = 0; x <= tItems; x += 1) {
+                nodes.push({ name: '' + (x + 1) });
+            }
+            supplyChain.lastStates(new BigNumber(tItems)).then(async (lastStateN) => {
+                const links = await this.generateGraphic(lastStateN);
+                this.setState({
+                    links,
+                    nodes,
+                });
+            });
         });
     }
 
     private drawGraph() {
-        const { activeLink } = this.state;
-        const nodes = Energy.nodes;
-        const links = Energy.links;
+        const { activeLink, nodes, links } = this.state;
+        if (nodes.length === 0 || links.length === 0) {
+            return;
+        }
+        // const nodes = Energy.nodes;
+        // const links = Energy.links;
         const mapLinks = links.map((d, i) => ({
             ...d,
             opacity:
