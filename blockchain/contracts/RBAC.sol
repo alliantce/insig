@@ -24,7 +24,7 @@ contract RBAC {
     struct Role {
         string description;
         uint256 admin;
-        address[] bearers;
+        mapping (address => bool) bearers;
     }
 
     /**
@@ -49,9 +49,10 @@ contract RBAC {
         public
         returns(uint256)
     {
-        uint256 role = addRole(_roleDescription, roles.length);
-        roles[role].bearers.push(msg.sender);
+        uint256 role = _addRole(_roleDescription, roles.length);
+        roles[role].bearers[msg.sender] = true;
         emit BearerAdded(msg.sender, role);
+        return role;
     }
 
     /**
@@ -65,16 +66,8 @@ contract RBAC {
         public
         returns(uint256)
     {
-        require(_admin <= roles.length, "Admin role doesn't exist.");
-        uint256 role = roles.push(
-            Role({
-                description: _roleDescription,
-                admin: _admin,
-                bearers: new address[](0)
-            })
-        ) - 1;
-        emit RoleCreated(role);
-        return role;
+        require(_admin < roles.length, "Admin role doesn't exist.");
+        return _addRole(_roleDescription, _admin);
     }
 
     /**
@@ -101,16 +94,7 @@ contract RBAC {
         view
         returns(bool)
     {
-        if (_role >= roles.length ) {
-            return false;
-        }
-        address[] memory _bearers = roles[_role].bearers;
-        for (uint256 i = 0; i < _bearers.length; i++) {
-            if (_bearers[i] == _account) {
-                return true;
-            }
-        }
-        return false;
+        return _role < roles.length && roles[_role].bearers[_account];
     }
 
     /**
@@ -127,12 +111,15 @@ contract RBAC {
         );
         require(
             hasRole(msg.sender, roles[_role].admin),
-            "User not authorized to add bearers."
+            "User can't add bearers."
         );
-        if (hasRole(_account, _role) == false) {
-            roles[_role].bearers.push(_account);
-            emit BearerAdded(_account, _role);
-        }
+        require(
+            !hasRole(_account, _role),
+            "Account is bearer of role."
+        );
+
+        roles[_role].bearers[_account] = true;
+        emit BearerAdded(_account, _role);
     }
 
     /**
@@ -149,15 +136,35 @@ contract RBAC {
         );
         require(
             hasRole(msg.sender, roles[_role].admin),
-            "User not authorized to remove bearers."
+            "User can't remove bearers."
         );
-        address[] memory _bearers = roles[_role].bearers;
-        for (uint256 i = 0; i < _bearers.length; i++) {
-            if (_bearers[i] == _account) {
-                _bearers[i] = _bearers[_bearers.length - 1];
-                roles[_role].bearers.pop();
-                emit BearerRemoved(_account, _role);
-            }
-        }
+        require(
+            hasRole(_account, _role),
+            "Account is not bearer of role."
+        );
+
+        delete roles[_role].bearers[_account];
+        emit BearerRemoved(_account, _role);
+    }
+
+    /**
+     * @notice A method to create a new role.
+     * @param _roleDescription The description of the role being created.
+     * @param _admin The role that is allowed to add and remove bearers from
+     * the role being created.
+     * @return The role id.
+     */
+    function _addRole(string memory _roleDescription, uint256 _admin)
+        internal
+        returns(uint256)
+    {
+        uint256 role = roles.push(
+            Role({
+                description: _roleDescription,
+                admin: _admin
+            })
+        ) - 1;
+        emit RoleCreated(role);
+        return role;
     }
 }
