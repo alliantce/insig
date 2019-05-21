@@ -481,9 +481,13 @@ class AddState extends Component<{}, IAddState> {
         supplyChain.totalItems().then(async (tItems) => {
             const links: [{ source: number, target: number, value: number }] = [] as any;
             const nodes: [{ name: string }] = [] as any;
+            let highestStateNumber = 0;
             // and then navigate through the precedents of each one
             for (let i = 1; i <= tItems.toNumber(); i += 1) {
                 const lastStateN = await supplyChain.lastStates(new BigNumber(i));
+                if (lastStateN.toNumber() > highestStateNumber) {
+                    highestStateNumber = lastStateN.toNumber();
+                }
                 const generated = await this.generateGraphic(lastStateN);
                 // and add new values to arrays
                 generated.links.forEach((e) => {
@@ -494,13 +498,9 @@ class AddState extends Component<{}, IAddState> {
                         links.push(e);
                     }
                 });
-                generated.nodes.reverse().forEach((e) => {
-                    if (
-                        nodes.find((n) => n.name === e.name) === undefined
-                    ) {
-                        nodes.push(e);
-                    }
-                });
+            }
+            for (let x = 0; x < highestStateNumber; x += 1) {
+                nodes.push({ name: '' + (x + 1) });
             }
             this.setState({ links, nodes });
         });
