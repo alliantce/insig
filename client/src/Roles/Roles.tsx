@@ -150,7 +150,7 @@ class Roles extends Component<{}, IRolesState> {
             removeBearerAddress,
         } = this.state;
         return (<div>
-            <div hidden={currentTab !== DOMNames.newRootRoleForm}>
+            <div className="tabContent" hidden={currentTab !== DOMNames.newRootRoleForm}>
                 Add root role
                 <form name={DOMNames.newRootRoleForm} onSubmit={this.handleSubmit}>
                     <input
@@ -165,7 +165,7 @@ class Roles extends Component<{}, IRolesState> {
                     <input type="submit" className="button is-primary" />
                 </form>
             </div>
-            <div hidden={currentTab !== DOMNames.newRoleForm}>
+            <div className="tabContent" hidden={currentTab !== DOMNames.newRoleForm}>
                 Add role
                 <form name={DOMNames.newRoleForm} onSubmit={this.handleSubmit}>
                     <input
@@ -189,7 +189,7 @@ class Roles extends Component<{}, IRolesState> {
                     <input type="submit" className="button is-primary" />
                 </form>
             </div>
-            <div hidden={currentTab !== DOMNames.addBearerForm}>
+            <div className="tabContent" hidden={currentTab !== DOMNames.addBearerForm}>
                 Add Bearer
                     <form name={DOMNames.addBearerForm} onSubmit={this.handleSubmit}>
                     <input
@@ -201,15 +201,17 @@ class Roles extends Component<{}, IRolesState> {
                         onChange={this.handleChange}
                     />
                     <br />
-                    <select name={DOMNames.bearerRole} value={bearerRole} onChange={this.handleChange}>
-                        <option key="default" value="default" disabled={true}>Role</option>
-                        {rolesList.map((r) => <option key={r.index} value={r.index}>{r.description}</option>)}
-                    </select>
+                    <div className="select">
+                        <select name={DOMNames.bearerRole} value={bearerRole} onChange={this.handleChange}>
+                            <option key="default" value="default" disabled={true}>Role</option>
+                            {rolesList.map((r) => <option key={r.index} value={r.index}>{r.description}</option>)}
+                        </select>
+                    </div>
                     <br />
                     <input type="submit" className="button is-primary" />
                 </form>
             </div>
-            <div hidden={currentTab !== DOMNames.removeBearerForm}>
+            <div className="tabContent" hidden={currentTab !== DOMNames.removeBearerForm}>
                 Remove Bearer
                     <form name={DOMNames.removeBearerForm} onSubmit={this.handleSubmit}>
                     <input
@@ -226,8 +228,8 @@ class Roles extends Component<{}, IRolesState> {
             </div>
             <div>
                 Existing roles
-                    <ol type="i">
-                    {rolesList.map((r) => <li key={r.index}>{r.description} -> Index: {r.index}</li>)}
+                    <ol type="1">
+                    {rolesList.map((r) => <li key={r.index}>{r.description}</li>)}
                 </ol>
             </div>
         </div>);

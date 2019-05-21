@@ -84,18 +84,24 @@ class Action extends Component<{}, IActionState> {
         return (
             <div>
                 <Navbar />
+                <aside />
                 <main>
-                    <form onSubmit={this.handleSubmit}>
-                        <input
-                            className="input"
-                            type="text"
-                            name="action"
-                            value={action}
-                            onChange={this.handleChange}
-                            placeholder="Action message"
-                        />
-                        <input className="button is-primary" type="submit" />
-                    </form>
+                    <div className="tabContent">
+                        <form onSubmit={this.handleSubmit}>
+                            Add action
+                            <br />
+                            <input
+                                className="input"
+                                type="text"
+                                name="action"
+                                value={action}
+                                onChange={this.handleChange}
+                                placeholder="Action message"
+                            />
+                            <br />
+                            <input className="button is-primary" type="submit" />
+                        </form>
+                    </div>
                     <ol className="is-lower-roman">
                         {listActions.map((e) => <li key={e}>{e}</li>)}
                     </ol>
