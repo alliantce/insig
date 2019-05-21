@@ -112,6 +112,9 @@ class AddState extends Component<{}, IAddState> {
         });
     }
 
+    /**
+     * Handle all changes in inputs, selects
+     */
     public handleChange = (event: any) => {
         const { currentTab } = this.state;
         if (currentTab === DOMNames.rootStateForm) {
@@ -151,6 +154,9 @@ class AddState extends Component<{}, IAddState> {
         }
     }
 
+    /**
+     * Handle any submit button
+     */
     public handleSubmit = (event: any) => {
         const {
             currentTab,
@@ -171,7 +177,6 @@ class AddState extends Component<{}, IAddState> {
             userAccount,
         } = this.state;
         if (currentTab === DOMNames.rootStateForm) {
-            console.log(rootStateAction, rootStateOperatorRole, rootStateOwnerRole);
             supplyChain.addRootState(
                 new BigNumber(rootStateAction),
                 new BigNumber(rootStateOperatorRole),
@@ -181,13 +186,19 @@ class AddState extends Component<{}, IAddState> {
                 alert('Success!');
             });
         } else if (currentTab === DOMNames.infoStateForm) {
-            const precedents = infoStatePrecedents.split(',');
             const resultPrecedents: BigNumber[] = [];
-            precedents.forEach((p) => resultPrecedents.push(new BigNumber(p)));
+            if (infoStatePrecedents.indexOf(',') > -1) {
+                const precedents = infoStatePrecedents.split(',');
+                if (precedents.length > 1) {
+                    precedents.forEach((p) => resultPrecedents.push(new BigNumber(p)));
+                }
+            } else if (infoStatePrecedents.length > 0) {
+                resultPrecedents.push(new BigNumber(infoStatePrecedents));
+            }
             supplyChain.addInfoState(
                 new BigNumber(infoStateAction),
                 new BigNumber(infoStateItem),
-                [],
+                resultPrecedents,
                 { from: userAccount },
             ).then(() => {
                 alert('Success!');
@@ -215,11 +226,17 @@ class AddState extends Component<{}, IAddState> {
         event.preventDefault();
     }
 
+    /**
+     * Handle tab change
+     */
     public handleChangeTab = (event: any) => {
         this.setState({ currentTab: event.currentTarget.dataset.id });
         event.preventDefault();
     }
 
+    /**
+     * @ignore
+     */
     public render() {
         return (
             <div>
@@ -250,6 +267,9 @@ class AddState extends Component<{}, IAddState> {
         );
     }
 
+    /**
+     * Render content for each tab
+     */
     private renderTabContent = () => {
         const {
             listActions,
@@ -434,13 +454,17 @@ class AddState extends Component<{}, IAddState> {
         );
     }
 
+    /**
+     * Navigate through the precendentsm until root
+     */
     private generateGraphic = async (lastState: BigNumber) => {
         const { supplyChain } = this.state;
         const links: [{ source: number, target: number, value: number }] = [] as any;
         const nodes: [{ name: string }] = [{ name: lastState.toString() }];
         const precedents = await supplyChain.getPrecedents(lastState);
+        // tslint:disable-next-line prefer-for-of
         for (let p = 0; p < precedents.length; p += 1) {
-            links.push({ source: lastState.toNumber() - 1, target: precedents[p].toNumber() - 1, value: 1 });
+            links.push({ source: precedents[p].toNumber() - 1, target: lastState.toNumber() - 1, value: 1 });
             const deep = await this.generateGraphic(precedents[p]);
             deep.links.forEach((d) => links.push(d));
             deep.nodes.forEach((d) => nodes.push(d));
@@ -448,26 +472,47 @@ class AddState extends Component<{}, IAddState> {
         return { links, nodes };
     }
 
+    /**
+     * Load data to render graphic
+     */
     private loadGraphicData = () => {
         const { supplyChain } = this.state;
-        supplyChain.totalItems().then((tItems) => {
-            supplyChain.lastStates(new BigNumber(tItems)).then(async (lastStateN) => {
-                const { links, nodes } = await this.generateGraphic(lastStateN);
-                this.setState({
-                    links,
-                    nodes,
+        // get the total items
+        supplyChain.totalItems().then(async (tItems) => {
+            const links: [{ source: number, target: number, value: number }] = [] as any;
+            const nodes: [{ name: string }] = [] as any;
+            // and then navigate through the precedents of each one
+            for (let i = 1; i <= tItems.toNumber(); i += 1) {
+                const lastStateN = await supplyChain.lastStates(new BigNumber(i));
+                const generated = await this.generateGraphic(lastStateN);
+                // and add new values to arrays
+                generated.links.forEach((e) => {
+                    if (
+                        links.find((l) => l.source === e.source && l.target === e.target && l.value === e.value)
+                        === undefined
+                    ) {
+                        links.push(e);
+                    }
                 });
-            });
+                generated.nodes.reverse().forEach((e) => {
+                    if (
+                        nodes.find((n) => n.name === e.name) === undefined
+                    ) {
+                        nodes.push(e);
+                    }
+                });
+            }
+            this.setState({ links, nodes });
         });
     }
 
     private drawGraph() {
         const { activeLink, nodes, links } = this.state;
+        // const nodes = Energy.nodes;
+        // const links = Energy.links;
         if (nodes.length === 0 || links.length === 0) {
             return;
         }
-        // const nodes = Energy.nodes;
-        // const links = Energy.links;
         const mapLinks = links.map((d, i) => ({
             ...d,
             opacity:
@@ -488,13 +533,14 @@ class AddState extends Component<{}, IAddState> {
             },
         };
 
+        const customHigh = 80 + nodes.length * 10;
         return (
             <div>
                 <Sankey
                     nodes={nodes}
                     links={mapLinks}
                     width={960}
-                    height={500}
+                    height={customHigh}
                     layout={24}
                     align={'right'}
                     nodeWidth={15}
@@ -528,6 +574,9 @@ class AddState extends Component<{}, IAddState> {
         this.setState({ rolesList: roles });
     }
 
+    /**
+     * Load all existing actions
+     */
     private loadActions = async () => {
         const { supplyChain } = this.state;
         const actionsName: Array<{ description: string, index: number }> = [];
@@ -538,6 +587,9 @@ class AddState extends Component<{}, IAddState> {
         return actionsName;
     }
 
+    /**
+     * Render hint when mouse is hover grafic
+     */
     private renderHint() {
         const { activeLink } = this.state;
 
