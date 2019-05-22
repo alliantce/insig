@@ -9,10 +9,10 @@ contract('SupplyChain', (accounts) => {
     let supplyChain;
     // let productCreationAction;
     let productCreationDescription;
-    let itemCreationAction;
-    let itemCreationDescription;
-    // let itemCertificationAction;
-    let itemCertificationDescription;
+    let assetCreationAction;
+    let assetCreationDescription;
+    // let assetCertificationAction;
+    let assetCertificationDescription;
     // let certificationCreationAction;
     let certificationCreationDescription;
     let transaction;
@@ -39,17 +39,17 @@ contract('SupplyChain', (accounts) => {
             transaction = await supplyChain.addAction(productCreationDescription);
             // productCreationAction = transaction.logs[0].args.action;
 
-            itemCreationDescription = 'Instance created.';
-            transaction = await supplyChain.addAction(itemCreationDescription);
-            itemCreationAction = transaction.logs[0].args.action;
+            assetCreationDescription = 'Instance created.';
+            transaction = await supplyChain.addAction(assetCreationDescription);
+            assetCreationAction = transaction.logs[0].args.action;
 
             certificationCreationDescription = 'Certification created';
             transaction = await supplyChain.addAction(certificationCreationDescription);
             // certificationCreationAction = transaction.logs[0].args.action;
 
-            itemCertificationDescription = 'Instance certified';
-            transaction = await supplyChain.addAction(itemCertificationDescription);
-            // itemCertificationAction = transaction.logs[0].args.action;
+            assetCertificationDescription = 'Instance certified';
+            transaction = await supplyChain.addAction(assetCertificationDescription);
+            // assetCertificationAction = transaction.logs[0].args.action;
 
             transaction = await supplyChain.addRootRole('Root', { from: root });
             rootRole = transaction.logs[0].args.role;
@@ -75,7 +75,7 @@ contract('SupplyChain', (accounts) => {
             'addRootState - operator role must be provided.',
             async () => {
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     0,
                     ownerRole1,
                     { from: owner1 },
@@ -88,7 +88,7 @@ contract('SupplyChain', (accounts) => {
             'addRootState - owner role must be provided.',
             async () => {
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operator1,
                     0,
                     { from: owner1 },
@@ -102,7 +102,7 @@ contract('SupplyChain', (accounts) => {
             'addRootState - operator must be owner for created state.',
             async () => {
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: operator1 },
@@ -117,28 +117,28 @@ contract('SupplyChain', (accounts) => {
 
             transaction = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
             );
-            const itemOne = transaction.logs[0].args.item;
+            const assetOne = transaction.logs[0].args.asset;
             const stateOne = transaction.logs[1].args.state;
 
             transaction = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole2,
                     ownerRole2,
                     { from: owner2 },
                 )
             );
-            const itemTwo = transaction.logs[0].args.item;
+            const assetTwo = transaction.logs[0].args.asset;
             const stateTwo = transaction.logs[1].args.state;
 
-            assert.equal(itemOne.toNumber(), 1);
-            assert.equal(itemTwo.toNumber(), 2);
+            assert.equal(assetOne.toNumber(), 1);
+            assert.equal(assetTwo.toNumber(), 2);
 
             assert.equal(stateOne.toNumber(), 1);
             assert.equal(stateTwo.toNumber(), 2);
@@ -153,28 +153,28 @@ contract('SupplyChain', (accounts) => {
             );
 
             assert.equal(
-                (await supplyChain.getPartOf(itemOne)).toNumber(),
+                (await supplyChain.getPartOf(assetOne)).toNumber(),
                 0,
             );
             assert.equal(
-                (await supplyChain.getPartOf(itemTwo)).toNumber(),
+                (await supplyChain.getPartOf(assetTwo)).toNumber(),
                 0,
             );
 
             assert.equal(
-                (await supplyChain.getOperatorRole(itemOne)).toNumber(),
+                (await supplyChain.getOperatorRole(assetOne)).toNumber(),
                 operatorRole1,
             );
             assert.equal(
-                (await supplyChain.getOperatorRole(itemTwo)).toNumber(),
+                (await supplyChain.getOperatorRole(assetTwo)).toNumber(),
                 operatorRole2,
             );
             assert.equal(
-                (await supplyChain.getOwnerRole(itemOne)).toNumber(),
+                (await supplyChain.getOwnerRole(assetOne)).toNumber(),
                 ownerRole1,
             );
             assert.equal(
-                (await supplyChain.getOwnerRole(itemTwo)).toNumber(),
+                (await supplyChain.getOwnerRole(assetTwo)).toNumber(),
                 ownerRole2,
             );
         });

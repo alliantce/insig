@@ -8,7 +8,7 @@ import "./SupplyChain.sol";
 /**
  * @title Token
  * @author Alberto Cuesta Canada
- * @notice Implements a token representation of supply chain items
+ * @notice Implements a token representation of supply chain assets
  */
 contract Token is ERC721 {
     using SafeMath for uint256;
@@ -66,15 +66,15 @@ contract Token is ERC721 {
             _supplychain.isOwner(msg.sender, _tokenId),
             "Minter not in ownerRole."
         );
-        // To mint a token its underlying item cannot be part of another item without an instantiated token.
-        // This means that to instantiate a part of a composite item several calls will be required to instantiate the path to the part.
+        // To mint a token its underlying asset cannot be part of another asset without an instantiated token.
+        // This means that to instantiate a part of a composite asset several calls will be required to instantiate the path to the part.
         uint256 partOf = _supplychain.getPartOf(_tokenId);
         require(
             partOf == _supplychain.NO_PARTOF() ||
                 exists(_supplychain.getPartOf(_tokenId)),
             "Instantiate composite first."
         );
-        // To mint a token its underlying item cannot be part of another item with a token owned by a different role.
+        // To mint a token its underlying asset cannot be part of another asset with a token owned by a different role.
         // This means that a token should be instantiated before its handed over to another party.
         require(
             _supplychain.getPartOf(_tokenId) == _supplychain.NO_PARTOF() ||
@@ -82,7 +82,7 @@ contract Token is ERC721 {
             "Not owner of composite token."
         );
 
-        // TODO: Consider using a tree of item compositions as an index to avoid frequent calls to getParts()
+        // TODO: Consider using a tree of asset compositions as an index to avoid frequent calls to getParts()
         // Require that the face value of composite is higher or equal than all the parts combined
         if (partOf != _supplychain.NO_PARTOF()) {
             uint256 combinedFaceValue = _faceValue;
@@ -116,7 +116,7 @@ contract Token is ERC721 {
             SupplyChain(supplyChain).isOwner(msg.sender, _tokenId),
             "Burner not in ownerRole."
         );
-        // To burn a token its underlying item cannot have parts with instantiated tokens.
+        // To burn a token its underlying asset cannot have parts with instantiated tokens.
         // This means that to burn a token all the tokens for its parts need to be burnt first.
         uint256[] memory parts = SupplyChain(supplyChain).getParts(_tokenId);
         for (uint256 i = 0; i < parts.length; i += 1) {

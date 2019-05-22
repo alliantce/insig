@@ -11,10 +11,10 @@ contract('Token', (accounts) => {
     let token;
     // let productCreationAction;
     let productCreationDescription;
-    let itemCreationAction;
-    let itemCreationDescription;
-    // let itemCertificationAction;
-    let itemCertificationDescription;
+    let assetCreationAction;
+    let assetCreationDescription;
+    // let assetCertificationAction;
+    let assetCertificationDescription;
     // let certificationCreationAction;
     let certificationCreationDescription;
     let transaction;
@@ -43,17 +43,17 @@ contract('Token', (accounts) => {
             transaction = await supplyChain.addAction(productCreationDescription);
             // productCreationAction = transaction.logs[0].args.action;
 
-            itemCreationDescription = 'Instance created.';
-            transaction = await supplyChain.addAction(itemCreationDescription);
-            itemCreationAction = transaction.logs[0].args.action;
+            assetCreationDescription = 'Instance created.';
+            transaction = await supplyChain.addAction(assetCreationDescription);
+            assetCreationAction = transaction.logs[0].args.action;
 
             certificationCreationDescription = 'Certification created';
             transaction = await supplyChain.addAction(certificationCreationDescription);
             // certificationCreationAction = transaction.logs[0].args.action;
 
-            itemCertificationDescription = 'Instance certified';
-            transaction = await supplyChain.addAction(itemCertificationDescription);
-            // itemCertificationAction = transaction.logs[0].args.action;
+            assetCertificationDescription = 'Instance certified';
+            transaction = await supplyChain.addAction(assetCertificationDescription);
+            // assetCertificationAction = transaction.logs[0].args.action;
 
             transaction = await supplyChain.addRootRole('Root', { from: root });
             rootRole = transaction.logs[0].args.role;
@@ -79,41 +79,41 @@ contract('Token', (accounts) => {
             'Fails if minter not in ownerRole.',
             async () => {
                 // RootState(1)
-                const itemOne = (
+                const assetOne = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // RootState(2)
-                const itemTwo = (
+                const assetTwo = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // (1,2) <- (2)
                 await supplyChain.addInfoState(
-                    itemCreationAction,
-                    itemTwo,
-                    [itemOne],
+                    assetCreationAction,
+                    assetTwo,
+                    [assetOne],
                     { from: operator1 },
                 );
                 // (1) <- PartOf(2) X
                 await supplyChain.addPartOfState(
-                    itemCreationAction,
-                    itemOne,
-                    itemTwo,
+                    assetCreationAction,
+                    assetOne,
+                    assetTwo,
                     { from: owner1 },
                 );
 
                 await token.mint(
                     operator1,
-                    itemOne,
+                    assetOne,
                     100,
                     { from: operator1 },
                 );
@@ -125,41 +125,41 @@ contract('Token', (accounts) => {
             'Fails if token for composite not instantiated.',
             async () => {
                 // RootState(1)
-                const itemOne = (
+                const assetOne = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // RootState(2)
-                const itemTwo = (
+                const assetTwo = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // (1,2) <- (2)
                 await supplyChain.addInfoState(
-                    itemCreationAction,
-                    itemTwo,
-                    [itemOne],
+                    assetCreationAction,
+                    assetTwo,
+                    [assetOne],
                     { from: operator1 },
                 );
                 // (1) <- PartOf(2) X
                 await supplyChain.addPartOfState(
-                    itemCreationAction,
-                    itemOne,
-                    itemTwo,
+                    assetCreationAction,
+                    assetOne,
+                    assetTwo,
                     { from: owner1 },
                 );
 
                 await token.mint(
                     operator1,
-                    itemOne,
+                    assetOne,
                     100,
                     { from: owner1 },
                 );
@@ -167,94 +167,94 @@ contract('Token', (accounts) => {
             'Instantiate composite first.',
         );
 
-        it('Instantiates a token for a simple item', async () => {
+        it('Instantiates a token for a simple asset', async () => {
             // RootState(1)
-            const itemOne = (
+            const assetOne = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
 
             await token.mint(
                 owner1,
-                itemOne,
+                assetOne,
                 100,
                 { from: owner1 },
             );
             assert.equal(
-                (await token.ownerOf(itemOne)),
+                (await token.ownerOf(assetOne)),
                 owner1,
             );
             assert.equal(
-                (await token.faceValue.call(itemOne)).toNumber(),
+                (await token.faceValue.call(assetOne)).toNumber(),
                 100,
             );
         });
 
-        it('Instantiates a token for a composite item', async () => {
+        it('Instantiates a token for a composite asset', async () => {
             // RootState(1)
-            const itemOne = (
+            const assetOne = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // RootState(2)
-            const itemTwo = (
+            const assetTwo = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // (1,2) <- (2)
             await supplyChain.addInfoState(
-                itemCreationAction,
-                itemTwo,
-                [itemOne],
+                assetCreationAction,
+                assetTwo,
+                [assetOne],
                 { from: operator1 },
             );
             // RootState(1) <- PartOf(2) X
             await supplyChain.addPartOfState(
-                itemCreationAction,
-                itemOne,
-                itemTwo,
+                assetCreationAction,
+                assetOne,
+                assetTwo,
                 { from: owner1 },
             );
 
             await token.mint(
                 owner1,
-                itemTwo,
+                assetTwo,
                 100,
                 { from: owner1 },
             );
             await token.mint(
                 owner1,
-                itemOne,
+                assetOne,
                 50,
                 { from: owner1 },
             );
 
             assert.equal(
-                (await token.ownerOf(itemOne)),
+                (await token.ownerOf(assetOne)),
                 owner1,
             );
             assert.equal(
-                (await token.faceValue.call(itemOne)).toNumber(),
+                (await token.faceValue.call(assetOne)).toNumber(),
                 50,
             );
             assert.equal(
-                (await token.ownerOf(itemTwo)),
+                (await token.ownerOf(assetTwo)),
                 owner1,
             );
             assert.equal(
-                (await token.faceValue.call(itemTwo)).toNumber(),
+                (await token.faceValue.call(assetTwo)).toNumber(),
                 100,
             );
         });
@@ -263,53 +263,53 @@ contract('Token', (accounts) => {
             'Fails token for composite is instantiated but doesn\'t belong to owner',
             async () => {
                 // RootState(1)
-                const itemOne = (
+                const assetOne = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // RootState(2)
-                const itemTwo = (
+                const assetTwo = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // (1,2) <- (2)
                 await supplyChain.addInfoState(
-                    itemCreationAction,
-                    itemTwo,
-                    [itemOne],
+                    assetCreationAction,
+                    assetTwo,
+                    [assetOne],
                     { from: operator1 },
                 );
                 // RootState(1) <- PartOf(2) X
                 await supplyChain.addPartOfState(
-                    itemCreationAction,
-                    itemOne,
-                    itemTwo,
+                    assetCreationAction,
+                    assetOne,
+                    assetTwo,
                     { from: owner1 },
                 );
 
                 await token.mint(
                     owner1,
-                    itemTwo,
+                    assetTwo,
                     100,
                     { from: owner1 },
                 );
                 await token.transferFrom(
                     owner1,
                     owner2,
-                    itemTwo,
+                    assetTwo,
                     { from: owner1 },
                 );
                 await token.mint(
                     owner1,
-                    itemOne,
+                    assetOne,
                     50,
                     { from: owner1 },
                 );
@@ -321,47 +321,47 @@ contract('Token', (accounts) => {
             'Fails if face value higher than composite\'s',
             async () => {
                 // RootState(1)
-                const itemOne = (
+                const assetOne = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // RootState(2)
-                const itemTwo = (
+                const assetTwo = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // (1,2) <- (2)
                 await supplyChain.addInfoState(
-                    itemCreationAction,
-                    itemTwo,
-                    [itemOne],
+                    assetCreationAction,
+                    assetTwo,
+                    [assetOne],
                     { from: operator1 },
                 );
                 // (1) <- PartOf(2) X
                 await supplyChain.addPartOfState(
-                    itemCreationAction,
-                    itemOne,
-                    itemTwo,
+                    assetCreationAction,
+                    assetOne,
+                    assetTwo,
                     { from: owner1 },
                 );
 
                 await token.mint(
                     owner1,
-                    itemTwo,
+                    assetTwo,
                     100,
                     { from: owner1 },
                 );
                 await token.mint(
                     owner1,
-                    itemOne,
+                    assetOne,
                     150,
                     { from: owner1 },
                 );
@@ -373,69 +373,69 @@ contract('Token', (accounts) => {
             'Fails if face value higher than composite + parts',
             async () => {
                 // (1)
-                const itemOne = (
+                const assetOne = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // (2)
-                const itemTwo = (
+                const assetTwo = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // (3)
-                const itemThree = (
+                const assetThree = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // (1,2,3) <- (3)
                 await supplyChain.addInfoState(
-                    itemCreationAction,
-                    itemThree,
-                    [itemOne, itemTwo],
+                    assetCreationAction,
+                    assetThree,
+                    [assetOne, assetTwo],
                     { from: operator1 },
                 );
                 // (1) <- PartOf(3)
                 await supplyChain.addPartOfState(
-                    itemCreationAction,
-                    itemOne,
-                    itemThree,
+                    assetCreationAction,
+                    assetOne,
+                    assetThree,
                     { from: owner1 },
                 );
                 // (2) <- PartOf(3)
                 await supplyChain.addPartOfState(
-                    itemCreationAction,
-                    itemTwo,
-                    itemThree,
+                    assetCreationAction,
+                    assetTwo,
+                    assetThree,
                     { from: owner1 },
                 );
 
                 await token.mint(
                     owner1,
-                    itemThree,
+                    assetThree,
                     100,
                     { from: owner1 },
                 );
                 await token.mint(
                     owner1,
-                    itemOne,
+                    assetOne,
                     50,
                     { from: owner1 },
                 );
                 await token.mint(
                     owner1,
-                    itemTwo,
+                    assetTwo,
                     51,
                     { from: owner1 },
                 );
@@ -453,17 +453,17 @@ contract('Token', (accounts) => {
             transaction = await supplyChain.addAction(productCreationDescription);
             // productCreationAction = transaction.logs[0].args.action;
 
-            itemCreationDescription = 'Instance created.';
-            transaction = await supplyChain.addAction(itemCreationDescription);
-            itemCreationAction = transaction.logs[0].args.action;
+            assetCreationDescription = 'Instance created.';
+            transaction = await supplyChain.addAction(assetCreationDescription);
+            assetCreationAction = transaction.logs[0].args.action;
 
             certificationCreationDescription = 'Certification created';
             transaction = await supplyChain.addAction(certificationCreationDescription);
             // certificationCreationAction = transaction.logs[0].args.action;
 
-            itemCertificationDescription = 'Instance certified';
-            transaction = await supplyChain.addAction(itemCertificationDescription);
-            // itemCertificationAction = transaction.logs[0].args.action;
+            assetCertificationDescription = 'Instance certified';
+            transaction = await supplyChain.addAction(assetCertificationDescription);
+            // assetCertificationAction = transaction.logs[0].args.action;
 
             transaction = await supplyChain.addRootRole('Root', { from: root });
             rootRole = transaction.logs[0].args.role;
@@ -489,23 +489,23 @@ contract('Token', (accounts) => {
             'Fails if burner not in ownerRole.',
             async () => {
                 // RootState(1)
-                const itemOne = (
+                const assetOne = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
 
                 await token.mint(
                     owner1,
-                    itemOne,
+                    assetOne,
                     100,
                     { from: owner1 },
                 );
                 await token.burn(
-                    itemOne,
+                    assetOne,
                     { from: owner2 },
                 );
             },
@@ -513,95 +513,95 @@ contract('Token', (accounts) => {
         );
 
         itShouldThrow(
-            'Fails if item has parts with instantiated tokens.',
+            'Fails if asset has parts with instantiated tokens.',
             async () => {
                 // RootState(1)
-                const itemOne = (
+                const assetOne = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // RootState(2)
-                const itemTwo = (
+                const assetTwo = (
                     await supplyChain.addRootState(
-                        itemCreationAction,
+                        assetCreationAction,
                         operatorRole1,
                         ownerRole1,
                         { from: owner1 },
                     )
-                ).logs[0].args.item;
+                ).logs[0].args.asset;
                 // (1,2) <- (2)
                 await supplyChain.addInfoState(
-                    itemCreationAction,
-                    itemTwo,
-                    [itemOne],
+                    assetCreationAction,
+                    assetTwo,
+                    [assetOne],
                     { from: operator1 },
                 );
                 // (1) <- PartOf(2) X
                 await supplyChain.addPartOfState(
-                    itemCreationAction,
-                    itemOne,
-                    itemTwo,
+                    assetCreationAction,
+                    assetOne,
+                    assetTwo,
                     { from: owner1 },
                 );
 
                 await token.mint(
                     owner1,
-                    itemTwo,
+                    assetTwo,
                     100,
                     { from: owner1 },
                 );
                 await token.mint(
                     owner1,
-                    itemOne,
+                    assetOne,
                     50,
                     { from: owner1 },
                 );
                 await token.burn(
-                    itemTwo,
+                    assetTwo,
                     { from: owner1 },
                 );
             },
             'Burn part tokens first.',
         );
 
-        it('Burns a token for a simple item', async () => {
+        it('Burns a token for a simple asset', async () => {
             // RootState(1)
-            const itemOne = (
+            const assetOne = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             await token.mint(
                 owner1,
-                itemOne,
+                assetOne,
                 100,
                 { from: owner1 },
             );
             assert.equal(
-                (await token.ownerOf(itemOne)),
+                (await token.ownerOf(assetOne)),
                 owner1,
             );
             assert.equal(
-                (await token.faceValue.call(itemOne)).toNumber(),
+                (await token.faceValue.call(assetOne)).toNumber(),
                 100,
             );
             await token.burn(
-                itemOne,
+                assetOne,
                 { from: owner1 },
             );
             assert.equal(
-                (await token.exists(itemOne)),
+                (await token.exists(assetOne)),
                 false,
             );
             assert.equal(
-                (await token.faceValue.call(itemOne)).toNumber(),
+                (await token.faceValue.call(assetOne)).toNumber(),
                 0,
             );
         });

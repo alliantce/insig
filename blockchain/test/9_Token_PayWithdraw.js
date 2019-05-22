@@ -11,12 +11,12 @@ contract('Token', (accounts) => {
     let token;
     // let productCreationAction;
     let productCreationDescription;
-    let itemCreationAction;
-    let itemCreationDescription;
+    let assetCreationAction;
+    let assetCreationDescription;
     // let certificationCreationAction;
     let certificationCreationDescription;
-    // let itemCertificationAction;
-    let itemCertificationDescription;
+    // let assetCertificationAction;
+    let assetCertificationDescription;
     let transaction;
     const root = accounts[0];
     const operator1 = accounts[1];
@@ -43,17 +43,17 @@ contract('Token', (accounts) => {
             transaction = await supplyChain.addAction(productCreationDescription);
             // productCreationAction = transaction.logs[0].args.action;
 
-            itemCreationDescription = 'Instance created.';
-            transaction = await supplyChain.addAction(itemCreationDescription);
-            itemCreationAction = transaction.logs[0].args.action;
+            assetCreationDescription = 'Instance created.';
+            transaction = await supplyChain.addAction(assetCreationDescription);
+            assetCreationAction = transaction.logs[0].args.action;
 
             certificationCreationDescription = 'Certification created';
             transaction = await supplyChain.addAction(certificationCreationDescription);
             // certificationCreationAction = transaction.logs[0].args.action;
 
-            itemCertificationDescription = 'Instance certified';
-            transaction = await supplyChain.addAction(itemCertificationDescription);
-            // itemCertificationAction = transaction.logs[0].args.action;
+            assetCertificationDescription = 'Instance certified';
+            transaction = await supplyChain.addAction(assetCertificationDescription);
+            // assetCertificationAction = transaction.logs[0].args.action;
 
             transaction = await supplyChain.addRootRole('Root', { from: root });
             rootRole = transaction.logs[0].args.role;
@@ -89,36 +89,36 @@ contract('Token', (accounts) => {
 
         it('Pays for a simple token.', async () => {
             // RootState(1)
-            const itemOne = (
+            const assetOne = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
 
             await token.mint(
                 owner1,
-                itemOne,
+                assetOne,
                 100,
                 { from: owner1 },
             );
 
             const { amount } = (
                 await token.pay(
-                    itemOne,
+                    assetOne,
                     200,
                     { from: root },
                 )
             ).logs[0].args;
 
             assert.equal(
-                (await token.ownerOf(itemOne)),
+                (await token.ownerOf(assetOne)),
                 owner1,
             );
             assert.equal(
-                (await token.revenues.call(itemOne)).toNumber(),
+                (await token.revenues.call(assetOne)).toNumber(),
                 200,
             );
             assert.equal(
@@ -127,321 +127,321 @@ contract('Token', (accounts) => {
             );
         });
 
-        it('Pays a token for a composite item', async () => {
+        it('Pays a token for a composite asset', async () => {
             // RootState(1)
-            const itemOne = (
+            const assetOne = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // RootState(2)
-            const itemTwo = (
+            const assetTwo = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // (1,2) <- (2)
             await supplyChain.addInfoState(
-                itemCreationAction,
-                itemTwo,
-                [itemOne],
+                assetCreationAction,
+                assetTwo,
+                [assetOne],
                 { from: operator1 },
             );
             // RootState(1) <- PartOf(2) X
             await supplyChain.addPartOfState(
-                itemCreationAction,
-                itemOne,
-                itemTwo,
+                assetCreationAction,
+                assetOne,
+                assetTwo,
                 { from: owner1 },
             );
 
             await token.mint(
                 owner1,
-                itemTwo,
+                assetTwo,
                 100,
                 { from: owner1 },
             );
             await token.mint(
                 owner1,
-                itemOne,
+                assetOne,
                 50,
                 { from: owner1 },
             );
             await token.pay(
-                itemTwo,
+                assetTwo,
                 400,
                 { from: root },
             );
 
             assert.equal(
-                (await token.revenues.call(itemOne)).toNumber(),
+                (await token.revenues.call(assetOne)).toNumber(),
                 200,
             );
             assert.equal(
-                (await token.revenues.call(itemTwo)).toNumber(),
+                (await token.revenues.call(assetTwo)).toNumber(),
                 200,
             );
         });
 
         it('Ignores non-parts when paying.', async () => {
             // RootState(1)
-            const itemOne = (
+            const assetOne = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // RootState(2)
-            const itemTwo = (
+            const assetTwo = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // RootState(3)
-            const itemThree = (
+            const assetThree = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // (1,2,3) <- (3)
             await supplyChain.addInfoState(
-                itemCreationAction,
-                itemThree,
-                [itemOne, itemTwo],
+                assetCreationAction,
+                assetThree,
+                [assetOne, assetTwo],
                 { from: operator1 },
             );
             // (1) <- PartOf(3)
             await supplyChain.addPartOfState(
-                itemCreationAction,
-                itemOne,
-                itemThree,
+                assetCreationAction,
+                assetOne,
+                assetThree,
                 { from: owner1 },
             );
 
             await token.mint(
                 owner1,
-                itemThree,
+                assetThree,
                 100,
                 { from: owner1 },
             );
             await token.mint(
                 owner1,
-                itemOne,
+                assetOne,
                 50,
                 { from: owner1 },
             );
             await token.pay(
-                itemThree,
+                assetThree,
                 400,
                 { from: root },
             );
 
             assert.equal(
-                (await token.revenues.call(itemOne)).toNumber(),
+                (await token.revenues.call(assetOne)).toNumber(),
                 200,
             );
             assert.equal(
-                (await token.revenues.call(itemThree)).toNumber(),
+                (await token.revenues.call(assetThree)).toNumber(),
                 200,
             );
         });
 
         it('Pays to multiple parts.', async () => {
             // RootState(1)
-            const itemOne = (
+            const assetOne = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // RootState(2)
-            const itemTwo = (
+            const assetTwo = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // RootState(2)
-            const itemThree = (
+            const assetThree = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // (1,2,3) <- (3)
             await supplyChain.addInfoState(
-                itemCreationAction,
-                itemThree,
-                [itemOne, itemTwo],
+                assetCreationAction,
+                assetThree,
+                [assetOne, assetTwo],
                 { from: operator1 },
             );
             // RootState(1) <- PartOf(3) X
             await supplyChain.addPartOfState(
-                itemCreationAction,
-                itemOne,
-                itemThree,
+                assetCreationAction,
+                assetOne,
+                assetThree,
                 { from: owner1 },
             );
             // RootState(2) <- PartOf(3) X
             await supplyChain.addPartOfState(
-                itemCreationAction,
-                itemTwo,
-                itemThree,
+                assetCreationAction,
+                assetTwo,
+                assetThree,
                 { from: owner1 },
             );
 
             await token.mint(
                 owner1,
-                itemThree,
+                assetThree,
                 100,
                 { from: owner1 },
             );
             await token.mint(
                 owner1,
-                itemOne,
+                assetOne,
                 20,
                 { from: owner1 },
             );
             await token.mint(
                 owner1,
-                itemTwo,
+                assetTwo,
                 30,
                 { from: owner1 },
             );
             await token.pay(
-                itemThree,
+                assetThree,
                 400,
                 { from: root },
             );
 
             assert.equal(
-                (await token.revenues.call(itemThree)).toNumber(),
+                (await token.revenues.call(assetThree)).toNumber(),
                 200,
             );
             assert.equal(
-                (await token.revenues.call(itemTwo)).toNumber(),
+                (await token.revenues.call(assetTwo)).toNumber(),
                 120,
             );
             assert.equal(
-                (await token.revenues.call(itemOne)).toNumber(),
+                (await token.revenues.call(assetOne)).toNumber(),
                 80,
             );
         });
 
         it('Pays in multiple part levels.', async () => {
             // (1)
-            const itemOne = (
+            const assetOne = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // (2)
-            const itemTwo = (
+            const assetTwo = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // (3)
-            const itemThree = (
+            const assetThree = (
                 await supplyChain.addRootState(
-                    itemCreationAction,
+                    assetCreationAction,
                     operatorRole1,
                     ownerRole1,
                     { from: owner1 },
                 )
-            ).logs[0].args.item;
+            ).logs[0].args.asset;
             // (1,2) <- (2)
             await supplyChain.addInfoState(
-                itemCreationAction,
-                itemTwo,
-                [itemOne],
+                assetCreationAction,
+                assetTwo,
+                [assetOne],
                 { from: operator1 },
             );
             // (1) <- PartOf(2)
             await supplyChain.addPartOfState(
-                itemCreationAction,
-                itemOne,
-                itemTwo,
+                assetCreationAction,
+                assetOne,
+                assetTwo,
                 { from: owner1 },
             );
 
             // (2,3) <- (3)
             await supplyChain.addInfoState(
-                itemCreationAction,
-                itemThree,
-                [itemTwo],
+                assetCreationAction,
+                assetThree,
+                [assetTwo],
                 { from: operator1 },
             );
             // (2) <- PartOf(3)
             await supplyChain.addPartOfState(
-                itemCreationAction,
-                itemTwo,
-                itemThree,
+                assetCreationAction,
+                assetTwo,
+                assetThree,
                 { from: owner1 },
             );
 
             await token.mint(
                 owner1,
-                itemThree,
+                assetThree,
                 200,
                 { from: owner1 },
             );
             await token.mint(
                 owner1,
-                itemTwo,
+                assetTwo,
                 100,
                 { from: owner1 },
             );
 
             await token.mint(
                 owner1,
-                itemOne,
+                assetOne,
                 30,
                 { from: owner1 },
             );
 
             await token.pay(
-                itemThree,
+                assetThree,
                 800,
                 { from: root },
             );
 
             assert.equal(
-                (await token.revenues.call(itemThree)).toNumber(),
+                (await token.revenues.call(assetThree)).toNumber(),
                 400,
             );
             assert.equal(
-                (await token.revenues.call(itemTwo)).toNumber(),
+                (await token.revenues.call(assetTwo)).toNumber(),
                 280,
             );
             assert.equal(
-                (await token.revenues.call(itemOne)).toNumber(),
+                (await token.revenues.call(assetOne)).toNumber(),
                 120,
             );
         });

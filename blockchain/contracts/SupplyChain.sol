@@ -17,7 +17,7 @@ contract SupplyChain is RBAC {
 
     event ActionCreated(uint256 action);
     event StateCreated(uint256 state);
-    event ItemCreated(uint256 item);
+    event AssetCreated(uint256 asset);
 
     /**
      * @notice Supply chain state data. By chaining these and not allowing them to be modified
@@ -27,16 +27,16 @@ contract SupplyChain is RBAC {
      * struct packing.
      * @param creator The creator of this state.
      * @param action The action of this state.
-     * @param item The id of the object that this state refers to.
+     * @param asset The id of the object that this state refers to.
      * @param precedents The ids of the states that precede this one in the supply chain.
-     * @param partOf The id of some other item that this is part of and inherits permissions from.
+     * @param partOf The id of some other asset that this is part of and inherits permissions from.
      * @param operatorRole The roles allowed to append states to this one.
      * @param ownerRole The roles allowed to append states with different permissions.
      */
     struct State {
         address creator;
         uint256 action;
-        uint256 item;
+        uint256 asset;
         uint256[] precedents;
         uint256 partOf;
         uint256 operatorRole;
@@ -56,12 +56,12 @@ contract SupplyChain is RBAC {
     string[] internal actions;
 
     /**
-     * @notice Item counter
+     * @notice Asset counter
      */
-    uint256 public totalItems;
+    uint256 public totalAssets;
 
     /**
-     * @notice Mapping from item id to the last state in the lifecycle of that item.
+     * @notice Mapping from asset id to the last state in the lifecycle of that asset.
      */
     mapping(uint256 => uint256) public lastStates;
 
@@ -75,17 +75,17 @@ contract SupplyChain is RBAC {
             // solium-disable-next-line arg-overflow
             State(address(0), 0, 0, emptyArray, 0, 0, 0)
         );
-        totalItems = 0;
+        totalAssets = 0;
     }
 
     /**
      * @notice Create a new state action.
      * @param _actionDescription The description of the action being created.
      * @dev Product lines can be implemented with a state action that indicates the creation of a
-     * product line that is a parent to all items of that product. The creation of an item
+     * product line that is a parent to all assets of that product. The creation of an asset
      * would also be its own state action, which would usually have as precedents a product line state
-     * and other item states for parts and materials. If implementing product lines as a state
-     * action the item id could be thought of as the product id and retrieved from lastStates
+     * and other asset states for parts and materials. If implementing product lines as a state
+     * action the asset id could be thought of as the product id and retrieved from lastStates
      * @return The action id.
      */
     function addAction(string memory _actionDescription)
@@ -140,16 +140,16 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Returns whether an item exists.
-     * @param _item The id for the item.
-     * @return Whether an item exists.
+     * @notice Returns whether an asset exists.
+     * @param _asset The id for the asset.
+     * @return Whether an asset exists.
      */
-    function isItem(uint256 _item)
+    function isAsset(uint256 _asset)
         public
         view
         returns(bool)
     {
-        return lastStates[_item] != 0;
+        return lastStates[_asset] != 0;
     }
 
     /**
@@ -166,62 +166,62 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Retrieve the direct composite item of another one, if existing.
-     * @param _item The item id verify if it's part of another one.
-     * @return The direct composite item.
+     * @notice Retrieve the direct composite asset of another one, if existing.
+     * @param _asset The asset id verify if it's part of another one.
+     * @return The direct composite asset.
      */
-    function getPartOf(uint256 _item)
+    function getPartOf(uint256 _asset)
         public
         view
         returns(uint256)
     {
-        return states[lastStates[_item]].partOf;
+        return states[lastStates[_asset]].partOf;
     }
 
     /**
-     * @notice Retrieve the ultimate composite item of another one, if existing.
-     * @param _item The item id to start looking from.
-     * @return The ultimate composite item.
+     * @notice Retrieve the ultimate composite asset of another one, if existing.
+     * @param _asset The asset id to start looking from.
+     * @return The ultimate composite asset.
      */
-    function getComposite(uint256 _item)
+    function getComposite(uint256 _asset)
         public
         view
         returns(uint256)
     {
-        uint256 item = _item;
-        State memory state = states[lastStates[item]];
+        uint256 asset = _asset;
+        State memory state = states[lastStates[asset]];
         while (state.partOf != NO_ITEM) {
-            item = state.partOf;
-            state = states[lastStates[item]];
+            asset = state.partOf;
+            state = states[lastStates[asset]];
         }
-        return item;
+        return asset;
     }
 
     /**
-     * @notice Explore the state tree backwards, to a depth of one item transformation in each
-     * branch, to count all the items that contributed directly to this one.
+     * @notice Explore the state tree backwards, to a depth of one asset transformation in each
+     * branch, to count all the assets that contributed directly to this one.
      * @dev The whole purpose of this function is to allow getParts to instantiate an array of the
-     * required length to return the item ids, since dynamic arrays are not supported in memory.
-     * @param _item The item id to count parts for.
-     * @return The direct composite item.
+     * required length to return the asset ids, since dynamic arrays are not supported in memory.
+     * @param _asset The asset id to count parts for.
+     * @return The direct composite asset.
      */
-    function countParts(uint256 _item)
+    function countParts(uint256 _asset)
         public
         view
         returns(uint256)
     {
-        // For all precedents to an item, only one of them can share the same item id
-        // If a precedent shares the same item id, store the state id and continue with it after exploring precedents with different ids
-        // For each precedent with a different item id which is part of this item, add 1 to the counter.
+        // For all precedents to an asset, only one of them can share the same asset id
+        // If a precedent shares the same asset id, store the state id and continue with it after exploring precedents with different ids
+        // For each precedent with a different asset id which is part of this asset, add 1 to the counter.
         uint256 count = 0;
-        uint256 nextStateId = lastStates[_item];
+        uint256 nextStateId = lastStates[_asset];
         while (nextStateId != NO_STEP) {
             State memory state = states[nextStateId];
             nextStateId = NO_STEP;
             for (uint256 i = 0; i < state.precedents.length; i += 1) {
                 uint256 precedentStateId = state.precedents[i];
-                if (states[precedentStateId].item != _item &&
-                    getPartOf(states[precedentStateId].item) == _item) {
+                if (states[precedentStateId].asset != _asset &&
+                    getPartOf(states[precedentStateId].asset) == _asset) {
                     count += 1;
                 } else { // Only one of this can exist, store it to continue at the end of precedents.
                     nextStateId = precedentStateId;
@@ -233,27 +233,27 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Explore the state tree backwards, to a depth of one item transformation in each
-     * branch, to find all the items that contributed directly to this one.
-     * @param _item The item id to find parts for.
-     * @return The direct composite item.
+     * @notice Explore the state tree backwards, to a depth of one asset transformation in each
+     * branch, to find all the assets that contributed directly to this one.
+     * @param _asset The asset id to find parts for.
+     * @return The direct composite asset.
      */
-    function getParts(uint256 _item)
+    function getParts(uint256 _asset)
         public
         view
         returns(uint256[] memory)
     {
-        uint256[] memory parts = new uint256[](countParts(_item));
+        uint256[] memory parts = new uint256[](countParts(_asset));
         uint256 count = 0;
-        uint256 nextStateId = lastStates[_item];
+        uint256 nextStateId = lastStates[_asset];
         while (nextStateId != NO_STEP) {
             State memory state = states[nextStateId];
             nextStateId = NO_STEP;
             for (uint256 i = 0; i < state.precedents.length; i += 1) {
                 uint256 precedentStateId = state.precedents[i];
-                if (states[precedentStateId].item != _item &&
-                    getPartOf(states[precedentStateId].item) == _item) {
-                    parts[count] = states[precedentStateId].item;
+                if (states[precedentStateId].asset != _asset &&
+                    getPartOf(states[precedentStateId].asset) == _asset) {
+                    parts[count] = states[precedentStateId].asset;
                     count += 1;
                 } else { // Only one of this can exist, store it to continue at the end of precedents.
                     nextStateId = precedentStateId;
@@ -264,70 +264,70 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Retrieve the authorized operator role for an item, taking into account composition.
-     * @param _item The item id of the item to retrieve operatorRole for.
+     * @notice Retrieve the authorized operator role for an asset, taking into account composition.
+     * @param _asset The asset id of the asset to retrieve operatorRole for.
      * @return The authorized operatorRole for this state.
      */
-    function getOperatorRole(uint256 _item)
+    function getOperatorRole(uint256 _asset)
         public
         view
         returns(uint256)
     {
-        return states[lastStates[getComposite(_item)]].operatorRole;
+        return states[lastStates[getComposite(_asset)]].operatorRole;
     }
 
     /**
-     * @notice Retrieve the authorized owner role for an item, taking into account composition.
-     * @param _item The item id of the item to retrieve ownerRole for.
+     * @notice Retrieve the authorized owner role for an asset, taking into account composition.
+     * @param _asset The asset id of the asset to retrieve ownerRole for.
      * @return The authorized ownerRole for this state.
      */
-    function getOwnerRole(uint256 _item)
+    function getOwnerRole(uint256 _asset)
         public
         view
         returns(uint256)
     {
-        return states[lastStates[getComposite(_item)]].ownerRole;
+        return states[lastStates[getComposite(_asset)]].ownerRole;
     }
 
     /**
-     * @notice Check if an address can operate an item in the supply chain
+     * @notice Check if an address can operate an asset in the supply chain
      * @param _address The address to check operator role for.
-     * @param _item The id of the item to check
+     * @param _asset The id of the asset to check
      */
-    function isOperator(address _address, uint256 _item)
+    function isOperator(address _address, uint256 _asset)
         public
         view
         returns(bool)
     {
-        return hasRole(_address, getOperatorRole(_item));
+        return hasRole(_address, getOperatorRole(_asset));
     }
 
     /**
-     * @notice Check if an address owns an item in the supply chain
+     * @notice Check if an address owns an asset in the supply chain
      * @param _address The address to check ownership for.
-     * @param _item The id of the item to check
+     * @param _asset The id of the asset to check
      */
-    function isOwner(address _address, uint256 _item)
+    function isOwner(address _address, uint256 _asset)
         public
         view
         returns(bool)
     {
-        return hasRole(_address, getOwnerRole(_item));
+        return hasRole(_address, getOwnerRole(_asset));
     }
 
     /**
      * @notice Create a new state.
      * @param _action The action of this state.
-     * @param _item The id of the object that this state refers to.
+     * @param _asset The id of the object that this state refers to.
      * @param _precedents The ids of the states that precede this one in the supply chain.
-     * @param _partOf The id of some other item that this is part of and inherits permissions from.
+     * @param _partOf The id of some other asset that this is part of and inherits permissions from.
      * @param _operatorRole The roles allowed to append states to this one.
      * @param _ownerRole The roles allowed to append states with different permissions.
      */
     function pushState
     (
         uint256 _action,
-        uint256 _item,
+        uint256 _asset,
         uint256[] memory _precedents,
         uint256 _partOf,
         uint256 _operatorRole,
@@ -341,14 +341,14 @@ contract SupplyChain is RBAC {
             State(
                 msg.sender,
                 _action,
-                _item,
+                _asset,
                 _precedents,
                 _partOf,
                 _operatorRole,
                 _ownerRole
             )
         ) - 1;
-        lastStates[_item] = stateId;
+        lastStates[_asset] = stateId;
         emit StateCreated(stateId);
     }
 
@@ -372,13 +372,13 @@ contract SupplyChain is RBAC {
 
         require(hasRole(msg.sender, _ownerRole), "Creator not in ownerRole.");
 
-        totalItems += 1;
-        emit ItemCreated(totalItems);
+        totalAssets += 1;
+        emit AssetCreated(totalAssets);
 
         uint256[] memory emptyArray;
         pushState(
             _action,
-            totalItems,
+            totalAssets,
             emptyArray,
             NO_PARTOF,
             _operatorRole,
@@ -387,88 +387,88 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Create a new supply chain state with no changes on ownership or item.
+     * @notice Create a new supply chain state with no changes on ownership or asset.
      * @param _action The index for the state action as defined in the actions array.
-     * @param _item The item id that this state is for. The operatorRole and ownerRole are inherited
+     * @param _asset The asset id that this state is for. The operatorRole and ownerRole are inherited
      * from its last state.
-     * @param _precedentItems An array of the item ids for items considered to be predecessors to
-     * this one. The item passed in the previous parameter is added on to these.
+     * @param _precedentAssets An array of the asset ids for assets considered to be predecessors to
+     * this one. The asset passed in the previous parameter is added on to these.
      */
     function addInfoState
     (
         uint256 _action,
-        uint256 _item,
-        uint256[] memory _precedentItems
+        uint256 _asset,
+        uint256[] memory _precedentAssets
     )
         public
     {
         // Check all precedents exist.
-        for (uint i = 0; i < _precedentItems.length; i++) {
-            require(isItem(_precedentItems[i]), "Precedent item does not exist.");
+        for (uint i = 0; i < _precedentAssets.length; i++) {
+            require(isAsset(_precedentAssets[i]), "Precedent asset does not exist.");
         }
 
         // TODO: Check for repeated precedents in the array.
 
-        // Check the item id is not in precedents
-        bool repeatItem = false;
-        for (uint i = 0; i < _precedentItems.length; i++) {
-            if (_precedentItems[i] == _item) {
-                repeatItem = true;
+        // Check the asset id is not in precedents
+        bool repeatAsset = false;
+        for (uint i = 0; i < _precedentAssets.length; i++) {
+            if (_precedentAssets[i] == _asset) {
+                repeatAsset = true;
                 break;
             }
         }
-        require (!repeatItem, "Item in precedents."); // TODO: Extract to a function and use in addPartOfState
+        require (!repeatAsset, "Asset in precedents."); // TODO: Extract to a function and use in addPartOfState
 
-        // Check user belongs to the operatorRole of item and all precedents.
-        require(isOperator(msg.sender, _item), "Not an operator of precedents.");
-        for (uint i = 0; i < _precedentItems.length; i++) {
-            require(isOperator(msg.sender, _precedentItems[i]), "Not an operator of precedents.");
+        // Check user belongs to the operatorRole of asset and all precedents.
+        require(isOperator(msg.sender, _asset), "Not an operator of precedents.");
+        for (uint i = 0; i < _precedentAssets.length; i++) {
+            require(isOperator(msg.sender, _precedentAssets[i]), "Not an operator of precedents.");
         }
 
         // Build precedents array out of states from lastStates[_precedents[i]]
-        uint256[] memory precedents = new uint256[](_precedentItems.length + 1);
-        precedents[0] = lastStates[_item];
-        for (uint i = 0; i < _precedentItems.length; i++) {
-            precedents[i + 1] = lastStates[_precedentItems[i]];
+        uint256[] memory precedents = new uint256[](_precedentAssets.length + 1);
+        precedents[0] = lastStates[_asset];
+        for (uint i = 0; i < _precedentAssets.length; i++) {
+            precedents[i + 1] = lastStates[_precedentAssets[i]];
         }
 
         pushState(
             _action,
-            _item,
+            _asset,
             precedents,
             NO_PARTOF,
-            getOperatorRole(_item),
-            getOwnerRole(_item)
+            getOperatorRole(_asset),
+            getOwnerRole(_asset)
         );
     }
 
     /**
-     * @notice Create a new supply chain state representing the handover of an item.
+     * @notice Create a new supply chain state representing the handover of an asset.
      * In practical terms it is a change in the permissions.
      * @param _action The index for the state action as defined in the actions array.
-     * @param _item The item being handed over.
+     * @param _asset The asset being handed over.
      * @param _operatorRole The roles allowed to append states to this one.
      * @param _ownerRole The roles allowed to append states with different permissions.
      */
     function addHandoverState
     (
         uint256 _action,
-        uint256 _item,
+        uint256 _asset,
         uint256 _operatorRole,
         uint256 _ownerRole
     )
         public
     {
-        require(isItem(_item), "Item does not exist.");
+        require(isAsset(_asset), "Asset does not exist.");
 
-        require(isOwner(msg.sender, _item), "Needs owner for handover.");
+        require(isOwner(msg.sender, _asset), "Needs owner for handover.");
 
         uint256[] memory precedents = new uint256[](1);
-        precedents[0] = lastStates[_item];
+        precedents[0] = lastStates[_asset];
 
         pushState(
             _action,
-            _item,
+            _asset,
             precedents,
             NO_PARTOF,
             _operatorRole,
@@ -477,44 +477,44 @@ contract SupplyChain is RBAC {
     }
 
     /**
-     * @notice Create a new supply chain state representing that an item has become a part of
-     * another item.
+     * @notice Create a new supply chain state representing that an asset has become a part of
+     * another asset.
      * @param _action The index for the state action as defined in the actions array.
-     * @param _item The item being made a part of another.
-     * @param _partOf The item id for the item that this one is being made a part of.
+     * @param _asset The asset being made a part of another.
+     * @param _partOf The asset id for the asset that this one is being made a part of.
      */
     function addPartOfState
     (
         uint256 _action,
-        uint256 _item,
+        uint256 _asset,
         uint256 _partOf
     )
         public
     {
-        require(isItem(_item), "Item does not exist.");
+        require(isAsset(_asset), "Asset does not exist.");
 
-        require(isOwner(msg.sender, _item), "Needs owner for partOf.");
+        require(isOwner(msg.sender, _asset), "Needs owner for partOf.");
 
-        require(isItem(_partOf), "Composite item does not exist.");
+        require(isAsset(_partOf), "Composite asset does not exist.");
 
-        // Require that a state for _item is in of states[lastStates[_partOf]].precedents
-        // TODO: Check for precedent items, not precedent states
+        // Require that a state for _asset is in of states[lastStates[_partOf]].precedents
+        // TODO: Check for precedent assets, not precedent states
         bool isPrecedent = false;
         uint256[] memory partOfprecedents = states[lastStates[_partOf]].precedents;
         for (uint256 i = 0; i < partOfprecedents.length; i += 1) {
-            if (states[partOfprecedents[i]].item == _item) {
+            if (states[partOfprecedents[i]].asset == _asset) {
                 isPrecedent = true;
                 break;
             }
         }
-        require(isPrecedent, "Item not precedent of partOf.");
+        require(isPrecedent, "Asset not precedent of partOf.");
 
         uint256[] memory precedents = new uint256[](1);
-        precedents[0] = lastStates[_item];
+        precedents[0] = lastStates[_asset];
 
         pushState(
             _action,
-            _item,
+            _asset,
             precedents,
             _partOf,
             NO_ROLE,
@@ -522,7 +522,7 @@ contract SupplyChain is RBAC {
         );
     }
 
-    // TODO: Consider a new supply chain state implying a composition of a new item from others,
+    // TODO: Consider a new supply chain state implying a composition of a new asset from others,
     // creating an Info and a PartOf states so that the composition is transactional.
 
 }

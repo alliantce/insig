@@ -24,17 +24,17 @@ enum DOMNames {
     infoStateForm = 'infoStateForm',
     infoStateAction = 'infoStateAction',
     infoStatePrecedents = 'infoStatePrecedents',
-    infoStateItem = 'infoStateItem',
+    infoStateAsset = 'infoStateAsset',
     // handover
     handoverStateForm = 'handoverStateForm',
     handoverStateAction = 'handoverStateAction',
-    handoverStateItem = 'handoverStateItem',
+    handoverStateAsset = 'handoverStateAsset',
     handoverStateOperatorRole = 'handoverStateOperatorRole',
     handoverStateOwnerRole = 'handoverStateOwnerRole',
     // partof
     parteOfStateForm = 'parteOfStateForm',
     parteOfStateAction = 'parteOfStateAction',
-    parteOfStateItem = 'parteOfStateItem',
+    parteOfStateAsset = 'parteOfStateAsset',
     parteOfStateParteOf = 'parteOfStateParteOf',
 }
 interface IAddState extends IBlockchainState {
@@ -47,13 +47,13 @@ interface IAddState extends IBlockchainState {
     rootStateOwnerRole: string;
     infoStateAction: string;
     infoStatePrecedents: string;
-    infoStateItem: string;
+    infoStateAsset: string;
     handoverStateAction: string;
-    handoverStateItem: string;
+    handoverStateAsset: string;
     handoverStateOperatorRole: string;
     handoverStateOwnerRole: string;
     parteOfStateAction: string;
-    parteOfStateItem: string;
+    parteOfStateAsset: string;
     parteOfStateParteOf: string;
     rolesList: Array<{ description: string, index: number }>;
     rbac: IRBAC;
@@ -67,17 +67,17 @@ class AddState extends Component<{}, IAddState> {
             activeLink: null as any,
             currentTab: '',
             handoverStateAction: 'default',
-            handoverStateItem: '',
+            handoverStateAsset: '',
             handoverStateOperatorRole: 'default',
             handoverStateOwnerRole: 'default',
             infoStateAction: 'default',
-            infoStateItem: '',
+            infoStateAsset: '',
             infoStatePrecedents: '',
             links: [],
             listActions: [],
             nodes: [],
             parteOfStateAction: 'default',
-            parteOfStateItem: '',
+            parteOfStateAsset: '',
             parteOfStateParteOf: '',
             rbac: undefined as any,
             rolesList: [],
@@ -130,14 +130,14 @@ class AddState extends Component<{}, IAddState> {
                 this.setState({ infoStateAction: event.target.value });
             } else if (event.target.name === DOMNames.infoStatePrecedents) {
                 this.setState({ infoStatePrecedents: event.target.value });
-            } else if (event.target.name === DOMNames.infoStateItem) {
-                this.setState({ infoStateItem: event.target.value });
+            } else if (event.target.name === DOMNames.infoStateAsset) {
+                this.setState({ infoStateAsset: event.target.value });
             }
         } else if (currentTab === DOMNames.handoverStateForm) {
             if (event.target.name === DOMNames.handoverStateAction) {
                 this.setState({ handoverStateAction: event.target.value });
-            } else if (event.target.name === DOMNames.handoverStateItem) {
-                this.setState({ handoverStateItem: event.target.value });
+            } else if (event.target.name === DOMNames.handoverStateAsset) {
+                this.setState({ handoverStateAsset: event.target.value });
             } else if (event.target.name === DOMNames.handoverStateOperatorRole) {
                 this.setState({ handoverStateOperatorRole: event.target.value });
             } else if (event.target.name === DOMNames.handoverStateOwnerRole) {
@@ -146,8 +146,8 @@ class AddState extends Component<{}, IAddState> {
         } else if (currentTab === DOMNames.parteOfStateForm) {
             if (event.target.name === DOMNames.parteOfStateAction) {
                 this.setState({ parteOfStateAction: event.target.value });
-            } else if (event.target.name === DOMNames.parteOfStateItem) {
-                this.setState({ parteOfStateItem: event.target.value });
+            } else if (event.target.name === DOMNames.parteOfStateAsset) {
+                this.setState({ parteOfStateAsset: event.target.value });
             } else if (event.target.name === DOMNames.parteOfStateParteOf) {
                 this.setState({ parteOfStateParteOf: event.target.value });
             }
@@ -165,14 +165,14 @@ class AddState extends Component<{}, IAddState> {
             rootStateOperatorRole,
             rootStateOwnerRole,
             infoStateAction,
-            infoStateItem,
+            infoStateAsset,
             infoStatePrecedents,
             handoverStateAction,
-            handoverStateItem,
+            handoverStateAsset,
             handoverStateOperatorRole,
             handoverStateOwnerRole,
             parteOfStateAction,
-            parteOfStateItem,
+            parteOfStateAsset,
             parteOfStateParteOf,
             userAccount,
         } = this.state;
@@ -197,7 +197,7 @@ class AddState extends Component<{}, IAddState> {
             }
             supplyChain.addInfoState(
                 new BigNumber(infoStateAction),
-                new BigNumber(infoStateItem),
+                new BigNumber(infoStateAsset),
                 resultPrecedents,
                 { from: userAccount },
             ).then(() => {
@@ -206,7 +206,7 @@ class AddState extends Component<{}, IAddState> {
         } else if (currentTab === DOMNames.handoverStateForm) {
             supplyChain.addHandoverState(
                 new BigNumber(handoverStateAction),
-                new BigNumber(handoverStateItem),
+                new BigNumber(handoverStateAsset),
                 new BigNumber(handoverStateOperatorRole),
                 new BigNumber(handoverStateOwnerRole),
                 { from: userAccount },
@@ -216,7 +216,7 @@ class AddState extends Component<{}, IAddState> {
         } else if (currentTab === DOMNames.parteOfStateForm) {
             supplyChain.addPartOfState(
                 new BigNumber(parteOfStateAction),
-                new BigNumber(parteOfStateItem),
+                new BigNumber(parteOfStateAsset),
                 new BigNumber(parteOfStateParteOf),
                 { from: userAccount },
             ).then(() => {
@@ -279,13 +279,13 @@ class AddState extends Component<{}, IAddState> {
             rootStateOwnerRole,
             infoStateAction,
             infoStatePrecedents,
-            infoStateItem,
+            infoStateAsset,
             handoverStateAction,
-            handoverStateItem,
+            handoverStateAsset,
             handoverStateOperatorRole,
             handoverStateOwnerRole,
             parteOfStateAction,
-            parteOfStateItem,
+            parteOfStateAsset,
             parteOfStateParteOf,
             rolesList,
         } = this.state;
@@ -357,9 +357,9 @@ class AddState extends Component<{}, IAddState> {
                         <input
                             className="input"
                             type="text"
-                            placeholder="Item"
-                            name={DOMNames.infoStateItem}
-                            value={infoStateItem}
+                            placeholder="Asset"
+                            name={DOMNames.infoStateAsset}
+                            value={infoStateAsset}
                             onChange={this.handleChange}
                         />
                         <br />
@@ -383,9 +383,9 @@ class AddState extends Component<{}, IAddState> {
                         <input
                             className="input"
                             type="text"
-                            placeholder="Item"
-                            name={DOMNames.handoverStateItem}
-                            value={handoverStateItem}
+                            placeholder="Asset"
+                            name={DOMNames.handoverStateAsset}
+                            value={handoverStateAsset}
                             onChange={this.handleChange}
                         />
                         <br />
@@ -431,9 +431,9 @@ class AddState extends Component<{}, IAddState> {
                         <input
                             className="input"
                             type="text"
-                            placeholder="Item"
-                            name={DOMNames.parteOfStateItem}
-                            value={parteOfStateItem}
+                            placeholder="Asset"
+                            name={DOMNames.parteOfStateAsset}
+                            value={parteOfStateAsset}
                             onChange={this.handleChange}
                         />
                         <br />
@@ -477,13 +477,13 @@ class AddState extends Component<{}, IAddState> {
      */
     private loadGraphicData = () => {
         const { supplyChain } = this.state;
-        // get the total items
-        supplyChain.totalItems().then(async (tItems) => {
+        // get the total assets
+        supplyChain.totalAssets().then(async (tAssets) => {
             const links: [{ source: number, target: number, value: number }] = [] as any;
             const nodes: [{ name: string }] = [] as any;
             let highestStateNumber = 0;
             // and then navigate through the precedents of each one
-            for (let i = 1; i <= tItems.toNumber(); i += 1) {
+            for (let i = 1; i <= tAssets.toNumber(); i += 1) {
                 const lastStateN = await supplyChain.lastStates(new BigNumber(i));
                 if (lastStateN.toNumber() > highestStateNumber) {
                     highestStateNumber = lastStateN.toNumber();

@@ -12,31 +12,31 @@ In [TechHQ](https://www.techhq.io/) we have been involved in designing a number 
 
 At the core of our solution is the data representation for the Supply Chain as a Directed Acyclic Graph. Many have proposed using an ERC721 token for this task, and at first sight it might look like a good idea. ERC721 tokens are uniquely identifiable and indivisible, so it is easy to think that a token can represent a part that changes hands through the supply chain.
 
-However, the ERC721 token focuses very strongly in the handover part, and not so much in providing easy use of the history of the item represented. Another issue is that although ERC721 tokens are indivisible, Supply Chains often work with raw materials that are always divisible, as well as with batches of items that would be too cumbersome to track individually.
+However, the ERC721 token focuses very strongly in the handover part, and not so much in providing easy use of the history of the asset represented. Another issue is that although ERC721 tokens are indivisible, Supply Chains often work with raw materials that are always divisible, as well as with batches of assets that would be too cumbersome to track individually.
 
-In this solution we are going to depart from the physical-item-as-token representation, and instead we are going to focus on the lifecycle of those physical items, including partitioning and composing them. Our base data element is going to be  a **State**, which will represent an event at a specific time for an item which is part of some supply chain. Some example states could be:
+In this solution we are going to depart from the physical-asset-as-token representation, and instead we are going to focus on the lifecycle of those physical assets, including partitioning and composing them. Our base data element is going to be  a **State**, which will represent an event at a specific time for an asset which is part of some supply chain. Some example states could be:
 
-*   The production of an item.
-*   The certification of an item by an expert.
-*   The shipping of an item.
-*   The production of a blueprint to produce items.
+*   The production of an asset.
+*   The certification of an asset by an expert.
+*   The shipping of an asset.
+*   The production of a blueprint to produce assets.
 *   An update on a blueprint.
-*   The transformation of a raw material into a different item.
-*   The destruction or recycling of an item.
+*   The transformation of a raw material into a different asset.
+*   The destruction or recycling of an asset.
 
 In a mature solution each state would record quite a few data points, but for this example we will focus on only three of them.
 
 1. The unique state identifier, assigned sequentially.
-2. The unique identifier of the item that the state refers to, chosen by the user.
+2. The unique identifier of the asset that the state refers to, chosen by the user.
 3. The immediately precedent states to the one being created.
 
-The item identifier refers to a physical item and it will change along in a state from its precedents if the item itself is substantially transformed. For example a batch of material could have the 0x100 identifier, and then from that batch we could produce 100 items with identifiers 0x100 to 0x199. All those produced items would each one have its own state in the Supply Chain, and all of them would point to the last known state of 0x100, the material used to produce them.
+The asset identifier refers to a physical asset and it will change along in a state from its precedents if the asset itself is substantially transformed. For example a batch of material could have the 0x100 identifier, and then from that batch we could produce 100 assets with identifiers 0x100 to 0x199. All those produced assets would each one have its own state in the Supply Chain, and all of them would point to the last known state of 0x100, the material used to produce them.
 
-A state won’t always imply a new item identifier. In the previous example, imagine that there is plenty of material left from building all those parts, and that leftover material is sold to some other company. A new state would be created for 0x100 to represent this change of hands, which would point to the last known state for 0x100. Any new events related to an item must always point to its last known state.
+A state won’t always imply a new asset identifier. In the previous example, imagine that there is plenty of material left from building all those parts, and that leftover material is sold to some other company. A new state would be created for 0x100 to represent this change of hands, which would point to the last known state for 0x100. Any new events related to an asset must always point to its last known state.
 
-The behaviour for composition is similar, if several items are combined, a state will be created that has an identifier different from all of them, and that has all of them as precedent states.
+The behaviour for composition is similar, if several assets are combined, a state will be created that has an identifier different from all of them, and that has all of them as precedent states.
 
-These simple rules create a Directed Acyclic Graph that can easily be traversed backwards to find the lifecycle of an item back to its raw materials. By keeping an index of the last states for all items that were ever created we can also traverse the graph forwards. With these two motions we have a complete view of the whole supply chain, starting from any item and finding all other related items along with all their history.
+These simple rules create a Directed Acyclic Graph that can easily be traversed backwards to find the lifecycle of an asset back to its raw materials. By keeping an index of the last states for all assets that were ever created we can also traverse the graph forwards. With these two motions we have a complete view of the whole supply chain, starting from any asset and finding all other related assets along with all their history.
 
 Before we get into the implementation, it is important to note why this is a blockchain application and how it is different from just recording all this data in a database. 
 
@@ -49,10 +49,10 @@ In short, this solution becomes an easy to use, trusted and robust system for th
 The data structures of SupplyChain.sol are limited to:
 
 1. A vanilla contract.
-2. A struct representing a State, which holds the item, precedents and state creator.
+2. A struct representing a State, which holds the asset, precedents and state creator.
 3. A counter for the total of states created.
 4. A mapping for all the states created.
-5. A mapping pointing to the last created states for each item.
+5. A mapping pointing to the last created states for each asset.
 
 
 ```
@@ -77,12 +77,12 @@ contract SupplyChain {
     * to whoever looks for the state. The types of the struct members have been chosen for optimal
     * struct packing.
     * @param creator The creator of this state.
-    * @param item The id of the object that this state refers to.
+    * @param asset The id of the object that this state refers to.
     * @param precedents The ids of the states that precede this one in the supply chain.
     */
    struct State {
        address creator;
-       uint256 item;
+       uint256 asset;
        uint256[] precedents;
    }
 
@@ -98,7 +98,7 @@ contract SupplyChain {
    uint256 public totalStates;
 
    /**
-    * @notice Mapping from item id to the last state in the lifecycle of that item.
+    * @notice Mapping from asset id to the last state in the lifecycle of that asset.
     */
    mapping(uint256 => uint256) public lastStates;
 ```
@@ -108,7 +108,7 @@ The methods of SupplyChain.sol are limited to:
 
 
 
-1. A method to append new states that observes rules on items and precedents, and updates counters and indexes.
+1. A method to append new states that observes rules on assets and precedents, and updates counters and indexes.
 2. A helper method to find out whether a state can be appended to.
 3. A helper method to unpack precedents from a state struct.
 
@@ -117,14 +117,14 @@ The methods of SupplyChain.sol are limited to:
    /**
     * @notice A method to create a new supply chain state. The msg.sender is recorded as the 
     * creator of the state, which might possibly mean creator of the underlying asset as well.
-    * @param _item The item id that this state is for. This must be either the item
-    * of one of the states in _precedents, or an item that has never been used before.
+    * @param _asset The asset id that this state is for. This must be either the asset
+    * of one of the states in _precedents, or an asset that has never been used before.
     * @param _precedents An array of the state ids for states considered to be predecessors to
     * this one. Often this would just mean that the event refers to the same asset as the event
     * pointed to, but for states like Creation it could point to the parts this asset is made of.
     * @return The state id of the state created.
     */
-   function addState(uint256 _item, uint256[] memory _precedents)
+   function addState(uint256 _asset, uint256[] memory _precedents)
        public
        returns(uint256)
    {
@@ -133,39 +133,39 @@ The methods of SupplyChain.sol are limited to:
        }
        bool repeatInstance = false;
        for (uint i = 0; i < _precedents.length; i++){
-           if (states[_precedents[i]].item == _item) {
+           if (states[_precedents[i]].asset == _asset) {
                repeatInstance = true;
                break;
            }
        }
        if (!repeatInstance){
-           require(lastStates[_item] == 0, "Instance not valid.");
+           require(lastStates[_asset] == 0, "Instance not valid.");
        }
 
 
        states[totalStates] = State(
            msg.sender,
-           _item,
+           _asset,
            _precedents
        );
        uint256 state = totalStates;
        totalStates += 1;
-       lastStates[_item] = state;
+       lastStates[_asset] = state;
        emit StateCreated(state);
        return state;
    }
 
    /**
-    * @notice A method to verify whether a state is the last of an item.
+    * @notice A method to verify whether a state is the last of an asset.
     * @param _state The state id of the state to verify.
-    * @return Whether a state is the last of an item.
+    * @return Whether a state is the last of an asset.
     */
    function isLastState(uint256 _state)
        public
        view
        returns(bool)
    {
-       return lastStates[states[_state].item] == _state;
+       return lastStates[states[_state].asset] == _state;
    }
 
    /**
@@ -203,13 +203,13 @@ Immutability in blockchain also means that your bugs will haunt you forever, tha
 
       ✓ addState allows multiple precedents. (136ms)
 
-      ✓ item must be unique or the same as a direct precedent. (114ms)
+      ✓ asset must be unique or the same as a direct precedent. (114ms)
 
       ✓ addState records state creator. (128ms)
 
-      ✓ addState records item. (165ms)
+      ✓ addState records asset. (165ms)
 
-      ✓ lastStates records item. (138ms)
+      ✓ lastStates records asset. (138ms)
 
   9 passing (2s)
 ```
@@ -218,7 +218,7 @@ Immutability in blockchain also means that your bugs will haunt you forever, tha
 
 In this article we have shown a simple yet powerful implementation of a supply chain for Ethereum. While a large proportion of previous implementations have been based in an ERC721 token, we have decided instead to implement a document registry structured as a Directed Acyclic Graph without any cryptocurrency capabilities.
 
-Our chosen implementation allows to easily recover the lifecycle of any item in the supply chain to their inception. A frontend can be plugged in with more advanced query and filter capabilities.
+Our chosen implementation allows to easily recover the lifecycle of any asset in the supply chain to their inception. A frontend can be plugged in with more advanced query and filter capabilities.
 
 The use cases that are served by our implementation include some of the thorniest issues in any supply chain, for example:
 
@@ -228,5 +228,5 @@ The use cases that are served by our implementation include some of the thornies
 *   Ensuring legitimacy across the supply chain with reliable certification processes.
 *   Transparency on the supply chain to enable more efficient and controlled journeys.
 
-Of course this is a very simplistic approach which only shows that a Directed Acyclic Graph can be easily built and that it can represent a Supply Chain in a useful way. A huge gap in this implementation is that anyone can append states in the lifecycle of any item, as long as they know the item identifier. In the next article of this series we will build Role Based Access Control capabilities, which will enable us to secure the data and accurately represent the handover of items in the Supply Chain.
+Of course this is a very simplistic approach which only shows that a Directed Acyclic Graph can be easily built and that it can represent a Supply Chain in a useful way. A huge gap in this implementation is that anyone can append states in the lifecycle of any asset, as long as they know the asset identifier. In the next article of this series we will build Role Based Access Control capabilities, which will enable us to secure the data and accurately represent the handover of assets in the Supply Chain.
 
