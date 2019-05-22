@@ -2,12 +2,12 @@ import BigNumber from 'bignumber.js';
 import React, { Component } from 'react';
 
 import { createLogger, format, transports } from 'winston';
-import BlockchainGeneric from '../Common/BlockchainGeneric';
-import { IBlockchainState, ISupplyChain } from '../Common/CommonInterfaces';
-import '../main.scss';
+import BlockchainGeneric from '../../Common/BlockchainGeneric';
+import { IBlockchainState, ISupplyChain } from '../../Common/CommonInterfaces';
+import '../../main.scss';
 import './action.scss';
 
-import Navbar from '../Components/Navbar/Navbar';
+import Navbar from '../../Components/Navbar/Navbar';
 
 /**
  * Define class interface

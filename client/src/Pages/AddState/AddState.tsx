@@ -3,12 +3,12 @@ import React, { Component } from 'react';
 import { Hint, Sankey } from 'react-vis';
 import Energy from './energy.json';
 
-import BlockchainGeneric from '../Common/BlockchainGeneric';
-import { IBlockchainState, IRBAC, ISupplyChain } from '../Common/CommonInterfaces';
-import '../main.scss';
+import BlockchainGeneric from '../../Common/BlockchainGeneric';
+import { IBlockchainState, IRBAC, ISupplyChain } from '../../Common/CommonInterfaces';
+import '../../main.scss';
 import './addstate.scss';
 
-import Navbar from '../Components/Navbar/Navbar';
+import Navbar from '../../Components/Navbar/Navbar';
 
 // graphic variables
 const BLURRED_LINK_OPACITY = 0.3;

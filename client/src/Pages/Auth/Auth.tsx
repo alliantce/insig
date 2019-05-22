@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 import { UPortButton } from 'rimble-ui';
 import { Connect } from 'uport-connect';
 
-import '../main.scss';
+import '../../main.scss';
 import './auth.scss';
 import insigLogo from './insigv1trans.png';
 
-import Navbar from '../Components/Navbar/Navbar';
+import Navbar from '../../Components/Navbar/Navbar';
 
 /**
  * Connect to uport

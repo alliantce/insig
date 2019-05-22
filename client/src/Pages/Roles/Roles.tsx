@@ -1,13 +1,13 @@
 import BigNumber from 'bignumber.js';
 import React, { Component } from 'react';
 
-import '../main.scss';
+import '../../main.scss';
 import './roles.scss';
 
-import Navbar from '../Components/Navbar/Navbar';
+import Navbar from '../../Components/Navbar/Navbar';
 
-import BlockchainGeneric from '../Common/BlockchainGeneric';
-import { IBlockchainState, IRBAC } from '../Common/CommonInterfaces';
+import BlockchainGeneric from '../../Common/BlockchainGeneric';
+import { IBlockchainState, IRBAC } from '../../Common/CommonInterfaces';
 
 enum DOMNames {
     newRoleForm = 'newRoleForm',

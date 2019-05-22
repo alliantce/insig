@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-import Action from './Action/Action';
-import AddState from './AddState/AddState';
-import Auth from './Auth/Auth';
-import Roles from './Roles/Roles';
+import Action from './Pages/Action/Action';
+import AddState from './Pages/AddState/AddState';
+import Auth from './Pages/Auth/Auth';
+import Roles from './Pages/Roles/Roles';
 
 class App extends Component {
     public render() {
