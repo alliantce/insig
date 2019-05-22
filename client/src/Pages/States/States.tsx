@@ -10,51 +10,26 @@ import './states.scss';
 
 import Navbar from '../../Components/Navbar/Navbar';
 
+import HandoverState from './HandoverState';
+import InfoState from './InfoState';
+import ParteOf from './ParteOfState';
+import RootState from './RootState';
+
 // graphic variables
 const BLURRED_LINK_OPACITY = 0.3;
 const FOCUSED_LINK_OPACITY = 1;
 // dom controller names
 enum DOMNames {
-    // root
     rootStateForm = 'rootStateForm',
-    rootStateAction = 'rootStateAction',
-    rootStateOperatorRole = 'rootStateOperatorRole',
-    rootStateOwnerRole = 'rootStateOwnerRole',
-    // info
     infoStateForm = 'infoStateForm',
-    infoStateAction = 'infoStateAction',
-    infoStatePrecedents = 'infoStatePrecedents',
-    infoStateAsset = 'infoStateAsset',
-    // handover
     handoverStateForm = 'handoverStateForm',
-    handoverStateAction = 'handoverStateAction',
-    handoverStateAsset = 'handoverStateAsset',
-    handoverStateOperatorRole = 'handoverStateOperatorRole',
-    handoverStateOwnerRole = 'handoverStateOwnerRole',
-    // partof
     parteOfStateForm = 'parteOfStateForm',
-    parteOfStateAction = 'parteOfStateAction',
-    parteOfStateAsset = 'parteOfStateAsset',
-    parteOfStateParteOf = 'parteOfStateParteOf',
 }
 interface IState extends IBlockchainState {
     activeLink: any;
     listActions: Array<{ description: string, index: number }>;
     supplyChain: ISupplyChain;
     currentTab: string;
-    rootStateAction: string;
-    rootStateOperatorRole: string;
-    rootStateOwnerRole: string;
-    infoStateAction: string;
-    infoStatePrecedents: string;
-    infoStateAsset: string;
-    handoverStateAction: string;
-    handoverStateAsset: string;
-    handoverStateOperatorRole: string;
-    handoverStateOwnerRole: string;
-    parteOfStateAction: string;
-    parteOfStateAsset: string;
-    parteOfStateParteOf: string;
     rolesList: Array<{ description: string, index: number }>;
     rbac: IRBAC;
     nodes: any[];
@@ -66,24 +41,11 @@ class State extends Component<{}, IState> {
         this.state = {
             activeLink: null as any,
             currentTab: '',
-            handoverStateAction: 'default',
-            handoverStateAsset: '',
-            handoverStateOperatorRole: 'default',
-            handoverStateOwnerRole: 'default',
-            infoStateAction: 'default',
-            infoStateAsset: '',
-            infoStatePrecedents: '',
             links: [],
             listActions: [],
             nodes: [],
-            parteOfStateAction: 'default',
-            parteOfStateAsset: '',
-            parteOfStateParteOf: '',
             rbac: undefined as any,
             rolesList: [],
-            rootStateAction: 'default',
-            rootStateOperatorRole: 'default',
-            rootStateOwnerRole: 'default',
             supplyChain: undefined as any,
             userAccount: undefined as any,
             web3: undefined as any,
@@ -110,120 +72,6 @@ class State extends Component<{}, IState> {
                 }, this.loadRoles);
             });
         });
-    }
-
-    /**
-     * Handle all changes in inputs, selects
-     */
-    public handleChange = (event: any) => {
-        const { currentTab } = this.state;
-        if (currentTab === DOMNames.rootStateForm) {
-            if (event.target.name === DOMNames.rootStateAction) {
-                this.setState({ rootStateAction: event.target.value });
-            } else if (event.target.name === DOMNames.rootStateOperatorRole) {
-                this.setState({ rootStateOperatorRole: event.target.value });
-            } else if (event.target.name === DOMNames.rootStateOwnerRole) {
-                this.setState({ rootStateOwnerRole: event.target.value });
-            }
-        } else if (currentTab === DOMNames.infoStateForm) {
-            if (event.target.name === DOMNames.infoStateAction) {
-                this.setState({ infoStateAction: event.target.value });
-            } else if (event.target.name === DOMNames.infoStatePrecedents) {
-                this.setState({ infoStatePrecedents: event.target.value });
-            } else if (event.target.name === DOMNames.infoStateAsset) {
-                this.setState({ infoStateAsset: event.target.value });
-            }
-        } else if (currentTab === DOMNames.handoverStateForm) {
-            if (event.target.name === DOMNames.handoverStateAction) {
-                this.setState({ handoverStateAction: event.target.value });
-            } else if (event.target.name === DOMNames.handoverStateAsset) {
-                this.setState({ handoverStateAsset: event.target.value });
-            } else if (event.target.name === DOMNames.handoverStateOperatorRole) {
-                this.setState({ handoverStateOperatorRole: event.target.value });
-            } else if (event.target.name === DOMNames.handoverStateOwnerRole) {
-                this.setState({ handoverStateOwnerRole: event.target.value });
-            }
-        } else if (currentTab === DOMNames.parteOfStateForm) {
-            if (event.target.name === DOMNames.parteOfStateAction) {
-                this.setState({ parteOfStateAction: event.target.value });
-            } else if (event.target.name === DOMNames.parteOfStateAsset) {
-                this.setState({ parteOfStateAsset: event.target.value });
-            } else if (event.target.name === DOMNames.parteOfStateParteOf) {
-                this.setState({ parteOfStateParteOf: event.target.value });
-            }
-        }
-    }
-
-    /**
-     * Handle any submit button
-     */
-    public handleSubmit = (event: any) => {
-        const {
-            currentTab,
-            supplyChain,
-            rootStateAction,
-            rootStateOperatorRole,
-            rootStateOwnerRole,
-            infoStateAction,
-            infoStateAsset,
-            infoStatePrecedents,
-            handoverStateAction,
-            handoverStateAsset,
-            handoverStateOperatorRole,
-            handoverStateOwnerRole,
-            parteOfStateAction,
-            parteOfStateAsset,
-            parteOfStateParteOf,
-            userAccount,
-        } = this.state;
-        if (currentTab === DOMNames.rootStateForm) {
-            supplyChain.addRootState(
-                new BigNumber(rootStateAction),
-                new BigNumber(rootStateOperatorRole),
-                new BigNumber(rootStateOwnerRole),
-                { from: userAccount },
-            ).then(() => {
-                alert('Success!');
-            });
-        } else if (currentTab === DOMNames.infoStateForm) {
-            const resultPrecedents: BigNumber[] = [];
-            if (infoStatePrecedents.indexOf(',') > -1) {
-                const precedents = infoStatePrecedents.split(',');
-                if (precedents.length > 1) {
-                    precedents.forEach((p) => resultPrecedents.push(new BigNumber(p)));
-                }
-            } else if (infoStatePrecedents.length > 0) {
-                resultPrecedents.push(new BigNumber(infoStatePrecedents));
-            }
-            supplyChain.addInfoState(
-                new BigNumber(infoStateAction),
-                new BigNumber(infoStateAsset),
-                resultPrecedents,
-                { from: userAccount },
-            ).then(() => {
-                alert('Success!');
-            });
-        } else if (currentTab === DOMNames.handoverStateForm) {
-            supplyChain.addHandoverState(
-                new BigNumber(handoverStateAction),
-                new BigNumber(handoverStateAsset),
-                new BigNumber(handoverStateOperatorRole),
-                new BigNumber(handoverStateOwnerRole),
-                { from: userAccount },
-            ).then(() => {
-                alert('Success!');
-            });
-        } else if (currentTab === DOMNames.parteOfStateForm) {
-            supplyChain.addPartOfState(
-                new BigNumber(parteOfStateAction),
-                new BigNumber(parteOfStateAsset),
-                new BigNumber(parteOfStateParteOf),
-                { from: userAccount },
-            ).then(() => {
-                alert('Success!');
-            });
-        }
-        event.preventDefault();
     }
 
     /**
@@ -274,180 +122,42 @@ class State extends Component<{}, IState> {
         const {
             listActions,
             currentTab,
-            rootStateAction,
-            rootStateOperatorRole,
-            rootStateOwnerRole,
-            infoStateAction,
-            infoStatePrecedents,
-            infoStateAsset,
-            handoverStateAction,
-            handoverStateAsset,
-            handoverStateOperatorRole,
-            handoverStateOwnerRole,
-            parteOfStateAction,
-            parteOfStateAsset,
-            parteOfStateParteOf,
             rolesList,
+            supplyChain,
+            userAccount,
         } = this.state;
 
         return (
             <div>
                 <div className="tabContent" hidden={currentTab !== DOMNames.rootStateForm}>
-                    <form name={DOMNames.rootStateForm} onSubmit={this.handleSubmit}>
-                        <legend>Add root state</legend>
-                        <div className="select">
-                            <select
-                                name={DOMNames.rootStateAction}
-                                value={rootStateAction}
-                                onChange={this.handleChange}
-                            >
-                                <option value="default" disabled={true}>Action</option>
-                                {listActions.map((a) => <option key={a.index} value={a.index}>{a.description}</option>)}
-                            </select>
-                        </div>
-                        <br />
-                        <div className="select">
-                            <select
-                                name={DOMNames.rootStateOperatorRole}
-                                value={rootStateOperatorRole}
-                                onChange={this.handleChange}
-                            >
-                                <option value="default" disabled={true}>Operator Role</option>
-                                {rolesList.map((r) => <option key={r.index} value={r.index}>{r.description}</option>)}
-                            </select>
-                        </div>
-                        <br />
-                        <div className="select">
-                            <select
-                                name={DOMNames.rootStateOwnerRole}
-                                value={rootStateOwnerRole}
-                                onChange={this.handleChange}
-                            >
-                                <option value="default" disabled={true}>Owner Role</option>
-                                {rolesList.map((r) => <option key={r.index} value={r.index}>{r.description}</option>)}
-                            </select>
-                        </div>
-                        <br />
-                        <input className="button is-primary" type="submit" />
-                    </form>
+                    <RootState
+                        userAccount={userAccount}
+                        supplyChain={supplyChain}
+                        listActions={listActions}
+                        rolesList={rolesList}
+                    />
                 </div>
                 <div className="tabContent" hidden={currentTab !== DOMNames.infoStateForm}>
-                    <form name={DOMNames.infoStateForm} onSubmit={this.handleSubmit}>
-                        <legend>Add state</legend>
-                        <div className="select">
-                            <select
-                                name={DOMNames.infoStateAction}
-                                value={infoStateAction}
-                                onChange={this.handleChange}
-                            >
-                                <option value="default" disabled={true}>Action</option>
-                                {listActions.map((a) => <option key={a.index} value={a.index}>{a.description}</option>)}
-                            </select>
-                        </div>
-                        <br />
-                        <input
-                            className="input"
-                            type="text"
-                            placeholder="Precedents"
-                            name={DOMNames.infoStatePrecedents}
-                            value={infoStatePrecedents}
-                            onChange={this.handleChange}
-                        />
-                        <br />
-                        <input
-                            className="input"
-                            type="text"
-                            placeholder="Asset"
-                            name={DOMNames.infoStateAsset}
-                            value={infoStateAsset}
-                            onChange={this.handleChange}
-                        />
-                        <br />
-                        <input className="button is-primary" type="submit" />
-                    </form>
+                    <InfoState
+                        userAccount={userAccount}
+                        supplyChain={supplyChain}
+                        listActions={listActions}
+                    />
                 </div>
                 <div className="tabContent" hidden={currentTab !== DOMNames.handoverStateForm}>
-                    <form name={DOMNames.handoverStateForm} onSubmit={this.handleSubmit}>
-                        <legend>Handover state</legend>
-                        <div className="select">
-                            <select
-                                name={DOMNames.handoverStateAction}
-                                value={handoverStateAction}
-                                onChange={this.handleChange}
-                            >
-                                <option value="default" disabled={true}>Action</option>
-                                {listActions.map((a) => <option key={a.index} value={a.index}>{a.description}</option>)}
-                            </select>
-                        </div>
-                        <br />
-                        <input
-                            className="input"
-                            type="text"
-                            placeholder="Asset"
-                            name={DOMNames.handoverStateAsset}
-                            value={handoverStateAsset}
-                            onChange={this.handleChange}
-                        />
-                        <br />
-                        <div className="select">
-                            <select
-                                name={DOMNames.handoverStateOperatorRole}
-                                value={handoverStateOperatorRole}
-                                onChange={this.handleChange}
-                            >
-                                <option value="default" disabled={true}>Operator Role</option>
-                                {rolesList.map((r) => <option key={r.index} value={r.index}>{r.description}</option>)}
-                            </select>
-                        </div>
-                        <br />
-                        <div className="select">
-                            <select
-                                name={DOMNames.handoverStateOwnerRole}
-                                value={handoverStateOwnerRole}
-                                onChange={this.handleChange}
-                            >
-                                <option value="default" disabled={true}>Owner Role</option>
-                                {rolesList.map((r) => <option key={r.index} value={r.index}>{r.description}</option>)}
-                            </select>
-                        </div>
-                        <br />
-                        <input className="button is-primary" type="submit" />
-                    </form>
+                    <HandoverState
+                        userAccount={userAccount}
+                        supplyChain={supplyChain}
+                        listActions={listActions}
+                        rolesList={rolesList}
+                    />
                 </div>
                 <div className="tabContent" hidden={currentTab !== DOMNames.parteOfStateForm}>
-                    <form name={DOMNames.parteOfStateForm} onSubmit={this.handleSubmit}>
-                        <legend>ParteOf state</legend>
-                        <div className="select">
-                            <select
-                                name={DOMNames.parteOfStateAction}
-                                value={parteOfStateAction}
-                                onChange={this.handleChange}
-                            >
-                                <option value="default" disabled={true}>Action</option>
-                                {listActions.map((a) => <option key={a.index} value={a.index}>{a.description}</option>)}
-                            </select>
-                        </div>
-                        <br />
-                        <input
-                            className="input"
-                            type="text"
-                            placeholder="Asset"
-                            name={DOMNames.parteOfStateAsset}
-                            value={parteOfStateAsset}
-                            onChange={this.handleChange}
-                        />
-                        <br />
-                        <input
-                            className="input"
-                            type="text"
-                            placeholder="Parte of"
-                            name={DOMNames.parteOfStateParteOf}
-                            value={parteOfStateParteOf}
-                            onChange={this.handleChange}
-                        />
-                        <br />
-                        <input className="button is-primary" type="submit" />
-                    </form>
+                    <ParteOf
+                        userAccount={userAccount}
+                        supplyChain={supplyChain}
+                        listActions={listActions}
+                    />
                 </div>
                 {this.drawGraph()}
             </div>
