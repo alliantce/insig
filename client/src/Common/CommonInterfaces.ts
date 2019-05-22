@@ -15,9 +15,18 @@ interface ITruffleContract {
 /**
  * SupplyChain contract interface definition
  */
+export interface ISupplyChainState {
+    action: BigNumber;
+    asset: BigNumber;
+    creator: string;
+    operatorRole: BigNumber;
+    ownerRole: BigNumber;
+    partOf: BigNumber;
+};
 export interface ISupplyChain extends ITruffleContract {
     totalAssets: () => Promise<BigNumber>;
     lastStates: (state: BigNumber) => Promise<BigNumber>;
+    states: (state: BigNumber) => Promise<ISupplyChainState>;
     addAction: (actionDescription: string, options: object) => Promise<BigNumber>;
     actionDescription: (action: BigNumber) => Promise<string>;
     totalActions: () => Promise<BigNumber>;

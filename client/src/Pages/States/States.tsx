@@ -14,6 +14,7 @@ import HandoverState from './HandoverState';
 import InfoState from './InfoState';
 import ParteOf from './ParteOfState';
 import RootState from './RootState';
+import ViewState from './ViewState';
 
 // graphic variables
 const BLURRED_LINK_OPACITY = 0.3;
@@ -24,6 +25,7 @@ enum DOMNames {
     infoStateForm = 'infoStateForm',
     handoverStateForm = 'handoverStateForm',
     parteOfStateForm = 'parteOfStateForm',
+    viewStateForm = 'viewStateForm',
 }
 interface IState extends IBlockchainState {
     activeLink: any;
@@ -106,6 +108,9 @@ class State extends Component<{}, IState> {
                         <li data-id={DOMNames.parteOfStateForm} onClick={this.handleChangeTab}>
                             <a>Parte Of state</a>
                         </li>
+                        <li data-id={DOMNames.viewStateForm} onClick={this.handleChangeTab}>
+                            <a>View state</a>
+                        </li>
                     </ul>
                 </aside>
                 <main>
@@ -157,6 +162,12 @@ class State extends Component<{}, IState> {
                         userAccount={userAccount}
                         supplyChain={supplyChain}
                         listActions={listActions}
+                    />
+                </div>
+                <div className="tabContent" hidden={currentTab !== DOMNames.viewStateForm}>
+                    <ViewState
+                        userAccount={userAccount}
+                        supplyChain={supplyChain}
                     />
                 </div>
                 {this.drawGraph()}
