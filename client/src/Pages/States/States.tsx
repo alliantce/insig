@@ -6,7 +6,7 @@ import Energy from './energy.json';
 import BlockchainGeneric from '../../Common/BlockchainGeneric';
 import { IBlockchainState, IRBAC, ISupplyChain } from '../../Common/CommonInterfaces';
 import '../../main.scss';
-import './addstate.scss';
+import './states.scss';
 
 import Navbar from '../../Components/Navbar/Navbar';
 
@@ -37,7 +37,7 @@ enum DOMNames {
     parteOfStateAsset = 'parteOfStateAsset',
     parteOfStateParteOf = 'parteOfStateParteOf',
 }
-interface IAddState extends IBlockchainState {
+interface IState extends IBlockchainState {
     activeLink: any;
     listActions: Array<{ description: string, index: number }>;
     supplyChain: ISupplyChain;
@@ -60,7 +60,7 @@ interface IAddState extends IBlockchainState {
     nodes: any[];
     links: any[];
 }
-class AddState extends Component<{}, IAddState> {
+class State extends Component<{}, IState> {
     constructor(props: any) {
         super(props);
         this.state = {
@@ -608,4 +608,4 @@ class AddState extends Component<{}, IAddState> {
     }
 }
 
-export default AddState;
+export default State;

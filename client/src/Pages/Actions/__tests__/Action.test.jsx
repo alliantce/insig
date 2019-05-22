@@ -3,7 +3,7 @@ import { shallow, configure } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 import * as React from 'react';
 // eslint-disable-next-line no-unused-vars
-import Action from '../Action.tsx';
+import Action from '../Actions.tsx';
 
 
 // setup the adapter

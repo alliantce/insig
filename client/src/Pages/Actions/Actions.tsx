@@ -5,7 +5,7 @@ import { createLogger, format, transports } from 'winston';
 import BlockchainGeneric from '../../Common/BlockchainGeneric';
 import { IBlockchainState, ISupplyChain } from '../../Common/CommonInterfaces';
 import '../../main.scss';
-import './action.scss';
+import './actions.scss';
 
 import Navbar from '../../Components/Navbar/Navbar';
 

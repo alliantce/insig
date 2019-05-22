@@ -46,8 +46,9 @@ class Navbar extends Component<{}, INavbarState> {
                     {/* add some menu on left side after the logo */}
                     <div className="navbar-start">
                         <a className="navbar-item" href="/">Home</a>
-                        <a className="navbar-item" href="/action">Action</a>
-                        <a className="navbar-item" href="/addstate">Add State</a>
+                        <a className="navbar-item" href="/actions">Actions</a>
+                        <a className="navbar-item" href="/assets">Assets</a>
+                        <a className="navbar-item" href="/states">States</a>
                         <a className="navbar-item" href="/roles">Roles</a>
                     </div>
                     {/* add welcome or login on right side */}
