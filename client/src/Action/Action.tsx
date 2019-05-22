@@ -10,19 +10,6 @@ import './action.scss';
 import Navbar from '../Components/Navbar/Navbar';
 
 /**
- * Setting up a logger.
- */
-const logger = createLogger({
-    format: format.combine(
-        format.timestamp(),
-        format.json(),
-    ),
-    level: 'debug',
-    transports: [
-        new transports.Console(),
-    ],
-});
-/**
  * Define class interface
  */
 interface IActionState extends IBlockchainState {
@@ -52,7 +39,6 @@ class Action extends Component<{}, IActionState> {
      * @ignore
      */
     public componentDidMount() {
-        logger.info('[START] componentDidMount');
         BlockchainGeneric.onLoad().then((generic) => {
             BlockchainGeneric.loadSupplyChain(generic.web3).then((contracts) => {
                 this.setState({
@@ -63,7 +49,6 @@ class Action extends Component<{}, IActionState> {
                 this.loadActions().then((actionsName) => this.setState({listActions: actionsName}));
             });
         });
-        logger.info('[END] componentDidMount');
     }
 
     public handleChange = (event: any) => {
